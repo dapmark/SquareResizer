@@ -1,0 +1,171 @@
+<Window x:Class="ImageSquareResizer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DapLine SquareResizer 0.04"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="CanMinimize"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F0F0F0" />
+        <SolidColorBrush x:Key="DropAreaBackgroundBrush" Color="#F5F5F5" />
+        <SolidColorBrush x:Key="DropAreaBorderBrush" Color="#828282" />
+        <SolidColorBrush x:Key="MainTextBrush" Color="#464646" />
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#505050" />
+        <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#FAFAFA" />
+        <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="#F5F9FF" />
+        <SolidColorBrush x:Key="ButtonPressedBackgroundBrush" Color="#E6F2FF" />
+        <SolidColorBrush x:Key="ButtonBorderBrush" Color="#AAAAAA" />
+        <SolidColorBrush x:Key="AccentBorderBrush" Color="#0078D7" />
+        <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="StatusTextBrush" Color="#505050" />
+
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="RootBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonHoverBackgroundBrush}" />
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonPressedBackgroundBrush}" />
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="RootBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="4,0"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Canvas Width="360"
+            Height="420"
+            Background="{DynamicResource WindowBackgroundBrush}"
+            AllowDrop="True"
+            DragEnter="OnDragEnter"
+            Drop="OnDrop">
+
+        <Border x:Name="DropArea"
+                Canvas.Left="20"
+                Canvas.Top="20"
+                Width="320"
+                Height="320"
+                Background="{DynamicResource DropAreaBackgroundBrush}"
+                BorderBrush="{DynamicResource DropAreaBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="5"
+                AllowDrop="True"
+                DragEnter="OnDragEnter"
+                Drop="OnDrop">
+            <Viewbox Width="140"
+                     Height="140"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     IsHitTestVisible="False"
+         Opacity="0.55">
+                <Path Stroke="{DynamicResource DropAreaBorderBrush}"
+                      StrokeThickness="2"
+                      StrokeLineJoin="Miter"
+                      Fill="Transparent"
+                      Data="M 40,5 L 60,5 L 60,40 L 95,40 L 95,60 L 60,60 L 60,95 L 40,95 L 40,60 L 5,60 L 5,40 L 40,40 Z"/>
+            </Viewbox>
+        </Border>
+
+        <Button x:Name="OpenButton"
+                Canvas.Left="59"
+                Canvas.Top="352"
+                Width="140"
+                Height="40"
+                Content="Открыть файл"
+                Style="{StaticResource RoundedButtonStyle}"
+                Click="OnOpenButtonClick" />
+
+        <TextBlock x:Name="QualityLabel"
+                   Canvas.Left="238"
+                   Canvas.Top="350"
+                   Text="Качество"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
+                   FontFamily="Segoe UI"
+                   FontSize="12" />
+
+        <TextBox x:Name="QualityTextBox"
+                 Canvas.Left="238"
+                 Canvas.Top="368"
+                 Width="64"
+                 Height="24"
+                 Style="{StaticResource RoundedTextBoxStyle}"
+                 LostFocus="OnQualityLostFocus"
+                 PreviewKeyDown="OnQualityPreviewKeyDown"
+                 PreviewTextInput="OnQualityPreviewTextInput"
+                 PreviewMouseWheel="OnQualityPreviewMouseWheel" />
+
+        <TextBlock x:Name="StatusTextBlock"
+                   Canvas.Left="20"
+                   Canvas.Top="398"
+                   Width="320"
+                   Height="18"
+                   Text=""
+                   TextAlignment="Center"
+                   TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource StatusTextBrush}"
+                   FontFamily="Segoe UI"
+                   FontSize="11" />
+    </Canvas>
+</Window>

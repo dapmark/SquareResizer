@@ -1,0 +1,14 @@
+# ImageSquareResizer settings
+#
+# quality:
+#   число от 1 до 100
+#   применяется для JPG и WEBP
+#
+# theme:
+#   light = светлая тема
+#   dark  = тёмная тема в стиле Visual Studio
+#
+# Если значение theme некорректное или отсутствует, используется light.
+
+quality=100
+theme=dark
