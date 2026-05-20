@@ -1,7 +1,7 @@
 <Window x:Class="ImageSquareResizer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="DapLine SquareResizer 0.04"
+        Title="DapLine SquareResizer 0.05"
         SizeToContent="WidthAndHeight"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"

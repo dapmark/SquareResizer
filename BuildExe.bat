@@ -5,6 +5,6 @@ dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=
 
 echo.
 echo EXE:
-echo bin\Release\net10.0-windows\win-x64\publish\DapLine SquareResizer.exe
+echo bin\Release\net10.0-windows\win-x64\publish\SquareResizer.exe
 echo.
 pause
