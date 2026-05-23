@@ -16,7 +16,13 @@ public partial class App : Application
 
             if (e.Args.Length > 0)
             {
-                ImageProcessor.ProcessFiles(e.Args, settings.Quality);
+                ImageProcessor.ProcessFiles(
+                    e.Args,
+                    settings.Quality,
+                    settings.ResizeMode,
+                    settings.SmartMode,
+                    settings.SharpMode);
+
                 Shutdown();
                 return;
             }

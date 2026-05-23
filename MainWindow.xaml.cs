@@ -1,9 +1,12 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 namespace ImageSquareResizer;
@@ -13,6 +16,24 @@ public partial class MainWindow : Window
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
     private readonly AppSettings currentSettings;
+
+    private bool isManualPreviewLoaded;
+    private bool isDraggingCrop;
+
+    private string? manualSourcePath;
+    private int manualImageWidth;
+    private int manualImageHeight;
+    private int manualCropSize;
+    private int manualCropX;
+    private int manualCropY;
+
+    private double manualPreviewLeft;
+    private double manualPreviewTop;
+    private double manualPreviewScale = 1.0;
+
+    private Point dragStartPoint;
+    private int dragStartCropX;
+    private int dragStartCropY;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(
@@ -33,7 +54,15 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         QualityTextBox.Text = currentSettings.Quality.ToString();
+        SmartModeCheckBox.IsChecked = currentSettings.SmartMode;
+        ManualModeCheckBox.IsChecked = currentSettings.ManualMode;
+
+        SelectResizeMode(currentSettings.ResizeMode);
+        SelectSharpMode(currentSettings.SharpMode);
+
         DataObject.AddPastingHandler(QualityTextBox, OnQualityPaste);
+
+        PreviewHost.SizeChanged += OnPreviewHostSizeChanged;
 
         ApplyTheme();
         SourceInitialized += OnSourceInitialized;
@@ -120,20 +149,34 @@ public partial class MainWindow : Window
 
     private void OnOpenButtonClick(object sender, RoutedEventArgs e)
     {
+        if (isManualPreviewLoaded)
+        {
+            SaveManualPreview();
+            return;
+        }
+
         if (!SaveQualityFromUi(showMessageOnError: true))
         {
             return;
         }
 
+        bool manualMode = ManualModeCheckBox.IsChecked == true;
+
         var dialog = new OpenFileDialog
         {
             Title = "Выберите изображение",
             Filter = "Изображения|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff|Все файлы|*.*",
-            Multiselect = true
+            Multiselect = !manualMode
         };
 
         if (dialog.ShowDialog(this) != true)
         {
+            return;
+        }
+
+        if (manualMode)
+        {
+            LoadManualPreview(dialog.FileName);
             return;
         }
 
@@ -156,6 +199,8 @@ public partial class MainWindow : Window
 
     private void OnDrop(object sender, DragEventArgs e)
     {
+        e.Handled = true;
+
         if (!e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             return;
@@ -171,12 +216,113 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (ManualModeCheckBox.IsChecked == true)
+        {
+            if (files.Length != 1)
+            {
+                MessageBox.Show(
+                    this,
+                    "В ручном режиме выберите один файл.",
+                    "Ручной режим",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                return;
+            }
+
+            LoadManualPreview(files[0]);
+            return;
+        }
+
         ProcessSelectedFiles(files);
     }
 
     private void OnQualityLostFocus(object sender, RoutedEventArgs e)
     {
         SaveQualityFromUi(showMessageOnError: false);
+    }
+
+    private void OnResizeModeSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsInitialized || ResizeModeComboBox.SelectedItem is not ComboBoxItem selectedItem)
+        {
+            return;
+        }
+
+        currentSettings.ResizeMode = AppSettings.NormalizeResizeMode(selectedItem.Tag as string);
+        currentSettings.Save();
+    }
+
+    private void OnSharpModeSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsInitialized || SharpModeComboBox.SelectedItem is not ComboBoxItem selectedItem)
+        {
+            return;
+        }
+
+        currentSettings.SharpMode = AppSettings.NormalizeSharpMode(selectedItem.Tag as string);
+        currentSettings.Save();
+    }
+
+    private void OnSmartModeChanged(object sender, RoutedEventArgs e)
+    {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
+        currentSettings.SmartMode = SmartModeCheckBox.IsChecked == true;
+        currentSettings.Save();
+    }
+
+    private void OnManualModeChanged(object sender, RoutedEventArgs e)
+    {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
+        currentSettings.ManualMode = ManualModeCheckBox.IsChecked == true;
+        currentSettings.Save();
+
+        if (!currentSettings.ManualMode)
+        {
+            ResetManualPreview();
+        }
+    }
+
+    private void SelectResizeMode(string resizeMode)
+    {
+        string normalizedResizeMode = AppSettings.NormalizeResizeMode(resizeMode);
+
+        foreach (object item in ResizeModeComboBox.Items)
+        {
+            if (item is ComboBoxItem comboBoxItem &&
+                string.Equals(comboBoxItem.Tag as string, normalizedResizeMode, StringComparison.OrdinalIgnoreCase))
+            {
+                ResizeModeComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        ResizeModeComboBox.SelectedIndex = 0;
+    }
+
+    private void SelectSharpMode(string sharpMode)
+    {
+        string normalizedSharpMode = AppSettings.NormalizeSharpMode(sharpMode);
+
+        foreach (object item in SharpModeComboBox.Items)
+        {
+            if (item is ComboBoxItem comboBoxItem &&
+                string.Equals(comboBoxItem.Tag as string, normalizedSharpMode, StringComparison.OrdinalIgnoreCase))
+            {
+                SharpModeComboBox.SelectedItem = comboBoxItem;
+                return;
+            }
+        }
+
+        SharpModeComboBox.SelectedIndex = 0;
     }
 
     private void OnQualityPreviewKeyDown(object sender, KeyEventArgs e)
@@ -273,11 +419,65 @@ public partial class MainWindow : Window
         return true;
     }
 
+    private void SetStatusText(string text, string? toolTip = null)
+    {
+        StatusTextBlock.Text = text;
+
+        if (string.IsNullOrWhiteSpace(toolTip) || !IsStatusTextOverflowing(text))
+        {
+            StatusTextBlock.ToolTip = null;
+            return;
+        }
+
+        StatusTextBlock.ToolTip = new ToolTip
+        {
+            Content = toolTip,
+            Style = (Style)FindResource("StatusFileNameToolTipStyle")
+        };
+    }
+
+    private bool IsStatusTextOverflowing(string text)
+    {
+        double availableWidth = StatusTextBlock.ActualWidth;
+
+        if (availableWidth <= 0 && !double.IsNaN(StatusTextBlock.Width))
+        {
+            availableWidth = StatusTextBlock.Width;
+        }
+
+        if (availableWidth <= 0)
+        {
+            return false;
+        }
+
+        var typeface = new Typeface(
+            StatusTextBlock.FontFamily,
+            StatusTextBlock.FontStyle,
+            StatusTextBlock.FontWeight,
+            StatusTextBlock.FontStretch);
+
+        var formattedText = new FormattedText(
+            text,
+            System.Globalization.CultureInfo.CurrentUICulture,
+            StatusTextBlock.FlowDirection,
+            typeface,
+            StatusTextBlock.FontSize,
+            StatusTextBlock.Foreground,
+            VisualTreeHelper.GetDpi(StatusTextBlock).PixelsPerDip);
+
+        return formattedText.WidthIncludingTrailingWhitespace > availableWidth;
+    }
+
     private void ProcessSelectedFiles(string[] files)
     {
-        StatusTextBlock.Text = "Обработка...";
+        SetStatusText("Обработка...");
 
-        var results = ImageProcessor.ProcessFiles(files, currentSettings.Quality);
+        var results = ImageProcessor.ProcessFiles(
+            files,
+            currentSettings.Quality,
+            currentSettings.ResizeMode,
+            currentSettings.SmartMode,
+            currentSettings.SharpMode);
 
         foreach (ProcessResult result in results.Where(r => !r.Success && !r.AlreadyCorrectSize))
         {
@@ -296,24 +496,365 @@ public partial class MainWindow : Window
         if (created == 1 && failed == 0)
         {
             string? output = results.FirstOrDefault(r => r.OutputPath != null)?.OutputPath;
-            StatusTextBlock.Text = output == null
-                ? "Готово."
-                : $"Готово: {System.IO.Path.GetFileName(output)}";
+
+            if (output == null)
+            {
+                SetStatusText("Готово.");
+                return;
+            }
+
+            string fileName = Path.GetFileName(output);
+            SetStatusText($"Готово: {fileName}", fileName);
             return;
         }
 
         if (created > 1 && failed == 0)
         {
-            StatusTextBlock.Text = $"Готово. Создано файлов: {created}";
+            SetStatusText($"Готово. Создано файлов: {created}");
             return;
         }
 
         if (alreadyCorrect > 0 && created == 0 && failed == 0)
         {
-            StatusTextBlock.Text = "Файл уже нужного размера.";
+            SetStatusText("Файл уже нужного размера.");
             return;
         }
 
-        StatusTextBlock.Text = $"Создано: {created}, уже готово: {alreadyCorrect}, ошибок: {failed}";
+        SetStatusText($"Создано: {created}, уже готово: {alreadyCorrect}, ошибок: {failed}");
+    }
+
+    private void LoadManualPreview(string sourcePath)
+    {
+        try
+        {
+            if (!File.Exists(sourcePath))
+            {
+                MessageBox.Show(
+                    this,
+                    "Файл не найден.",
+                    "Ошибка открытия",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return;
+            }
+
+            BitmapImage bitmap = LoadBitmapImage(sourcePath);
+
+            manualSourcePath = sourcePath;
+            manualImageWidth = bitmap.PixelWidth;
+            manualImageHeight = bitmap.PixelHeight;
+            manualCropSize = Math.Min(manualImageWidth, manualImageHeight);
+            manualCropX = (manualImageWidth - manualCropSize) / 2;
+            manualCropY = (manualImageHeight - manualCropSize) / 2;
+
+            PreviewImage.Source = bitmap;
+            PreviewImage.Visibility = Visibility.Visible;
+            DropPlusIcon.Visibility = Visibility.Collapsed;
+            CropCanvas.Visibility = Visibility.Visible;
+
+            isManualPreviewLoaded = true;
+            OpenButton.Content = "Сохранить";
+
+            SetStatusText("Ручной режим: настройте квадрат и нажмите «Сохранить».");
+
+            PreviewHost.Focus();
+            UpdateManualPreviewLayout();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                this,
+                ex.Message,
+                "Ошибка открытия изображения",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private static BitmapImage LoadBitmapImage(string sourcePath)
+    {
+        var bitmap = new BitmapImage();
+
+        bitmap.BeginInit();
+        bitmap.UriSource = new Uri(sourcePath);
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+        bitmap.EndInit();
+
+        bitmap.Freeze();
+        return bitmap;
+    }
+
+    private void SaveManualPreview()
+    {
+        if (!isManualPreviewLoaded || string.IsNullOrWhiteSpace(manualSourcePath))
+        {
+            return;
+        }
+
+        if (!SaveQualityFromUi(showMessageOnError: true))
+        {
+            return;
+        }
+
+        SetStatusText("Сохранение...");
+
+        ProcessResult result = ImageProcessor.ProcessManualCropFile(
+            manualSourcePath,
+            currentSettings.Quality,
+            currentSettings.ResizeMode,
+            currentSettings.SharpMode,
+            manualCropX,
+            manualCropY,
+            manualCropSize);
+
+        if (!result.Success)
+        {
+            MessageBox.Show(
+                this,
+                result.ErrorMessage ?? "Неизвестная ошибка.",
+                "Ошибка сохранения",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            SetStatusText("Ошибка сохранения.");
+            return;
+        }
+
+        if (result.AlreadyCorrectSize || string.IsNullOrWhiteSpace(result.OutputPath))
+        {
+            ResetManualPreview();
+            SetStatusText("Файл уже нужного размера.");
+            return;
+        }
+
+        string fileName = Path.GetFileName(result.OutputPath);
+        ResetManualPreview();
+        SetStatusText($"Готово: {fileName}", fileName);
+    }
+
+    private void ResetManualPreview()
+    {
+        isManualPreviewLoaded = false;
+        isDraggingCrop = false;
+
+        manualSourcePath = null;
+        manualImageWidth = 0;
+        manualImageHeight = 0;
+        manualCropSize = 0;
+        manualCropX = 0;
+        manualCropY = 0;
+
+        PreviewImage.Source = null;
+        PreviewImage.Visibility = Visibility.Collapsed;
+        DropPlusIcon.Visibility = Visibility.Visible;
+        CropCanvas.Visibility = Visibility.Collapsed;
+
+        OpenButton.Content = "Открыть файл";
+        PreviewHost.ReleaseMouseCapture();
+    }
+
+    private void OnPreviewHostSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateManualPreviewLayout();
+    }
+
+    private void UpdateManualPreviewLayout()
+    {
+        if (!isManualPreviewLoaded ||
+            manualImageWidth <= 0 ||
+            manualImageHeight <= 0 ||
+            manualCropSize <= 0)
+        {
+            return;
+        }
+
+        double hostWidth = PreviewHost.ActualWidth;
+        double hostHeight = PreviewHost.ActualHeight;
+
+        if (hostWidth <= 0 || hostHeight <= 0)
+        {
+            return;
+        }
+
+        manualPreviewScale = Math.Min(
+            hostWidth / manualImageWidth,
+            hostHeight / manualImageHeight);
+
+        double renderedWidth = manualImageWidth * manualPreviewScale;
+        double renderedHeight = manualImageHeight * manualPreviewScale;
+
+        manualPreviewLeft = (hostWidth - renderedWidth) / 2.0;
+        manualPreviewTop = (hostHeight - renderedHeight) / 2.0;
+
+        CropCanvas.Width = hostWidth;
+        CropCanvas.Height = hostHeight;
+
+        double cropLeft = manualPreviewLeft + manualCropX * manualPreviewScale;
+        double cropTop = manualPreviewTop + manualCropY * manualPreviewScale;
+        double cropSize = manualCropSize * manualPreviewScale;
+
+        CropOverlay.Width = cropSize;
+        CropOverlay.Height = cropSize;
+
+        Canvas.SetLeft(CropOverlay, cropLeft);
+        Canvas.SetTop(CropOverlay, cropTop);
+    }
+
+    private void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!isManualPreviewLoaded)
+        {
+            return;
+        }
+
+        isDraggingCrop = true;
+        dragStartPoint = e.GetPosition(PreviewHost);
+        dragStartCropX = manualCropX;
+        dragStartCropY = manualCropY;
+
+        PreviewHost.CaptureMouse();
+        PreviewHost.Focus();
+
+        e.Handled = true;
+    }
+
+    private void OnPreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!isManualPreviewLoaded || !isDraggingCrop || manualPreviewScale <= 0)
+        {
+            return;
+        }
+
+        Point currentPoint = e.GetPosition(PreviewHost);
+        double deltaX = currentPoint.X - dragStartPoint.X;
+        double deltaY = currentPoint.Y - dragStartPoint.Y;
+
+        if (manualImageWidth > manualImageHeight)
+        {
+            int offsetX = (int)Math.Round(deltaX / manualPreviewScale);
+            manualCropX = ClampCropCoordinate(dragStartCropX + offsetX, manualImageWidth - manualCropSize);
+        }
+        else if (manualImageHeight > manualImageWidth)
+        {
+            int offsetY = (int)Math.Round(deltaY / manualPreviewScale);
+            manualCropY = ClampCropCoordinate(dragStartCropY + offsetY, manualImageHeight - manualCropSize);
+        }
+
+        UpdateManualPreviewLayout();
+        e.Handled = true;
+    }
+
+    private void OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!isDraggingCrop)
+        {
+            return;
+        }
+
+        isDraggingCrop = false;
+        PreviewHost.ReleaseMouseCapture();
+
+        e.Handled = true;
+    }
+
+    private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!isManualPreviewLoaded)
+        {
+            return;
+        }
+
+        if (Keyboard.FocusedElement == QualityTextBox)
+        {
+            return;
+        }
+
+        int step = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10 : 1;
+        bool handled = true;
+
+        switch (e.Key)
+        {
+            case Key.Left:
+                MoveManualCrop(-step, 0);
+                break;
+
+            case Key.Right:
+                MoveManualCrop(step, 0);
+                break;
+
+            case Key.Up:
+                MoveManualCrop(0, -step);
+                break;
+
+            case Key.Down:
+                MoveManualCrop(0, step);
+                break;
+
+            case Key.Home:
+                MoveManualCropToStart();
+                break;
+
+            case Key.End:
+                MoveManualCropToEnd();
+                break;
+
+            default:
+                handled = false;
+                break;
+        }
+
+        if (handled)
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void MoveManualCrop(int deltaX, int deltaY)
+    {
+        if (manualImageWidth > manualImageHeight)
+        {
+            manualCropX = ClampCropCoordinate(manualCropX + deltaX, manualImageWidth - manualCropSize);
+        }
+        else if (manualImageHeight > manualImageWidth)
+        {
+            manualCropY = ClampCropCoordinate(manualCropY + deltaY, manualImageHeight - manualCropSize);
+        }
+
+        UpdateManualPreviewLayout();
+    }
+
+    private void MoveManualCropToStart()
+    {
+        if (manualImageWidth > manualImageHeight)
+        {
+            manualCropX = 0;
+        }
+        else if (manualImageHeight > manualImageWidth)
+        {
+            manualCropY = 0;
+        }
+
+        UpdateManualPreviewLayout();
+    }
+
+    private void MoveManualCropToEnd()
+    {
+        if (manualImageWidth > manualImageHeight)
+        {
+            manualCropX = manualImageWidth - manualCropSize;
+        }
+        else if (manualImageHeight > manualImageWidth)
+        {
+            manualCropY = manualImageHeight - manualCropSize;
+        }
+
+        UpdateManualPreviewLayout();
+    }
+
+    private static int ClampCropCoordinate(int value, int maxValue)
+    {
+        return Math.Clamp(value, 0, Math.Max(0, maxValue));
     }
 }
