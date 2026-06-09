@@ -11,6 +11,7 @@
     <Product>SquareResizer</Product>
     <Version>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/version.txt').Trim())</Version>
     <InformationalVersion>$(Version)</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
@@ -20,8 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="settings.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="version.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="README.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Remove="settings.default.txt" />
+    <EmbeddedResource Include="settings.default.txt" LogicalName="SquareResizer.SettingsDefault" />
+    <Content Include="settings.default.txt" Link="settings.txt" TargetPath="settings.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

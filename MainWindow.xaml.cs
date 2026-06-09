@@ -479,7 +479,8 @@ public partial class MainWindow : Window
             currentSettings.Quality,
             currentSettings.ResizeMode,
             currentSettings.SmartMode,
-            currentSettings.SharpMode);
+            currentSettings.SharpMode,
+            currentSettings.JpegMode);
 
         foreach (ProcessResult result in results.Where(r => !r.Success && !r.AlreadyCorrectSize))
         {
@@ -607,6 +608,7 @@ public partial class MainWindow : Window
             currentSettings.Quality,
             currentSettings.ResizeMode,
             currentSettings.SharpMode,
+            currentSettings.JpegMode,
             manualCropX,
             manualCropY,
             manualCropSize);

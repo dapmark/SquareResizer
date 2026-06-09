@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Text;
 
 namespace ImageSquareResizer;
 
@@ -11,8 +14,21 @@ internal sealed class AppSettings
     public const bool DefaultSmartMode = true;
     public const bool DefaultManualMode = false;
     public const string DefaultSharpMode = "standard";
+    public const int DefaultJpegMode = 1;
 
     private const string SettingsFileName = "settings.txt";
+    private const string EmbeddedDefaultSettingsResourceName = "SquareResizer.SettingsDefault";
+
+    private static readonly string[] SettingKeyOrder =
+    {
+        "quality",
+        "resize_mode",
+        "sharp_mode",
+        "jpeg_mode",
+        "smart_mode",
+        "manual_mode",
+        "theme"
+    };
 
     public int Quality { get; set; } = DefaultQuality;
     public string Theme { get; set; } = DefaultTheme;
@@ -20,6 +36,7 @@ internal sealed class AppSettings
     public bool SmartMode { get; set; } = DefaultSmartMode;
     public bool ManualMode { get; set; } = DefaultManualMode;
     public string SharpMode { get; set; } = DefaultSharpMode;
+    public int JpegMode { get; set; } = DefaultJpegMode;
 
     public bool IsDarkTheme =>
         string.Equals(Theme, "dark", StringComparison.OrdinalIgnoreCase);
@@ -27,17 +44,14 @@ internal sealed class AppSettings
     public static string SettingsFilePath =>
         Path.Combine(AppContext.BaseDirectory, SettingsFileName);
 
+
     public static AppSettings Load()
     {
         var settings = new AppSettings();
 
         try
         {
-            if (!File.Exists(SettingsFilePath))
-            {
-                settings.Save();
-                return settings;
-            }
+            EnsureSettingsFileExists();
 
             string[] lines = File.ReadAllLines(SettingsFilePath);
 
@@ -97,6 +111,15 @@ internal sealed class AppSettings
                 if (key.Equals("sharp_mode", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.SharpMode = NormalizeSharpMode(value);
+                    continue;
+                }
+
+                if (key.Equals("jpeg_mode", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(value, out int jpegMode))
+                    {
+                        settings.JpegMode = NormalizeJpegMode(jpegMode);
+                    }
                 }
             }
 
@@ -111,6 +134,7 @@ internal sealed class AppSettings
             settings.SmartMode = DefaultSmartMode;
             settings.ManualMode = DefaultManualMode;
             settings.SharpMode = DefaultSharpMode;
+            settings.JpegMode = DefaultJpegMode;
             return settings;
         }
     }
@@ -121,50 +145,128 @@ internal sealed class AppSettings
         Theme = NormalizeTheme(Theme);
         ResizeMode = NormalizeResizeMode(ResizeMode);
         SharpMode = NormalizeSharpMode(SharpMode);
+        JpegMode = NormalizeJpegMode(JpegMode);
 
-        string content =
+        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["quality"] = Quality.ToString(),
+            ["resize_mode"] = ResizeMode,
+            ["sharp_mode"] = SharpMode,
+            ["jpeg_mode"] = JpegMode.ToString(),
+            ["smart_mode"] = SmartMode.ToString().ToLowerInvariant(),
+            ["manual_mode"] = ManualMode.ToString().ToLowerInvariant(),
+            ["theme"] = Theme
+        };
+
+        string[] sourceLines = LoadSettingsTemplateLines();
+        var resultLines = new List<string>();
+        var writtenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string rawLine in sourceLines)
+        {
+            string line = rawLine.Trim();
+
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+            {
+                resultLines.Add(rawLine);
+                continue;
+            }
+
+            int separatorIndex = rawLine.IndexOf('=');
+
+            if (separatorIndex <= 0)
+            {
+                resultLines.Add(rawLine);
+                continue;
+            }
+
+            string key = rawLine[..separatorIndex].Trim();
+
+            if (values.TryGetValue(key, out string? value))
+            {
+                resultLines.Add(key + "=" + value);
+                writtenKeys.Add(key);
+                continue;
+            }
+
+            resultLines.Add(rawLine);
+        }
+
+        bool appendedAnyMissingKey = false;
+
+        foreach (string key in SettingKeyOrder)
+        {
+            if (writtenKeys.Contains(key))
+            {
+                continue;
+            }
+
+            if (!appendedAnyMissingKey)
+            {
+                if (resultLines.Count > 0 && !string.IsNullOrWhiteSpace(resultLines[^1]))
+                {
+                    resultLines.Add(string.Empty);
+                }
+
+                appendedAnyMissingKey = true;
+            }
+
+            resultLines.Add(key + "=" + values[key]);
+        }
+
+        File.WriteAllLines(SettingsFilePath, resultLines);
+    }
+
+    private static void EnsureSettingsFileExists()
+    {
+        if (File.Exists(SettingsFilePath))
+        {
+            return;
+        }
+
+        string defaultSettingsContent = LoadEmbeddedDefaultSettingsContent() ?? BuildFallbackSettingsContent();
+        File.WriteAllText(SettingsFilePath, defaultSettingsContent, Encoding.UTF8);
+    }
+
+    private static string[] LoadSettingsTemplateLines()
+    {
+        if (File.Exists(SettingsFilePath))
+        {
+            return File.ReadAllLines(SettingsFilePath);
+        }
+
+        string templateContent = LoadEmbeddedDefaultSettingsContent() ?? BuildFallbackSettingsContent();
+
+        return templateContent
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n');
+    }
+
+    private static string? LoadEmbeddedDefaultSettingsContent()
+    {
+        using Stream? stream = typeof(AppSettings).Assembly.GetManifestResourceStream(EmbeddedDefaultSettingsResourceName);
+
+        if (stream is null)
+        {
+            return null;
+        }
+
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return reader.ReadToEnd();
+    }
+
+    private static string BuildFallbackSettingsContent()
+    {
+        return
             "# SquareResizer settings" + Environment.NewLine +
-            "#" + Environment.NewLine +
-            "# quality:" + Environment.NewLine +
-            "#   число от 1 до 100" + Environment.NewLine +
-            "#   применяется для JPG" + Environment.NewLine +
-            "#" + Environment.NewLine +
-            "# resize_mode:" + Environment.NewLine +
-            "#   auto        = ближайший квадрат" + Environment.NewLine +
-            "#   music_cover = стандартные размеры музыкальных обложек" + Environment.NewLine +
-            "#" + Environment.NewLine +
-            "# sharp_mode:" + Environment.NewLine +
-            "#   standard  = стандартная резкость" + Environment.NewLine +
-            "#   increased = повышенная резкость" + Environment.NewLine +
-            "#   high      = высокая резкость" + Environment.NewLine +
-            "#   maximum   = максимальная резкость" + Environment.NewLine +
-            "#" + Environment.NewLine +
-            "# smart_mode:" + Environment.NewLine +
-            "#   true  = если возможно, дополнить фон; иначе сжать/растянуть до квадрата" + Environment.NewLine +
-            "#   false = обычное сжатие/растяжение изображения до квадрата" + Environment.NewLine +
-            "#" + Environment.NewLine +
-            "# manual_mode:" + Environment.NewLine +
-            "#   true  = ручное кадрирование перед сохранением" + Environment.NewLine +
-            "#   false = обычная автоматическая обработка" + Environment.NewLine +
-            "#" + Environment.NewLine +
-            "# theme:" + Environment.NewLine +
-            "#   light = светлая тема" + Environment.NewLine +
-            "#   dark  = тёмная тема" + Environment.NewLine +
-            "#" + Environment.NewLine +
-            "# Если значение resize_mode некорректное или отсутствует, используется auto." + Environment.NewLine +
-            "# Если значение sharp_mode некорректное или отсутствует, используется standard." + Environment.NewLine +
-            "# Если значение smart_mode некорректное или отсутствует, используется true." + Environment.NewLine +
-            "# Если значение manual_mode некорректное или отсутствует, используется false." + Environment.NewLine +
-            "# Если значение theme некорректное или отсутствует, используется light." + Environment.NewLine +
             Environment.NewLine +
-            "quality=" + Quality + Environment.NewLine +
-            "resize_mode=" + ResizeMode + Environment.NewLine +
-            "sharp_mode=" + SharpMode + Environment.NewLine +
-            "smart_mode=" + SmartMode.ToString().ToLowerInvariant() + Environment.NewLine +
-            "manual_mode=" + ManualMode.ToString().ToLowerInvariant() + Environment.NewLine +
-            "theme=" + Theme + Environment.NewLine;
-
-        File.WriteAllText(SettingsFilePath, content);
+            "quality=" + DefaultQuality + Environment.NewLine +
+            "resize_mode=" + DefaultResizeMode + Environment.NewLine +
+            "sharp_mode=" + DefaultSharpMode + Environment.NewLine +
+            "jpeg_mode=" + DefaultJpegMode + Environment.NewLine +
+            "smart_mode=" + DefaultSmartMode.ToString().ToLowerInvariant() + Environment.NewLine +
+            "manual_mode=" + DefaultManualMode.ToString().ToLowerInvariant() + Environment.NewLine +
+            "theme=" + DefaultTheme + Environment.NewLine;
     }
 
     public static int NormalizeQuality(int quality)
@@ -180,6 +282,21 @@ internal sealed class AppSettings
         }
 
         return quality;
+    }
+
+    public static int NormalizeJpegMode(int jpegMode)
+    {
+        if (jpegMode < 1)
+        {
+            return 1;
+        }
+
+        if (jpegMode > 3)
+        {
+            return 3;
+        }
+
+        return jpegMode;
     }
 
     public static string NormalizeTheme(string? theme)

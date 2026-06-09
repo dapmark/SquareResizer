@@ -44,7 +44,8 @@ internal static class ImageProcessor
             quality,
             resizeMode,
             AppSettings.DefaultSmartMode,
-            AppSettings.DefaultSharpMode);
+            AppSettings.DefaultSharpMode,
+            AppSettings.DefaultJpegMode);
     }
 
     public static List<ProcessResult> ProcessFiles(
@@ -58,7 +59,8 @@ internal static class ImageProcessor
             quality,
             resizeMode,
             smartMode,
-            AppSettings.DefaultSharpMode);
+            AppSettings.DefaultSharpMode,
+            AppSettings.DefaultJpegMode);
     }
 
     public static List<ProcessResult> ProcessFiles(
@@ -68,11 +70,28 @@ internal static class ImageProcessor
         bool smartMode,
         string sharpMode)
     {
+        return ProcessFiles(
+            paths,
+            quality,
+            resizeMode,
+            smartMode,
+            sharpMode,
+            AppSettings.DefaultJpegMode);
+    }
+
+    public static List<ProcessResult> ProcessFiles(
+        IEnumerable<string> paths,
+        int quality,
+        string resizeMode,
+        bool smartMode,
+        string sharpMode,
+        int jpegMode)
+    {
         var results = new List<ProcessResult>();
 
         foreach (string path in paths)
         {
-            results.Add(ProcessFile(path, quality, resizeMode, smartMode, sharpMode));
+            results.Add(ProcessFile(path, quality, resizeMode, smartMode, sharpMode, jpegMode));
         }
 
         return results;
@@ -85,7 +104,8 @@ internal static class ImageProcessor
             quality,
             resizeMode,
             AppSettings.DefaultSmartMode,
-            AppSettings.DefaultSharpMode);
+            AppSettings.DefaultSharpMode,
+            AppSettings.DefaultJpegMode);
     }
 
     public static ProcessResult ProcessFile(
@@ -99,7 +119,8 @@ internal static class ImageProcessor
             quality,
             resizeMode,
             smartMode,
-            AppSettings.DefaultSharpMode);
+            AppSettings.DefaultSharpMode,
+            AppSettings.DefaultJpegMode);
     }
 
     public static ProcessResult ProcessFile(
@@ -108,6 +129,23 @@ internal static class ImageProcessor
         string resizeMode,
         bool smartMode,
         string sharpMode)
+    {
+        return ProcessFile(
+            sourcePath,
+            quality,
+            resizeMode,
+            smartMode,
+            sharpMode,
+            AppSettings.DefaultJpegMode);
+    }
+
+    public static ProcessResult ProcessFile(
+        string sourcePath,
+        int quality,
+        string resizeMode,
+        bool smartMode,
+        string sharpMode,
+        int jpegMode)
     {
         try
         {
@@ -131,6 +169,7 @@ internal static class ImageProcessor
             quality = AppSettings.NormalizeQuality(quality);
             resizeMode = AppSettings.NormalizeResizeMode(resizeMode);
             sharpMode = AppSettings.NormalizeSharpMode(sharpMode);
+            jpegMode = AppSettings.NormalizeJpegMode(jpegMode);
 
             using var image = new MagickImage(sourcePath);
 
@@ -183,7 +222,7 @@ internal static class ImageProcessor
                 };
             }
 
-            ApplyJpegOutputSettings(image, quality);
+            ApplyJpegOutputSettings(image, quality, jpegMode);
 
             string outputPath = CreateUniqueOutputPath(sourcePath, targetSize);
             image.Write(outputPath);
@@ -215,6 +254,7 @@ internal static class ImageProcessor
             quality,
             resizeMode,
             AppSettings.DefaultSharpMode,
+            AppSettings.DefaultJpegMode,
             cropX,
             cropY,
             cropSize);
@@ -225,6 +265,27 @@ internal static class ImageProcessor
         int quality,
         string resizeMode,
         string sharpMode,
+        int cropX,
+        int cropY,
+        int cropSize)
+    {
+        return ProcessManualCropFile(
+            sourcePath,
+            quality,
+            resizeMode,
+            sharpMode,
+            AppSettings.DefaultJpegMode,
+            cropX,
+            cropY,
+            cropSize);
+    }
+
+    public static ProcessResult ProcessManualCropFile(
+        string sourcePath,
+        int quality,
+        string resizeMode,
+        string sharpMode,
+        int jpegMode,
         int cropX,
         int cropY,
         int cropSize)
@@ -251,6 +312,7 @@ internal static class ImageProcessor
             quality = AppSettings.NormalizeQuality(quality);
             resizeMode = AppSettings.NormalizeResizeMode(resizeMode);
             sharpMode = AppSettings.NormalizeSharpMode(sharpMode);
+            jpegMode = AppSettings.NormalizeJpegMode(jpegMode);
 
             using var image = new MagickImage(sourcePath);
 
@@ -300,7 +362,7 @@ internal static class ImageProcessor
                 };
             }
 
-            ApplyJpegOutputSettings(image, quality);
+            ApplyJpegOutputSettings(image, quality, jpegMode);
 
             string outputPath = CreateUniqueOutputPath(sourcePath, targetSize);
             image.Write(outputPath);
@@ -560,12 +622,25 @@ internal static class ImageProcessor
         return bestSize;
     }
 
-    private static void ApplyJpegOutputSettings(MagickImage image, int quality)
+    private static void ApplyJpegOutputSettings(MagickImage image, int quality, int jpegMode)
     {
         image.BackgroundColor = MagickColors.White;
         image.Alpha(AlphaOption.Remove);
         image.Format = MagickFormat.Jpeg;
         image.Quality = (uint)quality;
+
+        string samplingFactor = GetJpegSamplingFactor(jpegMode);
+        image.Settings.SetDefine(MagickFormat.Jpeg, "sampling-factor", samplingFactor);
+    }
+
+    private static string GetJpegSamplingFactor(int jpegMode)
+    {
+        return AppSettings.NormalizeJpegMode(jpegMode) switch
+        {
+            2 => "4:2:2",
+            3 => "4:4:4",
+            _ => "4:2:0"
+        };
     }
 
     private static bool IsJpegExtension(string extension)

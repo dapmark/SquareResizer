@@ -356,26 +356,26 @@
                    FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
         <ComboBox x:Name="ResizeModeComboBox"
-                  Canvas.Left="72"
+                  Canvas.Left="71"
                   Canvas.Top="14"
                   Width="82"
                   Height="26"
                   Style="{StaticResource RoundedComboBoxStyle}"
-                  SelectionChanged="OnResizeModeSelectionChanged">
+                  SelectionChanged="OnResizeModeSelectionChanged" HorizontalAlignment="Left" VerticalAlignment="Center">
             <ComboBoxItem Content="Авто" Tag="auto" />
             <ComboBoxItem Content="Обложка" Tag="music_cover" />
         </ComboBox>
 
         <TextBlock x:Name="QualityLabel"
-                   Canvas.Left="23"
+                   Canvas.Left="22"
                    Canvas.Top="50"
                    Text="Качество"
                    Foreground="{DynamicResource SecondaryTextBrush}"
                    FontFamily="Segoe UI"
-                   FontSize="12"/>
+                   FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
         <TextBox x:Name="QualityTextBox"
-                 Canvas.Left="80"
+                 Canvas.Left="79"
                  Canvas.Top="46"
                  Width="45"
                  Height="26"
@@ -408,7 +408,7 @@
         </ComboBox>
 
         <CheckBox x:Name="SmartModeCheckBox"
-                  Canvas.Left="131"
+                  Canvas.Left="130"
                   Canvas.Top="48"
                   Width="100"
                   Height="22"
@@ -416,7 +416,7 @@
                   Style="{StaticResource ModeCheckBoxStyle}"
                   ToolTip="Программа попробует дорисовать недостающую сторону цветом фона, в противном случае используется обычное сжатие/растяжение до квадрата"
                   Checked="OnSmartModeChanged"
-                  Unchecked="OnSmartModeChanged"/>
+                  Unchecked="OnSmartModeChanged" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
         <CheckBox x:Name="ManualModeCheckBox"
                   Canvas.Left="235"

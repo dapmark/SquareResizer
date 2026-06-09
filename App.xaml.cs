@@ -21,7 +21,8 @@ public partial class App : Application
                     settings.Quality,
                     settings.ResizeMode,
                     settings.SmartMode,
-                    settings.SharpMode);
+                    settings.SharpMode,
+                    settings.JpegMode);
 
                 Shutdown();
                 return;

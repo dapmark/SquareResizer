@@ -1,0 +1,17 @@
+# SquareResizer settings
+#
+# quality:   число от 1 до 100 = применяется к JPG-файлу на выходе
+# resize_mode:  auto = ближайший квадрат, music_cover = стандартные размеры музыкальных обложек
+# sharp_mode: standard  = стандартная резкость, increased = повышенная, high = высокая, maximum = максимальная
+# jpeg_mode: 1 = компактный JPG, минимальный размер файла, 2 = сбалансированный JPG, 3 = максимальный JPG, самый большой файл
+# smart_mode: true  = если возможно, дополнить фон; иначе сжать/растянуть до квадрата, false = обычное сжатие/растяжение изображения до квадрата
+# manual_mode: true  = ручное кадрирование перед сохранением, false = обычная автоматическая обработка
+# theme: light = светлая тема, dark  = тёмная тема
+#
+quality=95
+resize_mode=music_cover
+sharp_mode=standard
+jpeg_mode=1
+smart_mode=true
+manual_mode=false
+theme=dark
