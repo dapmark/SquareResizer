@@ -85,13 +85,14 @@ internal static class ImageProcessor
         string resizeMode,
         bool smartMode,
         string sharpMode,
-        int jpegMode)
+        int jpegMode,
+        string language = AppSettings.DefaultLanguage)
     {
         var results = new List<ProcessResult>();
 
         foreach (string path in paths)
         {
-            results.Add(ProcessFile(path, quality, resizeMode, smartMode, sharpMode, jpegMode));
+            results.Add(ProcessFile(path, quality, resizeMode, smartMode, sharpMode, jpegMode, language));
         }
 
         return results;
@@ -145,25 +146,28 @@ internal static class ImageProcessor
         string resizeMode,
         bool smartMode,
         string sharpMode,
-        int jpegMode)
+        int jpegMode,
+        string language = AppSettings.DefaultLanguage)
     {
+        Localization text = Localization.For(language);
+
         try
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
             {
-                return Fail(sourcePath, "Пустой путь к файлу.");
+                return Fail(sourcePath, text.EmptyPath);
             }
 
             if (!File.Exists(sourcePath))
             {
-                return Fail(sourcePath, "Файл не найден.");
+                return Fail(sourcePath, text.FileNotFound);
             }
 
             string extension = Path.GetExtension(sourcePath);
 
             if (!SupportedExtensions.Contains(extension))
             {
-                return Fail(sourcePath, $"Неподдерживаемый формат: {extension}");
+                return Fail(sourcePath, text.UnsupportedFormat(extension));
             }
 
             quality = AppSettings.NormalizeQuality(quality);
@@ -288,25 +292,28 @@ internal static class ImageProcessor
         int jpegMode,
         int cropX,
         int cropY,
-        int cropSize)
+        int cropSize,
+        string language = AppSettings.DefaultLanguage)
     {
+        Localization text = Localization.For(language);
+
         try
         {
             if (string.IsNullOrWhiteSpace(sourcePath))
             {
-                return Fail(sourcePath, "Пустой путь к файлу.");
+                return Fail(sourcePath, text.EmptyPath);
             }
 
             if (!File.Exists(sourcePath))
             {
-                return Fail(sourcePath, "Файл не найден.");
+                return Fail(sourcePath, text.FileNotFound);
             }
 
             string extension = Path.GetExtension(sourcePath);
 
             if (!SupportedExtensions.Contains(extension))
             {
-                return Fail(sourcePath, $"Неподдерживаемый формат: {extension}");
+                return Fail(sourcePath, text.UnsupportedFormat(extension));
             }
 
             quality = AppSettings.NormalizeQuality(quality);
@@ -325,7 +332,7 @@ internal static class ImageProcessor
 
             if (maxCropSize <= 0)
             {
-                return Fail(sourcePath, "Некорректный размер изображения.");
+                return Fail(sourcePath, text.InvalidImageSize);
             }
 
             cropSize = Math.Clamp(cropSize, 1, maxCropSize);

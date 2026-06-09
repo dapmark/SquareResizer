@@ -1,12 +1,13 @@
 # SquareResizer settings
 #
-# quality:   число от 1 до 100 = применяется к JPG-файлу на выходе
-# resize_mode:  auto = ближайший квадрат, music_cover = стандартные размеры музыкальных обложек
-# sharp_mode: standard  = стандартная резкость, increased = повышенная, high = высокая, maximum = максимальная
-# jpeg_mode: 1 = компактный JPG, минимальный размер файла, 2 = сбалансированный JPG, 3 = максимальный JPG, самый большой файл
-# smart_mode: true  = если возможно, дополнить фон; иначе сжать/растянуть до квадрата, false = обычное сжатие/растяжение изображения до квадрата
-# manual_mode: true  = ручное кадрирование перед сохранением, false = обычная автоматическая обработка
-# theme: light = светлая тема, dark  = тёмная тема
+# quality: JPG output quality, from 1 to 100
+# resize_mode: auto = keep automatic square size, music_cover = use standard music cover sizes
+# sharp_mode: standard = no extra sharpening, increased = increased sharpness, high = high sharpness, maximum = maximum sharpness
+# jpeg_mode: 1 = compact JPG / smallest file, 2 = balanced JPG, 3 = maximum JPG / largest file
+# smart_mode: true = try to extend the missing side with a background color, false = regular square resize/stretch
+# manual_mode: true = manual crop before saving, false = regular automatic processing
+# theme: light = light theme, dark = dark theme
+# language: en = English interface, ru = Russian interface
 #
 quality=95
 resize_mode=music_cover
@@ -15,3 +16,4 @@ jpeg_mode=1
 smart_mode=true
 manual_mode=false
 theme=dark
+language=en

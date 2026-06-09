@@ -22,7 +22,8 @@ public partial class App : Application
                     settings.ResizeMode,
                     settings.SmartMode,
                     settings.SharpMode,
-                    settings.JpegMode);
+                    settings.JpegMode,
+                    settings.Language);
 
                 Shutdown();
                 return;
@@ -45,12 +46,12 @@ public partial class App : Application
             }
             catch
             {
-                // Если даже лог записать нельзя, просто покажем ошибку ниже.
+                // If the log cannot be written, show the error below.
             }
 
             MessageBox.Show(
                 errorText,
-                "Ошибка запуска " + AppVersion.ProductName,
+                Localization.For(AppSettings.DefaultLanguage).StartupErrorTitle(AppVersion.ProductName),
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 

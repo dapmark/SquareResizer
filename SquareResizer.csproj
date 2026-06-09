@@ -21,7 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="README.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="README-EN.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="README-RU.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="InstallContextMenu.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="CreateSendToShortcut.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Remove="settings.default.txt" />
     <EmbeddedResource Include="settings.default.txt" LogicalName="SquareResizer.SettingsDefault" />
     <Content Include="settings.default.txt" Link="settings.txt" TargetPath="settings.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

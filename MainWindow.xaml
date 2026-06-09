@@ -30,7 +30,7 @@
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="MaxWidth" Value="320" />
+            <Setter Property="MaxWidth" Value="440" />
             <Setter Property="HasDropShadow" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -350,7 +350,7 @@
         <TextBlock x:Name="ResizeModeLabel"
                    Canvas.Left="22"
                    Canvas.Top="18"
-                   Text="Размер"
+                   Text="Size"
                    Foreground="{DynamicResource SecondaryTextBrush}"
                    FontFamily="Segoe UI"
                    FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
@@ -362,14 +362,14 @@
                   Height="26"
                   Style="{StaticResource RoundedComboBoxStyle}"
                   SelectionChanged="OnResizeModeSelectionChanged" HorizontalAlignment="Left" VerticalAlignment="Center">
-            <ComboBoxItem Content="Авто" Tag="auto" />
-            <ComboBoxItem Content="Обложка" Tag="music_cover" />
+            <ComboBoxItem Content="Auto" Tag="auto" />
+            <ComboBoxItem Content="Cover" Tag="music_cover" />
         </ComboBox>
 
         <TextBlock x:Name="QualityLabel"
                    Canvas.Left="22"
                    Canvas.Top="50"
-                   Text="Качество"
+                   Text="Quality"
                    Foreground="{DynamicResource SecondaryTextBrush}"
                    FontFamily="Segoe UI"
                    FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
@@ -388,7 +388,7 @@
         <TextBlock x:Name="SharpModeLabel"
                    Canvas.Left="163"
                    Canvas.Top="18"
-                   Text="Резкость"
+                   Text="Sharp"
                    Foreground="{DynamicResource SecondaryTextBrush}"
                    FontFamily="Segoe UI"
                    FontSize="12"/>
@@ -399,12 +399,11 @@
                   Width="116"
                   Height="26"
                   Style="{StaticResource RoundedComboBoxStyle}"
-                  ToolTip="Добавит дополнительную резкость после изменения размера"
                   SelectionChanged="OnSharpModeSelectionChanged">
-            <ComboBoxItem Content="Стандартная" Tag="standard" />
-            <ComboBoxItem Content="Повышенная" Tag="increased" />
-            <ComboBoxItem Content="Высокая" Tag="high" />
-            <ComboBoxItem Content="Максимальная" Tag="maximum" />
+            <ComboBoxItem Content="Standard" Tag="standard" />
+            <ComboBoxItem Content="Increased" Tag="increased" />
+            <ComboBoxItem Content="High" Tag="high" />
+            <ComboBoxItem Content="Maximum" Tag="maximum" />
         </ComboBox>
 
         <CheckBox x:Name="SmartModeCheckBox"
@@ -412,9 +411,8 @@
                   Canvas.Top="48"
                   Width="100"
                   Height="22"
-                  Content="Умный режим"
+                  Content="Smart mode"
                   Style="{StaticResource ModeCheckBoxStyle}"
-                  ToolTip="Программа попробует дорисовать недостающую сторону цветом фона, в противном случае используется обычное сжатие/растяжение до квадрата"
                   Checked="OnSmartModeChanged"
                   Unchecked="OnSmartModeChanged" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
@@ -423,9 +421,8 @@
                   Canvas.Top="48"
                   Width="104"
                   Height="22"
-                  Content="Ручной режим"
+                  Content="Manual mode"
                   Style="{StaticResource ModeCheckBoxStyle}"
-                  ToolTip="Изображение можно будет открыть в предпросмотре, кроп-рамку можно двигать мышью или стрелками"
                   Checked="OnManualModeChanged"
                   Unchecked="OnManualModeChanged" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
@@ -486,9 +483,33 @@
                 Canvas.Top="412"
                 Width="140"
                 Height="40"
-                Content="Открыть файл"
+                Content="Open file"
                 Style="{StaticResource RoundedButtonStyle}"
                 Click="OnOpenButtonClick" />
+
+        <Button x:Name="CenterCropButton"
+                Canvas.Left="262"
+                Canvas.Top="412"
+                Width="40"
+                Height="40"
+                Style="{StaticResource RoundedButtonStyle}"
+                Visibility="Collapsed"
+                Click="OnCenterCropButtonClick">
+            <Viewbox Width="18"
+                     Height="18"
+                     IsHitTestVisible="False">
+                <Canvas Width="20"
+                        Height="20">
+                    <Path Stroke="{DynamicResource MainTextBrush}"
+                          StrokeThickness="1.8"
+                          StrokeStartLineCap="Round"
+                          StrokeEndLineCap="Round"
+                          StrokeLineJoin="Round"
+                          Fill="Transparent"
+                          Data="M 10,2 L 10,18 M 2,10 L 18,10 M 6,6 L 14,6 L 14,14 L 6,14 Z" />
+                </Canvas>
+            </Viewbox>
+        </Button>
 
         <TextBlock x:Name="StatusTextBlock"
                    Canvas.Left="20"

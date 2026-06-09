@@ -8,13 +8,14 @@ namespace ImageSquareResizer;
 
 internal sealed class AppSettings
 {
-    public const int DefaultQuality = 92;
-    public const string DefaultTheme = "light";
-    public const string DefaultResizeMode = "auto";
+    public const int DefaultQuality = 95;
+    public const string DefaultTheme = "dark";
+    public const string DefaultResizeMode = "music_cover";
     public const bool DefaultSmartMode = true;
     public const bool DefaultManualMode = false;
     public const string DefaultSharpMode = "standard";
     public const int DefaultJpegMode = 1;
+    public const string DefaultLanguage = "en";
 
     private const string SettingsFileName = "settings.txt";
     private const string EmbeddedDefaultSettingsResourceName = "SquareResizer.SettingsDefault";
@@ -27,7 +28,8 @@ internal sealed class AppSettings
         "jpeg_mode",
         "smart_mode",
         "manual_mode",
-        "theme"
+        "theme",
+        "language"
     };
 
     public int Quality { get; set; } = DefaultQuality;
@@ -37,6 +39,7 @@ internal sealed class AppSettings
     public bool ManualMode { get; set; } = DefaultManualMode;
     public string SharpMode { get; set; } = DefaultSharpMode;
     public int JpegMode { get; set; } = DefaultJpegMode;
+    public string Language { get; set; } = DefaultLanguage;
 
     public bool IsDarkTheme =>
         string.Equals(Theme, "dark", StringComparison.OrdinalIgnoreCase);
@@ -90,6 +93,12 @@ internal sealed class AppSettings
                     continue;
                 }
 
+                if (key.Equals("language", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.Language = NormalizeLanguage(value);
+                    continue;
+                }
+
                 if (key.Equals("resize_mode", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.ResizeMode = NormalizeResizeMode(value);
@@ -135,6 +144,7 @@ internal sealed class AppSettings
             settings.ManualMode = DefaultManualMode;
             settings.SharpMode = DefaultSharpMode;
             settings.JpegMode = DefaultJpegMode;
+            settings.Language = DefaultLanguage;
             return settings;
         }
     }
@@ -146,6 +156,7 @@ internal sealed class AppSettings
         ResizeMode = NormalizeResizeMode(ResizeMode);
         SharpMode = NormalizeSharpMode(SharpMode);
         JpegMode = NormalizeJpegMode(JpegMode);
+        Language = NormalizeLanguage(Language);
 
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -155,7 +166,8 @@ internal sealed class AppSettings
             ["jpeg_mode"] = JpegMode.ToString(),
             ["smart_mode"] = SmartMode.ToString().ToLowerInvariant(),
             ["manual_mode"] = ManualMode.ToString().ToLowerInvariant(),
-            ["theme"] = Theme
+            ["theme"] = Theme,
+            ["language"] = Language
         };
 
         string[] sourceLines = LoadSettingsTemplateLines();
@@ -266,7 +278,8 @@ internal sealed class AppSettings
             "jpeg_mode=" + DefaultJpegMode + Environment.NewLine +
             "smart_mode=" + DefaultSmartMode.ToString().ToLowerInvariant() + Environment.NewLine +
             "manual_mode=" + DefaultManualMode.ToString().ToLowerInvariant() + Environment.NewLine +
-            "theme=" + DefaultTheme + Environment.NewLine;
+            "theme=" + DefaultTheme + Environment.NewLine +
+            "language=" + DefaultLanguage + Environment.NewLine;
     }
 
     public static int NormalizeQuality(int quality)
@@ -297,6 +310,18 @@ internal sealed class AppSettings
         }
 
         return jpegMode;
+    }
+
+
+    public static string NormalizeLanguage(string? language)
+    {
+        if (string.Equals(language, "ru", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(language, "russian", StringComparison.OrdinalIgnoreCase))
+        {
+            return "ru";
+        }
+
+        return DefaultLanguage;
     }
 
     public static string NormalizeTheme(string? theme)

@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
     private readonly AppSettings currentSettings;
+    private readonly Localization text;
 
     private bool isManualPreviewLoaded;
     private bool isDraggingCrop;
@@ -50,10 +51,12 @@ public partial class MainWindow : Window
     internal MainWindow(AppSettings settings)
     {
         currentSettings = settings;
+        text = Localization.For(settings.Language);
 
         InitializeComponent();
 
         Title = AppVersion.WindowTitle;
+        ApplyLocalizedText();
 
         QualityTextBox.Text = currentSettings.Quality.ToString();
         SmartModeCheckBox.IsChecked = currentSettings.SmartMode;
@@ -149,6 +152,48 @@ public partial class MainWindow : Window
             sizeof(int));
     }
 
+
+    private void ApplyLocalizedText()
+    {
+        ResizeModeLabel.Text = text.ResizeModeLabel;
+        ResizeModeLabel.ToolTip = text.ResizeModeToolTip;
+        ResizeModeComboBox.ToolTip = text.ResizeModeToolTip;
+        SetComboBoxItemContent(ResizeModeComboBox, "auto", text.ResizeAuto);
+        SetComboBoxItemContent(ResizeModeComboBox, "music_cover", text.ResizeMusicCover);
+
+        QualityLabel.Text = text.QualityLabel;
+
+        SharpModeLabel.Text = text.SharpModeLabel;
+        SetComboBoxItemContent(SharpModeComboBox, "standard", text.SharpStandard);
+        SetComboBoxItemContent(SharpModeComboBox, "increased", text.SharpIncreased);
+        SetComboBoxItemContent(SharpModeComboBox, "high", text.SharpHigh);
+        SetComboBoxItemContent(SharpModeComboBox, "maximum", text.SharpMaximum);
+        SharpModeComboBox.ToolTip = text.SharpModeToolTip;
+
+        SmartModeCheckBox.Content = text.SmartMode;
+        SmartModeCheckBox.ToolTip = text.SmartModeToolTip;
+
+        ManualModeCheckBox.Content = text.ManualMode;
+        ManualModeCheckBox.ToolTip = text.ManualModeToolTip;
+
+        OpenButton.Content = isManualPreviewLoaded ? text.SaveButton : text.OpenFileButton;
+        CenterCropButton.ToolTip = text.CenterCropButtonToolTip;
+        CenterCropButton.Visibility = isManualPreviewLoaded ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static void SetComboBoxItemContent(ComboBox comboBox, string tag, string content)
+    {
+        foreach (object item in comboBox.Items)
+        {
+            if (item is ComboBoxItem comboBoxItem &&
+                string.Equals(comboBoxItem.Tag as string, tag, StringComparison.OrdinalIgnoreCase))
+            {
+                comboBoxItem.Content = content;
+                return;
+            }
+        }
+    }
+
     private void OnOpenButtonClick(object sender, RoutedEventArgs e)
     {
         if (isManualPreviewLoaded)
@@ -166,8 +211,8 @@ public partial class MainWindow : Window
 
         var dialog = new OpenFileDialog
         {
-            Title = "Выберите изображение",
-            Filter = "Изображения|*.jpg;*.jpeg;*.png;*.webp;*.bmp;*.tif;*.tiff|Все файлы|*.*",
+            Title = text.OpenDialogTitle,
+            Filter = text.OpenDialogFilter,
             Multiselect = !manualMode
         };
 
@@ -183,6 +228,18 @@ public partial class MainWindow : Window
         }
 
         ProcessSelectedFiles(dialog.FileNames);
+    }
+
+    private void OnCenterCropButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (!isManualPreviewLoaded)
+        {
+            return;
+        }
+
+        CenterManualCrop();
+        PreviewHost.Focus();
+        e.Handled = true;
     }
 
     private void OnDragEnter(object sender, DragEventArgs e)
@@ -224,8 +281,8 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show(
                     this,
-                    "В ручном режиме выберите один файл.",
-                    "Ручной режим",
+                    text.ManualSingleFileMessage,
+                    text.ManualModeTitle,
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
 
@@ -399,8 +456,8 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show(
                     this,
-                    "Введите число качества от 1 до 100.",
-                    "Некорректное значение",
+                    text.InvalidQualityMessage,
+                    text.InvalidValueTitle,
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
 
@@ -472,7 +529,7 @@ public partial class MainWindow : Window
 
     private void ProcessSelectedFiles(string[] files)
     {
-        SetStatusText("Обработка...");
+        SetStatusText(text.ProcessingStatus);
 
         var results = ImageProcessor.ProcessFiles(
             files,
@@ -480,14 +537,15 @@ public partial class MainWindow : Window
             currentSettings.ResizeMode,
             currentSettings.SmartMode,
             currentSettings.SharpMode,
-            currentSettings.JpegMode);
+            currentSettings.JpegMode,
+            currentSettings.Language);
 
         foreach (ProcessResult result in results.Where(r => !r.Success && !r.AlreadyCorrectSize))
         {
             MessageBox.Show(
                 this,
-                result.ErrorMessage ?? "Неизвестная ошибка.",
-                "Ошибка обработки",
+                result.ErrorMessage ?? text.UnknownError,
+                text.ProcessingErrorTitle,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
@@ -502,28 +560,28 @@ public partial class MainWindow : Window
 
             if (output == null)
             {
-                SetStatusText("Готово.");
+                SetStatusText(text.DoneStatus);
                 return;
             }
 
             string fileName = Path.GetFileName(output);
-            SetStatusText($"Готово: {fileName}", fileName);
+            SetStatusText(text.DoneWithFile(fileName), fileName);
             return;
         }
 
         if (created > 1 && failed == 0)
         {
-            SetStatusText($"Готово. Создано файлов: {created}");
+            SetStatusText(text.CreatedFilesStatus(created));
             return;
         }
 
         if (alreadyCorrect > 0 && created == 0 && failed == 0)
         {
-            SetStatusText("Файл уже нужного размера.");
+            SetStatusText(text.FileAlreadyCorrectSize);
             return;
         }
 
-        SetStatusText($"Создано: {created}, уже готово: {alreadyCorrect}, ошибок: {failed}");
+        SetStatusText(text.ProcessingSummary(created, alreadyCorrect, failed));
     }
 
     private void LoadManualPreview(string sourcePath)
@@ -534,8 +592,8 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show(
                     this,
-                    "Файл не найден.",
-                    "Ошибка открытия",
+                    text.FileNotFound,
+                    text.OpenErrorTitle,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
 
@@ -557,9 +615,10 @@ public partial class MainWindow : Window
             CropCanvas.Visibility = Visibility.Visible;
 
             isManualPreviewLoaded = true;
-            OpenButton.Content = "Сохранить";
+            OpenButton.Content = text.SaveButton;
+            CenterCropButton.Visibility = Visibility.Visible;
 
-            SetStatusText("Ручной режим: настройте квадрат и нажмите «Сохранить».");
+            SetStatusText(text.ManualPreviewStatus);
 
             PreviewHost.Focus();
             UpdateManualPreviewLayout();
@@ -569,7 +628,7 @@ public partial class MainWindow : Window
             MessageBox.Show(
                 this,
                 ex.Message,
-                "Ошибка открытия изображения",
+                text.OpenImageErrorTitle,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
@@ -601,7 +660,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        SetStatusText("Сохранение...");
+        SetStatusText(text.SavingStatus);
 
         ProcessResult result = ImageProcessor.ProcessManualCropFile(
             manualSourcePath,
@@ -611,31 +670,32 @@ public partial class MainWindow : Window
             currentSettings.JpegMode,
             manualCropX,
             manualCropY,
-            manualCropSize);
+            manualCropSize,
+            currentSettings.Language);
 
         if (!result.Success)
         {
             MessageBox.Show(
                 this,
-                result.ErrorMessage ?? "Неизвестная ошибка.",
-                "Ошибка сохранения",
+                result.ErrorMessage ?? text.UnknownError,
+                text.SaveErrorTitle,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 
-            SetStatusText("Ошибка сохранения.");
+            SetStatusText(text.SaveErrorStatus);
             return;
         }
 
         if (result.AlreadyCorrectSize || string.IsNullOrWhiteSpace(result.OutputPath))
         {
             ResetManualPreview();
-            SetStatusText("Файл уже нужного размера.");
+            SetStatusText(text.FileAlreadyCorrectSize);
             return;
         }
 
         string fileName = Path.GetFileName(result.OutputPath);
         ResetManualPreview();
-        SetStatusText($"Готово: {fileName}", fileName);
+        SetStatusText(text.DoneWithFile(fileName), fileName);
     }
 
     private void ResetManualPreview()
@@ -655,7 +715,8 @@ public partial class MainWindow : Window
         DropPlusIcon.Visibility = Visibility.Visible;
         CropCanvas.Visibility = Visibility.Collapsed;
 
-        OpenButton.Content = "Открыть файл";
+        OpenButton.Content = text.OpenFileButton;
+        CenterCropButton.Visibility = Visibility.Collapsed;
         PreviewHost.ReleaseMouseCapture();
     }
 
@@ -813,6 +874,19 @@ public partial class MainWindow : Window
         {
             e.Handled = true;
         }
+    }
+
+    private void CenterManualCrop()
+    {
+        if (manualCropSize <= 0)
+        {
+            return;
+        }
+
+        manualCropX = Math.Max(0, (manualImageWidth - manualCropSize) / 2);
+        manualCropY = Math.Max(0, (manualImageHeight - manualCropSize) / 2);
+
+        UpdateManualPreviewLayout();
     }
 
     private void MoveManualCrop(int deltaX, int deltaY)
