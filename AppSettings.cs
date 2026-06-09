@@ -123,11 +123,11 @@ internal sealed class AppSettings
         SharpMode = NormalizeSharpMode(SharpMode);
 
         string content =
-            "# DapLine SquareResizer settings" + Environment.NewLine +
+            "# SquareResizer settings" + Environment.NewLine +
             "#" + Environment.NewLine +
             "# quality:" + Environment.NewLine +
             "#   число от 1 до 100" + Environment.NewLine +
-            "#   применяется для JPG и WEBP" + Environment.NewLine +
+            "#   применяется для JPG" + Environment.NewLine +
             "#" + Environment.NewLine +
             "# resize_mode:" + Environment.NewLine +
             "#   auto        = ближайший квадрат" + Environment.NewLine +

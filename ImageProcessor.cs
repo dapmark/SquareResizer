@@ -30,6 +30,11 @@ internal static class ImageProcessor
         ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"
     };
 
+    private static readonly HashSet<string> JpegExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg"
+    };
+
     private readonly record struct RgbSample(int R, int G, int B);
 
     public static List<ProcessResult> ProcessFiles(IEnumerable<string> paths, int quality, string resizeMode)
@@ -161,10 +166,13 @@ internal static class ImageProcessor
 
             ApplySharpnessIfNeeded(image, resized, sharpMode);
 
-            if ((int)image.Width == originalWidth &&
+            bool dimensionsAlreadyCorrect =
+                (int)image.Width == originalWidth &&
                 (int)image.Height == originalHeight &&
                 originalWidth == targetSize &&
-                originalHeight == targetSize)
+                originalHeight == targetSize;
+
+            if (dimensionsAlreadyCorrect && IsJpegExtension(extension))
             {
                 return new ProcessResult
                 {
@@ -175,7 +183,7 @@ internal static class ImageProcessor
                 };
             }
 
-            ApplyOutputSettings(image, extension, quality);
+            ApplyJpegOutputSettings(image, quality);
 
             string outputPath = CreateUniqueOutputPath(sourcePath, targetSize);
             image.Write(outputPath);
@@ -275,10 +283,13 @@ internal static class ImageProcessor
 
             ApplySharpnessIfNeeded(image, resized, sharpMode);
 
-            if (imageWidth == cropSize &&
+            bool dimensionsAlreadyCorrect =
+                imageWidth == cropSize &&
                 imageHeight == cropSize &&
                 imageWidth == targetSize &&
-                imageHeight == targetSize)
+                imageHeight == targetSize;
+
+            if (dimensionsAlreadyCorrect && IsJpegExtension(extension))
             {
                 return new ProcessResult
                 {
@@ -289,7 +300,7 @@ internal static class ImageProcessor
                 };
             }
 
-            ApplyOutputSettings(image, extension, quality);
+            ApplyJpegOutputSettings(image, quality);
 
             string outputPath = CreateUniqueOutputPath(sourcePath, targetSize);
             image.Write(outputPath);
@@ -549,46 +560,29 @@ internal static class ImageProcessor
         return bestSize;
     }
 
-    private static void ApplyOutputSettings(MagickImage image, string extension, int quality)
+    private static void ApplyJpegOutputSettings(MagickImage image, int quality)
     {
-        switch (extension.ToLowerInvariant())
-        {
-            case ".jpg":
-            case ".jpeg":
-                image.Format = MagickFormat.Jpeg;
-                image.Quality = (uint)quality;
-                break;
+        image.BackgroundColor = MagickColors.White;
+        image.Alpha(AlphaOption.Remove);
+        image.Format = MagickFormat.Jpeg;
+        image.Quality = (uint)quality;
+    }
 
-            case ".webp":
-                image.Format = MagickFormat.WebP;
-                image.Quality = (uint)quality;
-                break;
-
-            case ".png":
-                image.Format = MagickFormat.Png;
-                image.Settings.Compression = CompressionMethod.Zip;
-                break;
-
-            case ".bmp":
-                image.Format = MagickFormat.Bmp;
-                break;
-
-            case ".tif":
-            case ".tiff":
-                image.Format = MagickFormat.Tiff;
-                break;
-        }
+    private static bool IsJpegExtension(string extension)
+    {
+        return JpegExtensions.Contains(extension);
     }
 
     private static string CreateUniqueOutputPath(string sourcePath, int targetSize)
     {
+        const string outputExtension = ".jpg";
+
         string directory = Path.GetDirectoryName(sourcePath) ?? "";
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourcePath);
-        string extension = Path.GetExtension(sourcePath);
 
         string baseOutputPath = Path.Combine(
             directory,
-            $"{fileNameWithoutExtension}_{targetSize}x{targetSize}{extension}");
+            $"{fileNameWithoutExtension}_{targetSize}x{targetSize}{outputExtension}");
 
         if (!File.Exists(baseOutputPath))
         {
@@ -601,7 +595,7 @@ internal static class ImageProcessor
         {
             string numberedOutputPath = Path.Combine(
                 directory,
-                $"{fileNameWithoutExtension}_{targetSize}x{targetSize}_{counter}{extension}");
+                $"{fileNameWithoutExtension}_{targetSize}x{targetSize}_{counter}{outputExtension}");
 
             if (!File.Exists(numberedOutputPath))
             {

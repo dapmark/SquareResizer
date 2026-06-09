@@ -49,7 +49,7 @@ public partial class App : Application
 
             MessageBox.Show(
                 errorText,
-                "Ошибка запуска DapLine SquareResizer",
+                "Ошибка запуска " + AppVersion.ProductName,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 

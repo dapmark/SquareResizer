@@ -1,0 +1,55 @@
+# SquareResizer / .NET / WPF
+
+# Local working folders
+.build/
+.test/
+.source/
+
+# Build outputs
+bin/
+obj/
+publish/
+out/
+artifacts/
+
+# Visual Studio / Rider / VS Code local state
+.vs/
+.idea/
+.vscode/.ropeproject/
+.vscode/.history/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results / coverage
+TestResults/
+coverage/
+coverage.*/
+*.coverage
+*.coveragexml
+*.trx
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Logs / temp
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Runtime local settings generated near exe/source during manual testing
+settings.txt
+
+# Windows / Explorer
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS just in case archives are unpacked there
+.DS_Store

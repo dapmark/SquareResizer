@@ -53,6 +53,8 @@ public partial class MainWindow : Window
 
         InitializeComponent();
 
+        Title = AppVersion.WindowTitle;
+
         QualityTextBox.Text = currentSettings.Quality.ToString();
         SmartModeCheckBox.IsChecked = currentSettings.SmartMode;
         ManualModeCheckBox.IsChecked = currentSettings.ManualMode;
