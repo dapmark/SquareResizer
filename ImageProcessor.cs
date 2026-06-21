@@ -33,6 +33,17 @@ internal static class ImageProcessor
         ".jpg", ".jpeg"
     };
 
+    public static bool IsSupportedInputFile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        string extension = Path.GetExtension(path);
+        return SupportedExtensions.Contains(extension);
+    }
+
     private readonly record struct RgbSample(int R, int G, int B);
 
     public static List<ProcessResult> ProcessFiles(IEnumerable<string> paths, int quality, string resizeMode)
@@ -46,7 +57,8 @@ internal static class ImageProcessor
             AppSettings.DefaultJpegMode,
             AppSettings.DefaultLanguage,
             AppSettings.DefaultSmartPaddingPercent,
-            AppSettings.DefaultSmartPaddingMaxPx);
+            AppSettings.DefaultSmartPaddingMaxPx,
+            AppSettings.DefaultAutoSizeStep);
     }
 
     public static List<ProcessResult> ProcessFiles(
@@ -64,7 +76,8 @@ internal static class ImageProcessor
             AppSettings.DefaultJpegMode,
             AppSettings.DefaultLanguage,
             AppSettings.DefaultSmartPaddingPercent,
-            AppSettings.DefaultSmartPaddingMaxPx);
+            AppSettings.DefaultSmartPaddingMaxPx,
+            AppSettings.DefaultAutoSizeStep);
     }
 
     public static List<ProcessResult> ProcessFiles(
@@ -83,7 +96,8 @@ internal static class ImageProcessor
             AppSettings.DefaultJpegMode,
             AppSettings.DefaultLanguage,
             AppSettings.DefaultSmartPaddingPercent,
-            AppSettings.DefaultSmartPaddingMaxPx);
+            AppSettings.DefaultSmartPaddingMaxPx,
+            AppSettings.DefaultAutoSizeStep);
     }
 
     public static List<ProcessResult> ProcessFiles(
@@ -95,7 +109,8 @@ internal static class ImageProcessor
         int jpegMode,
         string language = AppSettings.DefaultLanguage,
         double smartPaddingPercent = AppSettings.DefaultSmartPaddingPercent,
-        int smartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx)
+        int smartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx,
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
     {
         var results = new List<ProcessResult>();
 
@@ -110,7 +125,8 @@ internal static class ImageProcessor
                 jpegMode,
                 language,
                 smartPaddingPercent,
-                smartPaddingMaxPx));
+                smartPaddingMaxPx,
+                autoSizeStep));
         }
 
         return results;
@@ -127,7 +143,8 @@ internal static class ImageProcessor
             AppSettings.DefaultJpegMode,
             AppSettings.DefaultLanguage,
             AppSettings.DefaultSmartPaddingPercent,
-            AppSettings.DefaultSmartPaddingMaxPx);
+            AppSettings.DefaultSmartPaddingMaxPx,
+            AppSettings.DefaultAutoSizeStep);
     }
 
     public static ProcessResult ProcessFile(
@@ -145,7 +162,8 @@ internal static class ImageProcessor
             AppSettings.DefaultJpegMode,
             AppSettings.DefaultLanguage,
             AppSettings.DefaultSmartPaddingPercent,
-            AppSettings.DefaultSmartPaddingMaxPx);
+            AppSettings.DefaultSmartPaddingMaxPx,
+            AppSettings.DefaultAutoSizeStep);
     }
 
     public static ProcessResult ProcessFile(
@@ -164,7 +182,8 @@ internal static class ImageProcessor
             AppSettings.DefaultJpegMode,
             AppSettings.DefaultLanguage,
             AppSettings.DefaultSmartPaddingPercent,
-            AppSettings.DefaultSmartPaddingMaxPx);
+            AppSettings.DefaultSmartPaddingMaxPx,
+            AppSettings.DefaultAutoSizeStep);
     }
 
     public static ProcessResult ProcessFile(
@@ -176,7 +195,8 @@ internal static class ImageProcessor
         int jpegMode,
         string language = AppSettings.DefaultLanguage,
         double smartPaddingPercent = AppSettings.DefaultSmartPaddingPercent,
-        int smartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx)
+        int smartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx,
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
     {
         Localization text = Localization.For(language);
 
@@ -205,6 +225,7 @@ internal static class ImageProcessor
             jpegMode = AppSettings.NormalizeJpegMode(jpegMode);
             smartPaddingPercent = AppSettings.NormalizeSmartPaddingPercent(smartPaddingPercent);
             smartPaddingMaxPx = AppSettings.NormalizeSmartPaddingMaxPx(smartPaddingMaxPx);
+            autoSizeStep = AppSettings.NormalizeAutoSizeStep(autoSizeStep);
 
             using var image = new MagickImage(sourcePath);
 
@@ -225,7 +246,7 @@ internal static class ImageProcessor
                     smartPaddingMaxPx,
                     out int paddedSquareSize))
             {
-                targetSize = GetTargetSizeFromSquareSize(paddedSquareSize, resizeMode);
+                targetSize = GetTargetSizeFromSquareSize(paddedSquareSize, resizeMode, autoSizeStep);
 
                 if ((int)image.Width != targetSize || (int)image.Height != targetSize)
                 {
@@ -235,7 +256,7 @@ internal static class ImageProcessor
             }
             else
             {
-                targetSize = GetTargetSizeForStretch(originalWidth, originalHeight, resizeMode);
+                targetSize = GetTargetSizeForStretch(originalWidth, originalHeight, resizeMode, autoSizeStep);
 
                 if (originalWidth != targetSize || originalHeight != targetSize)
                 {
@@ -330,7 +351,8 @@ internal static class ImageProcessor
         int cropX,
         int cropY,
         int cropSize,
-        string language = AppSettings.DefaultLanguage)
+        string language = AppSettings.DefaultLanguage,
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
     {
         Localization text = Localization.For(language);
 
@@ -357,6 +379,7 @@ internal static class ImageProcessor
             resizeMode = AppSettings.NormalizeResizeMode(resizeMode);
             sharpMode = AppSettings.NormalizeSharpMode(sharpMode);
             jpegMode = AppSettings.NormalizeJpegMode(jpegMode);
+            autoSizeStep = AppSettings.NormalizeAutoSizeStep(autoSizeStep);
 
             using var image = new MagickImage(sourcePath);
 
@@ -378,7 +401,7 @@ internal static class ImageProcessor
 
             CropToSquare(image, cropX, cropY, cropSize);
 
-            int targetSize = GetTargetSizeFromSquareSize(cropSize, resizeMode);
+            int targetSize = GetTargetSizeFromSquareSize(cropSize, resizeMode, autoSizeStep);
             bool resized = false;
 
             if ((int)image.Width != targetSize || (int)image.Height != targetSize)
@@ -649,31 +672,33 @@ internal static class ImageProcessor
         };
     }
 
-    private static int GetTargetSizeForStretch(int width, int height, string resizeMode)
+    private static int GetTargetSizeForStretch(int width, int height, string resizeMode, int autoSizeStep)
     {
         int minSide = Math.Min(width, height);
-        return GetTargetSizeFromSquareSize(minSide, resizeMode);
+        return GetTargetSizeFromSquareSize(minSide, resizeMode, autoSizeStep);
     }
 
-    private static int GetTargetSizeFromSquareSize(int squareSize, string resizeMode)
+    private static int GetTargetSizeFromSquareSize(int squareSize, string resizeMode, int autoSizeStep)
     {
         if (string.Equals(resizeMode, "music_cover", StringComparison.OrdinalIgnoreCase))
         {
             return GetNearestMusicCoverSize(squareSize);
         }
 
-        return GetNearestAutoSize(squareSize);
+        return GetNearestAutoSize(squareSize, autoSizeStep);
     }
 
-    private static int GetNearestAutoSize(int size)
+    private static int GetNearestAutoSize(int size, int autoSizeStep)
     {
+        autoSizeStep = AppSettings.NormalizeAutoSizeStep(autoSizeStep);
+
         if (size <= 0)
         {
-            return 100;
+            return autoSizeStep;
         }
 
-        int rounded = (int)Math.Round(size / 100.0, MidpointRounding.AwayFromZero) * 100;
-        return Math.Max(100, rounded);
+        int rounded = (int)Math.Round(size / (double)autoSizeStep, MidpointRounding.AwayFromZero) * autoSizeStep;
+        return Math.Max(autoSizeStep, rounded);
     }
 
     private static int GetNearestMusicCoverSize(int size)

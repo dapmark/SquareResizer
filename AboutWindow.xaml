@@ -1,0 +1,173 @@
+<Window x:Class="ImageSquareResizer.AboutWindow"
+        x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About"
+        Width="416"
+        Height="180"
+        MinWidth="416"
+        MaxWidth="416"
+        MinHeight="180"
+        MaxHeight="180"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="Transparent"
+        AllowsTransparency="True"
+        UseLayoutRounding="True"
+        Icon="app.ico">
+    <Window.Resources>
+        <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#202020" />
+        <SolidColorBrush x:Key="MainTextBrush" Color="#D4D4D4" />
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#D4D4D4" />
+        <SolidColorBrush x:Key="WindowBorderBrush" Color="#292929" />
+        <SolidColorBrush x:Key="TitleButtonForegroundBrush" Color="#D4D4D4" />
+        <SolidColorBrush x:Key="SoftButtonHoverBackgroundBrush" Color="#333333" />
+        <SolidColorBrush x:Key="SoftButtonPressedBackgroundBrush" Color="#3E3E42" />
+
+        <Style x:Key="AboutCloseButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource TitleButtonForegroundBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SoftButtonHoverBackgroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SoftButtonPressedBackgroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+                                <Setter Property="Opacity" Value="0.55" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid MouseLeftButtonDown="RootGrid_OnMouseLeftButtonDown">
+        <Grid Margin="12">
+            <Border Background="{DynamicResource WindowBackgroundBrush}"
+                    CornerRadius="12"
+                    IsHitTestVisible="False">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20"
+                                      ShadowDepth="0"
+                                      Color="#FF000000"
+                                      Opacity="0.28" />
+                </Border.Effect>
+            </Border>
+
+            <Border Background="{DynamicResource WindowBackgroundBrush}"
+                    BorderBrush="{DynamicResource WindowBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    SnapsToDevicePixels="True">
+                <Grid>
+                    <Button HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0,10,10,0"
+                            Style="{StaticResource AboutCloseButtonStyle}"
+                            Click="CloseButton_OnClick">
+                        <Viewbox Width="12"
+                                 Height="12"
+                                 Stretch="Uniform">
+                            <Canvas Width="12"
+                                    Height="12">
+                                <Path Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      StrokeThickness="1.5"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      Data="M3,3 L9,9 M9,3 L3,9" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+
+                    <Grid Margin="19,20,20,20"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Image Source="pack://application:,,,/squareresizer-about.png"
+                               Width="116"
+                               Height="116"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Stretch="Uniform"
+                               SnapsToDevicePixels="True"
+                               RenderOptions.BitmapScalingMode="Fant" />
+
+                        <Grid Grid.Column="2"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Center">
+                            <Grid.RenderTransform>
+                                <TranslateTransform Y="-3" />
+                            </Grid.RenderTransform>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="7" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0"
+                                       FontFamily="Segoe UI Variable Display"
+                                       FontSize="26"
+                                       FontWeight="Black"
+                                       Foreground="{DynamicResource MainTextBrush}"
+                                       LineHeight="30"
+                                       LineStackingStrategy="BlockLineHeight"
+                                       Text="SquareResizer">
+                                <TextBlock.LayoutTransform>
+                                    <ScaleTransform ScaleX="0.96" />
+                                </TextBlock.LayoutTransform>
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="2"
+                                       x:Name="VersionTextBlock"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       LineHeight="17"
+                                       LineStackingStrategy="BlockLineHeight"
+                                       Text="Version: ..." />
+
+                            <TextBlock Grid.Row="4"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       LineHeight="17"
+                                       LineStackingStrategy="BlockLineHeight"
+                                       Text="© 2026 DapMark" />
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

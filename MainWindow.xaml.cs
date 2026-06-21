@@ -14,6 +14,8 @@ namespace ImageSquareResizer;
 public partial class MainWindow : Window
 {
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const double DarkBorderMixRatio = 0.03;
+    private const double LightBorderMixRatio = 0.06;
 
     private AppSettings currentSettings;
     private Localization text;
@@ -67,6 +69,17 @@ public partial class MainWindow : Window
         SourceInitialized += OnSourceInitialized;
     }
 
+    private void OnMainSettingsPanelSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.NewSize.Width <= 0)
+        {
+            return;
+        }
+
+        DropArea.Width = e.NewSize.Width;
+        DropArea.Height = e.NewSize.Width;
+    }
+
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
         ApplyTitleBarTheme();
@@ -91,15 +104,19 @@ public partial class MainWindow : Window
 
     private void ApplyLightTheme()
     {
-        Resources["WindowBackgroundBrush"] = BrushFromRgb(243, 243, 243);
-        Resources["DropAreaBackgroundBrush"] = BrushFromRgb(245, 245, 245);
-        Resources["DropAreaBorderBrush"] = BrushFromRgb(130, 130, 130);
+        var windowBackground = Color.FromRgb(243, 243, 243);
+        var dropAreaBackground = Color.FromRgb(245, 245, 245);
+
+        Resources["WindowBackgroundBrush"] = BrushFromColor(windowBackground);
+        Resources["DropAreaBackgroundBrush"] = BrushFromColor(dropAreaBackground);
+        Resources["DropAreaBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.Black, LightBorderMixRatio));
+        Resources["DropAreaDashedBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.Black, 0.16));
         Resources["MainTextBrush"] = BrushFromRgb(70, 70, 70);
         Resources["SecondaryTextBrush"] = BrushFromRgb(50, 50, 50);
         Resources["ButtonBackgroundBrush"] = BrushFromRgb(250, 250, 250);
         Resources["ButtonHoverBackgroundBrush"] = BrushFromRgb(245, 249, 255);
         Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(230, 242, 255);
-        Resources["ButtonBorderBrush"] = BrushFromRgb(170, 170, 170);
+        Resources["ButtonBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.Black, LightBorderMixRatio));
         Resources["AccentBorderBrush"] = BrushFromRgb(0, 120, 215);
         Resources["InputBackgroundBrush"] = BrushFromRgb(255, 255, 255);
         Resources["StatusTextBrush"] = BrushFromRgb(80, 80, 80);
@@ -107,15 +124,19 @@ public partial class MainWindow : Window
 
     private void ApplyDarkTheme()
     {
-        Resources["WindowBackgroundBrush"] = BrushFromRgb(32, 32, 32);
-        Resources["DropAreaBackgroundBrush"] = BrushFromRgb(37, 37, 38);
-        Resources["DropAreaBorderBrush"] = BrushFromRgb(63, 63, 70);
+        var windowBackground = Color.FromRgb(32, 32, 32);
+        var dropAreaBackground = Color.FromRgb(37, 37, 38);
+
+        Resources["WindowBackgroundBrush"] = BrushFromColor(windowBackground);
+        Resources["DropAreaBackgroundBrush"] = BrushFromColor(dropAreaBackground);
+        Resources["DropAreaBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.White, DarkBorderMixRatio));
+        Resources["DropAreaDashedBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.White, 0.18));
         Resources["MainTextBrush"] = BrushFromRgb(212, 212, 212);
         Resources["SecondaryTextBrush"] = BrushFromRgb(212, 212, 212);
         Resources["ButtonBackgroundBrush"] = BrushFromRgb(45, 45, 48);
         Resources["ButtonHoverBackgroundBrush"] = BrushFromRgb(62, 62, 66);
         Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(0, 122, 204);
-        Resources["ButtonBorderBrush"] = BrushFromRgb(63, 63, 70);
+        Resources["ButtonBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.White, DarkBorderMixRatio));
         Resources["AccentBorderBrush"] = BrushFromRgb(0, 122, 204);
         Resources["InputBackgroundBrush"] = BrushFromRgb(32, 32, 32);
         Resources["StatusTextBrush"] = BrushFromRgb(200, 200, 200);
@@ -123,9 +144,29 @@ public partial class MainWindow : Window
 
     private static SolidColorBrush BrushFromRgb(byte red, byte green, byte blue)
     {
-        var brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
+        return BrushFromColor(Color.FromRgb(red, green, blue));
+    }
+
+    private static SolidColorBrush BrushFromColor(Color color)
+    {
+        var brush = new SolidColorBrush(color);
         brush.Freeze();
         return brush;
+    }
+
+    private static Color MixColor(Color baseColor, Color mixColor, double ratio)
+    {
+        ratio = Math.Clamp(ratio, 0.0, 1.0);
+
+        return Color.FromRgb(
+            MixChannel(baseColor.R, mixColor.R, ratio),
+            MixChannel(baseColor.G, mixColor.G, ratio),
+            MixChannel(baseColor.B, mixColor.B, ratio));
+    }
+
+    private static byte MixChannel(byte baseValue, byte mixValue, double ratio)
+    {
+        return (byte)Math.Round(baseValue + (mixValue - baseValue) * ratio);
     }
 
     private void ApplyTitleBarTheme()
@@ -150,10 +191,11 @@ public partial class MainWindow : Window
     private void ApplyLocalizedText()
     {
         ResizeModeLabel.Text = text.ResizeModeLabel;
-        ResizeModeLabel.ToolTip = text.ResizeModeToolTip;
-        ResizeModeComboBox.ToolTip = text.ResizeModeToolTip;
-        SetComboBoxItemContent(ResizeModeComboBox, "auto", text.ResizeAuto);
-        SetComboBoxItemContent(ResizeModeComboBox, "music_cover", text.ResizeMusicCover);
+        ResizeModeLabel.ToolTip = null;
+        ResizeAutoButton.Content = text.ResizeAuto;
+        ResizeAutoButton.ToolTip = text.ResizeAutoToolTip;
+        ResizeCoverButton.Content = text.ResizeMusicCover;
+        ResizeCoverButton.ToolTip = text.ResizeMusicCoverToolTip;
 
         QualityLabel.Text = text.QualityLabel;
 
@@ -162,7 +204,6 @@ public partial class MainWindow : Window
         SetComboBoxItemContent(SharpModeComboBox, "increased", text.SharpIncreased);
         SetComboBoxItemContent(SharpModeComboBox, "high", text.SharpHigh);
         SetComboBoxItemContent(SharpModeComboBox, "maximum", text.SharpMaximum);
-        SharpModeComboBox.ToolTip = text.SharpModeToolTip;
 
         SmartModeCheckBox.Content = text.SmartMode;
         SmartModeCheckBox.ToolTip = text.SmartModeToolTip;
@@ -170,10 +211,15 @@ public partial class MainWindow : Window
         ManualModeCheckBox.Content = text.ManualMode;
         ManualModeCheckBox.ToolTip = text.ManualModeToolTip;
 
-        OpenButton.Content = isManualPreviewLoaded ? text.SaveButton : text.OpenFileButton;
+        SelectFileButton.Content = text.SelectFileButton;
+        DropOrTextBlock.Text = text.DropOrText;
+        DropHereTextBlock.Text = text.DropHereText;
         CenterCropButton.ToolTip = text.CenterCropButtonToolTip;
-        CenterCropButton.Visibility = isManualPreviewLoaded ? Visibility.Visible : Visibility.Collapsed;
-        SettingsButton.ToolTip = text.SettingsButtonToolTip;
+        SaveManualButton.ToolTip = text.SaveButton;
+        SettingsButtonText.Text = text.AdvancedSettingsButtonText;
+        SettingsButton.ToolTip = null;
+        CloseFileMenuItem.Header = text.CloseFileMenuItem;
+        UpdateDropAreaState();
     }
 
     private void ApplySettingsToUi()
@@ -290,15 +336,53 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OnSaveManualButtonClick(object sender, RoutedEventArgs e)
+    {
+        SaveManualPreview();
+        e.Handled = true;
+    }
+
+    private void OnCloseFileMenuItemClick(object sender, RoutedEventArgs e)
+    {
+        CloseManualPreview();
+        e.Handled = true;
+    }
+
+    private void OnPreviewHostContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (!isManualPreviewLoaded)
+        {
+            e.Handled = true;
+        }
+    }
+
     private void OnDragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        UpdateDragState(e);
+    }
+
+    private void OnDragOver(object sender, DragEventArgs e)
+    {
+        UpdateDragState(e);
+    }
+
+    private void OnDragLeave(object sender, DragEventArgs e)
+    {
+        HideDropPlusIcon();
+        e.Handled = true;
+    }
+
+    private void UpdateDragState(DragEventArgs e)
+    {
+        bool hasSupportedFiles = TryGetDroppedFiles(e.Data, out string[] files) &&
+            files.Any(ImageProcessor.IsSupportedInputFile);
+
+        e.Effects = hasSupportedFiles ? DragDropEffects.Copy : DragDropEffects.None;
+
+        if (hasSupportedFiles && !isManualPreviewLoaded)
         {
-            e.Effects = DragDropEffects.Copy;
-        }
-        else
-        {
-            e.Effects = DragDropEffects.None;
+            DropIdleContent.Visibility = Visibility.Collapsed;
+            DropPlusIcon.Visibility = Visibility.Visible;
         }
 
         e.Handled = true;
@@ -307,13 +391,9 @@ public partial class MainWindow : Window
     private void OnDrop(object sender, DragEventArgs e)
     {
         e.Handled = true;
+        HideDropPlusIcon();
 
-        if (!e.Data.GetDataPresent(DataFormats.FileDrop))
-        {
-            return;
-        }
-
-        if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
+        if (!TryGetDroppedFiles(e.Data, out string[] files) || files.Length == 0)
         {
             return;
         }
@@ -344,20 +424,65 @@ public partial class MainWindow : Window
         ProcessSelectedFiles(files);
     }
 
+    private static bool TryGetDroppedFiles(IDataObject dataObject, out string[] files)
+    {
+        files = Array.Empty<string>();
+
+        if (!dataObject.GetDataPresent(DataFormats.FileDrop))
+        {
+            return false;
+        }
+
+        files = dataObject.GetData(DataFormats.FileDrop) as string[] ?? Array.Empty<string>();
+        return files.Length > 0;
+    }
+
+    private void HideDropPlusIcon()
+    {
+        if (isManualPreviewLoaded)
+        {
+            DropPlusIcon.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        DropPlusIcon.Visibility = Visibility.Collapsed;
+        DropIdleContent.Visibility = Visibility.Visible;
+    }
+
     private void OnQualityLostFocus(object sender, RoutedEventArgs e)
     {
         SaveQualityFromUi(showMessageOnError: false);
     }
 
-    private void OnResizeModeSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnComboBoxPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (!IsInitialized || isApplyingSettingsToUi || ResizeModeComboBox.SelectedItem is not ComboBoxItem selectedItem)
+        if (sender is not ComboBox comboBox || comboBox.Items.Count == 0 || comboBox.IsDropDownOpen)
         {
             return;
         }
 
-        currentSettings.ResizeMode = AppSettings.NormalizeResizeMode(selectedItem.Tag as string);
+        int direction = e.Delta > 0 ? -1 : 1;
+        int currentIndex = comboBox.SelectedIndex >= 0 ? comboBox.SelectedIndex : 0;
+        int nextIndex = Math.Clamp(currentIndex + direction, 0, comboBox.Items.Count - 1);
+
+        if (nextIndex != comboBox.SelectedIndex)
+        {
+            comboBox.SelectedIndex = nextIndex;
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnResizeModeButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (!IsInitialized || isApplyingSettingsToUi || sender is not FrameworkElement element)
+        {
+            return;
+        }
+
+        currentSettings.ResizeMode = AppSettings.NormalizeResizeMode(element.Tag as string);
         currentSettings.Save();
+        SelectResizeMode(currentSettings.ResizeMode);
     }
 
     private void OnSharpModeSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -402,17 +527,8 @@ public partial class MainWindow : Window
     {
         string normalizedResizeMode = AppSettings.NormalizeResizeMode(resizeMode);
 
-        foreach (object item in ResizeModeComboBox.Items)
-        {
-            if (item is ComboBoxItem comboBoxItem &&
-                string.Equals(comboBoxItem.Tag as string, normalizedResizeMode, StringComparison.OrdinalIgnoreCase))
-            {
-                ResizeModeComboBox.SelectedItem = comboBoxItem;
-                return;
-            }
-        }
-
-        ResizeModeComboBox.SelectedIndex = 0;
+        ResizeAutoButton.IsChecked = string.Equals(normalizedResizeMode, "auto", StringComparison.OrdinalIgnoreCase);
+        ResizeCoverButton.IsChecked = string.Equals(normalizedResizeMode, "music_cover", StringComparison.OrdinalIgnoreCase);
     }
 
     private void SelectSharpMode(string sharpMode)
@@ -588,7 +704,8 @@ public partial class MainWindow : Window
             currentSettings.JpegMode,
             currentSettings.Language,
             currentSettings.SmartPaddingPercent,
-            currentSettings.SmartPaddingMaxPx);
+            currentSettings.SmartPaddingMaxPx,
+            currentSettings.AutoSizeStep);
 
         foreach (ProcessResult result in results.Where(r => !r.Success && !r.AlreadyCorrectSize))
         {
@@ -661,17 +778,18 @@ public partial class MainWindow : Window
 
             PreviewImage.Source = bitmap;
             PreviewImage.Visibility = Visibility.Visible;
+            DropIdleContent.Visibility = Visibility.Collapsed;
             DropPlusIcon.Visibility = Visibility.Collapsed;
             CropCanvas.Visibility = Visibility.Visible;
 
             isManualPreviewLoaded = true;
-            OpenButton.Content = text.SaveButton;
-            CenterCropButton.Visibility = Visibility.Visible;
+            UpdateDropAreaFrame();
 
             SetStatusText(text.ManualPreviewStatus);
 
             PreviewHost.Focus();
             UpdateManualPreviewLayout();
+            UpdateManualActionButtons();
         }
         catch (Exception ex)
         {
@@ -721,7 +839,8 @@ public partial class MainWindow : Window
             manualCropX,
             manualCropY,
             manualCropSize,
-            currentSettings.Language);
+            currentSettings.Language,
+            currentSettings.AutoSizeStep);
 
         if (!result.Success)
         {
@@ -762,12 +881,77 @@ public partial class MainWindow : Window
 
         PreviewImage.Source = null;
         PreviewImage.Visibility = Visibility.Collapsed;
-        DropPlusIcon.Visibility = Visibility.Visible;
+        DropIdleContent.Visibility = Visibility.Visible;
+        DropPlusIcon.Visibility = Visibility.Collapsed;
         CropCanvas.Visibility = Visibility.Collapsed;
 
-        OpenButton.Content = text.OpenFileButton;
         CenterCropButton.Visibility = Visibility.Collapsed;
+        SaveManualButton.Visibility = Visibility.Collapsed;
+        UpdateDropAreaFrame();
         PreviewHost.ReleaseMouseCapture();
+    }
+
+    private void UpdateDropAreaState()
+    {
+        UpdateDropAreaFrame();
+
+        if (isManualPreviewLoaded)
+        {
+            DropIdleContent.Visibility = Visibility.Collapsed;
+            DropPlusIcon.Visibility = Visibility.Collapsed;
+            SaveManualButton.Visibility = Visibility.Visible;
+            UpdateManualActionButtons();
+            return;
+        }
+
+        DropIdleContent.Visibility = Visibility.Visible;
+        DropPlusIcon.Visibility = Visibility.Collapsed;
+        CenterCropButton.Visibility = Visibility.Collapsed;
+        SaveManualButton.Visibility = Visibility.Collapsed;
+    }
+
+    private void UpdateDropAreaFrame()
+    {
+        DropArea.BorderThickness = isManualPreviewLoaded ? new Thickness(1) : new Thickness(0);
+        DropDashedBorder.Visibility = isManualPreviewLoaded ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void CloseManualPreview()
+    {
+        if (!isManualPreviewLoaded)
+        {
+            return;
+        }
+
+        ResetManualPreview();
+        SetStatusText(string.Empty);
+        PreviewHost.Focus();
+    }
+
+    private void UpdateManualActionButtons()
+    {
+        if (!isManualPreviewLoaded)
+        {
+            CenterCropButton.Visibility = Visibility.Collapsed;
+            SaveManualButton.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        SaveManualButton.Visibility = Visibility.Visible;
+        CenterCropButton.Visibility = IsManualCropCentered() ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private bool IsManualCropCentered()
+    {
+        if (!isManualPreviewLoaded || manualCropSize <= 0)
+        {
+            return true;
+        }
+
+        int centeredX = Math.Max(0, (manualImageWidth - manualCropSize) / 2);
+        int centeredY = Math.Max(0, (manualImageHeight - manualCropSize) / 2);
+
+        return manualCropX == centeredX && manualCropY == centeredY;
     }
 
     private void OnPreviewHostSizeChanged(object sender, SizeChangedEventArgs e)
@@ -858,6 +1042,7 @@ public partial class MainWindow : Window
         }
 
         UpdateManualPreviewLayout();
+        UpdateManualActionButtons();
         e.Handled = true;
     }
 
@@ -878,6 +1063,13 @@ public partial class MainWindow : Window
     {
         if (!isManualPreviewLoaded)
         {
+            return;
+        }
+
+        if (e.Key == Key.Escape)
+        {
+            CloseManualPreview();
+            e.Handled = true;
             return;
         }
 
@@ -937,6 +1129,7 @@ public partial class MainWindow : Window
         manualCropY = Math.Max(0, (manualImageHeight - manualCropSize) / 2);
 
         UpdateManualPreviewLayout();
+        UpdateManualActionButtons();
     }
 
     private void MoveManualCrop(int deltaX, int deltaY)
@@ -951,6 +1144,7 @@ public partial class MainWindow : Window
         }
 
         UpdateManualPreviewLayout();
+        UpdateManualActionButtons();
     }
 
     private void MoveManualCropToStart()
@@ -965,6 +1159,7 @@ public partial class MainWindow : Window
         }
 
         UpdateManualPreviewLayout();
+        UpdateManualActionButtons();
     }
 
     private void MoveManualCropToEnd()
@@ -979,6 +1174,7 @@ public partial class MainWindow : Window
         }
 
         UpdateManualPreviewLayout();
+        UpdateManualActionButtons();
     }
 
     private static int ClampCropCoordinate(int value, int maxValue)

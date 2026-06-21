@@ -47,6 +47,7 @@ internal partial class SettingsWindow : Window
             SelectComboBoxItem(LanguageComboBox, settingsDraft.Language);
             SelectComboBoxItem(ThemeComboBox, settingsDraft.Theme);
             SelectComboBoxItem(JpegModeComboBox, settingsDraft.JpegMode.ToString(CultureInfo.InvariantCulture));
+            SelectComboBoxItem(AutoSizeStepComboBox, settingsDraft.AutoSizeStep.ToString(CultureInfo.InvariantCulture));
 
             SmartPaddingPercentTextBox.Text = AppSettings.FormatDouble(settingsDraft.SmartPaddingPercent);
             SmartPaddingMaxPxTextBox.Text = settingsDraft.SmartPaddingMaxPx.ToString(CultureInfo.InvariantCulture);
@@ -59,18 +60,34 @@ internal partial class SettingsWindow : Window
 
     private void ApplyLocalizedText()
     {
-        var title = text.IsRussian ? "Настройки" : "Settings";
+        var title = text.IsRussian ? "Дополнительно" : "Advanced";
         Title = title;
         TitleTextBlock.Text = title;
 
         InterfaceSectionTextBlock.Text = text.IsRussian ? "Интерфейс" : "Interface";
         LanguageLabel.Text = text.IsRussian ? "Язык" : "Language";
         ThemeLabel.Text = text.IsRussian ? "Тема" : "Theme";
-        AdvancedSectionTextBlock.Text = text.IsRussian ? "Дополнительно" : "Advanced";
+        AdvancedSectionTextBlock.Text = text.IsRussian ? "Обработка" : "Processing";
         JpegModeLabel.Text = text.IsRussian ? "JPEG режим" : "JPEG mode";
-        SmartPaddingSectionTextBlock.Text = text.IsRussian ? "Умная дорисовка" : "Smart padding";
+        AutoSizeStepLabel.Text = text.IsRussian ? "Шаг авторазмера" : "Auto size step";
+        SmartPaddingSectionTextBlock.Text = text.IsRussian ? "Умный режим" : "Smart mode";
         SmartPaddingPercentLabel.Text = text.IsRussian ? "Макс. разница" : "Max difference";
-        SmartPaddingMaxPxLabel.Text = text.IsRussian ? "Лимит дорисовки" : "Padding limit";
+        SmartPaddingMaxPxLabel.Text = text.IsRussian ? "Макс. дорисовка" : "Max fill";
+
+        var jpegModeToolTip = text.IsRussian ? "Компактный режим уменьшает вес за счет некоторого снижения качества, максимальный режим сохраняет качество, но увеличивает вес" : "Compact mode reduces file size with some quality loss, maximum mode keeps quality but increases file size";
+        var autoSizeStepToolTip = text.IsRussian ? "Задаёт шаг округления для варианта «Авто»" : "Sets the rounding step for the Auto option";
+        var smartPaddingPercentToolTip = text.IsRussian ? "Проверяет разницу сторон относительно большей стороны" : "Checks the side difference relative to the larger side";
+        var smartPaddingMaxPxToolTip = text.IsRussian ? "Ограничивает кол-во пикселей, которое можно добавить фоном" : "Limits the number of pixels that can be added as background";
+
+        JpegModeLabel.ToolTip = jpegModeToolTip;
+        JpegModeComboBox.ToolTip = jpegModeToolTip;
+        AutoSizeStepLabel.ToolTip = autoSizeStepToolTip;
+        AutoSizeStepComboBox.ToolTip = autoSizeStepToolTip;
+        SmartPaddingPercentLabel.ToolTip = smartPaddingPercentToolTip;
+        SmartPaddingPercentTextBox.ToolTip = smartPaddingPercentToolTip;
+        SmartPaddingMaxPxLabel.ToolTip = smartPaddingMaxPxToolTip;
+        SmartPaddingMaxPxTextBox.ToolTip = smartPaddingMaxPxToolTip;
+
         ResetButton.Content = text.IsRussian ? "Сброс" : "Reset";
         CancelButton.Content = text.IsRussian ? "Отмена" : "Cancel";
         SaveButton.Content = text.IsRussian ? "Применить" : "Apply";
@@ -203,6 +220,16 @@ internal partial class SettingsWindow : Window
         ApplyTheme();
     }
 
+    private void OnAboutButtonClick(object sender, RoutedEventArgs e)
+    {
+        var aboutWindow = new AboutWindow(settingsDraft)
+        {
+            Owner = this
+        };
+
+        aboutWindow.ShowDialog();
+    }
+
     private void OnResetButtonClick(object sender, RoutedEventArgs e)
     {
         settingsDraft.Language = AppSettings.DefaultLanguage;
@@ -210,6 +237,7 @@ internal partial class SettingsWindow : Window
         settingsDraft.JpegMode = AppSettings.DefaultJpegMode;
         settingsDraft.SmartPaddingPercent = AppSettings.DefaultSmartPaddingPercent;
         settingsDraft.SmartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx;
+        settingsDraft.AutoSizeStep = AppSettings.DefaultAutoSizeStep;
 
         ApplyDraftToUi();
         ApplyTheme();
@@ -251,6 +279,7 @@ internal partial class SettingsWindow : Window
         settingsDraft.Language = AppSettings.NormalizeLanguage(GetSelectedTag(LanguageComboBox));
         settingsDraft.Theme = AppSettings.NormalizeTheme(GetSelectedTag(ThemeComboBox));
         settingsDraft.JpegMode = AppSettings.NormalizeJpegMode(ParseJpegMode(GetSelectedTag(JpegModeComboBox)));
+        settingsDraft.AutoSizeStep = AppSettings.NormalizeAutoSizeStep(ParseAutoSizeStep(GetSelectedTag(AutoSizeStepComboBox)));
         settingsDraft.SmartPaddingPercent = AppSettings.NormalizeSmartPaddingPercent(smartPaddingPercent);
         settingsDraft.SmartPaddingMaxPx = AppSettings.NormalizeSmartPaddingMaxPx(smartPaddingMaxPx);
 
@@ -267,6 +296,14 @@ internal partial class SettingsWindow : Window
         return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int jpegMode)
             ? jpegMode
             : AppSettings.DefaultJpegMode;
+    }
+
+
+    private static int ParseAutoSizeStep(string? value)
+    {
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int autoSizeStep)
+            ? autoSizeStep
+            : AppSettings.DefaultAutoSizeStep;
     }
 
     private static void SelectComboBoxItem(ComboBox comboBox, string tag)

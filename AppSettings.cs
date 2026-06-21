@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -19,6 +20,7 @@ internal sealed class AppSettings
     public const string DefaultLanguage = "en";
     public const double DefaultSmartPaddingPercent = 4.0;
     public const int DefaultSmartPaddingMaxPx = 32;
+    public const int DefaultAutoSizeStep = 100;
 
     private const string SettingsFileName = "settings.txt";
     private const string EmbeddedDefaultSettingsResourceName = "SquareResizer.SettingsDefault";
@@ -33,6 +35,7 @@ internal sealed class AppSettings
         "manual_mode",
         "smart_padding_percent",
         "smart_padding_max_px",
+        "auto_size_step",
         "theme",
         "language"
     };
@@ -47,6 +50,7 @@ internal sealed class AppSettings
     public string Language { get; set; } = DefaultLanguage;
     public double SmartPaddingPercent { get; set; } = DefaultSmartPaddingPercent;
     public int SmartPaddingMaxPx { get; set; } = DefaultSmartPaddingMaxPx;
+    public int AutoSizeStep { get; set; } = DefaultAutoSizeStep;
 
     public bool IsDarkTheme =>
         string.Equals(Theme, "dark", StringComparison.OrdinalIgnoreCase);
@@ -67,7 +71,8 @@ internal sealed class AppSettings
             JpegMode = JpegMode,
             Language = Language,
             SmartPaddingPercent = SmartPaddingPercent,
-            SmartPaddingMaxPx = SmartPaddingMaxPx
+            SmartPaddingMaxPx = SmartPaddingMaxPx,
+            AutoSizeStep = AutoSizeStep
         };
     }
 
@@ -83,6 +88,7 @@ internal sealed class AppSettings
         Language = other.Language;
         SmartPaddingPercent = other.SmartPaddingPercent;
         SmartPaddingMaxPx = other.SmartPaddingMaxPx;
+        AutoSizeStep = other.AutoSizeStep;
     }
 
     public static AppSettings Load()
@@ -186,6 +192,16 @@ internal sealed class AppSettings
                     {
                         settings.SmartPaddingMaxPx = NormalizeSmartPaddingMaxPx(smartPaddingMaxPx);
                     }
+
+                    continue;
+                }
+
+                if (key.Equals("auto_size_step", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int autoSizeStep))
+                    {
+                        settings.AutoSizeStep = NormalizeAutoSizeStep(autoSizeStep);
+                    }
                 }
             }
 
@@ -204,6 +220,7 @@ internal sealed class AppSettings
             settings.Language = DefaultLanguage;
             settings.SmartPaddingPercent = DefaultSmartPaddingPercent;
             settings.SmartPaddingMaxPx = DefaultSmartPaddingMaxPx;
+            settings.AutoSizeStep = DefaultAutoSizeStep;
             return settings;
         }
     }
@@ -218,6 +235,7 @@ internal sealed class AppSettings
         Language = NormalizeLanguage(Language);
         SmartPaddingPercent = NormalizeSmartPaddingPercent(SmartPaddingPercent);
         SmartPaddingMaxPx = NormalizeSmartPaddingMaxPx(SmartPaddingMaxPx);
+        AutoSizeStep = NormalizeAutoSizeStep(AutoSizeStep);
 
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -229,6 +247,7 @@ internal sealed class AppSettings
             ["manual_mode"] = ManualMode.ToString().ToLowerInvariant(),
             ["smart_padding_percent"] = FormatDouble(SmartPaddingPercent),
             ["smart_padding_max_px"] = SmartPaddingMaxPx.ToString(CultureInfo.InvariantCulture),
+            ["auto_size_step"] = AutoSizeStep.ToString(CultureInfo.InvariantCulture),
             ["theme"] = Theme,
             ["language"] = Language
         };
@@ -343,6 +362,7 @@ internal sealed class AppSettings
             "manual_mode=" + DefaultManualMode.ToString().ToLowerInvariant() + Environment.NewLine +
             "smart_padding_percent=" + FormatDouble(DefaultSmartPaddingPercent) + Environment.NewLine +
             "smart_padding_max_px=" + DefaultSmartPaddingMaxPx + Environment.NewLine +
+            "auto_size_step=" + DefaultAutoSizeStep + Environment.NewLine +
             "theme=" + DefaultTheme + Environment.NewLine +
             "language=" + DefaultLanguage + Environment.NewLine;
     }
@@ -479,6 +499,16 @@ internal sealed class AppSettings
     public static int NormalizeSmartPaddingMaxPx(int smartPaddingMaxPx)
     {
         return Math.Clamp(smartPaddingMaxPx, 0, 300);
+    }
+
+
+    public static int NormalizeAutoSizeStep(int autoSizeStep)
+    {
+        int[] allowedSteps = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200 };
+
+        return allowedSteps.Contains(autoSizeStep)
+            ? autoSizeStep
+            : DefaultAutoSizeStep;
     }
 
     public static bool TryParseDouble(string value, out double result)

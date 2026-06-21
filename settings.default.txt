@@ -1,13 +1,14 @@
 # SquareResizer settings
 #
 # quality: JPG output quality, from 1 to 100
-# resize_mode: auto = keep automatic square size, music_cover = use standard music cover sizes
-# sharp_mode: standard = no extra sharpening, increased = increased sharpness, high = high sharpness, maximum = maximum sharpness
-# jpeg_mode: 1 = compact JPG / smallest file, 2 = balanced JPG, 3 = maximum JPG / largest file
-# smart_mode: true = try to extend the missing side with a background color, false = regular square resize/stretch
+# resize_mode: auto = Auto, music_cover = Cover
+# sharp_mode: standard = standard sharpness, increased = increased sharpness, high = high sharpness, maximum = maximum sharpness
+# jpeg_mode: 1 = compact JPG, 2 = balanced JPG, 3 = maximum JPG
+# smart_mode: true = extend the short side with background within limits, false = regular square resize/stretch
 # manual_mode: true = manual crop before saving, false = regular automatic processing
-# smart_padding_percent: max side difference in percent for smart padding
-# smart_padding_max_px: absolute max side difference in pixels for smart padding
+# smart_padding_percent: maximum side difference in percent for smart mode, from 0 to 20
+# smart_padding_max_px: maximum pixels that smart mode can add as background, from 0 to 300
+# auto_size_step: Auto rounding step in pixels, allowed values: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200
 # theme: light = light theme, dark = dark theme
 # language: en = English interface, ru = Russian interface
 #
@@ -19,5 +20,6 @@ smart_mode=true
 manual_mode=false
 smart_padding_percent=4
 smart_padding_max_px=32
+auto_size_step=100
 theme=dark
 language=en

@@ -27,9 +27,13 @@ internal sealed class Localization
     public string ResizeModeLabel => IsRussian ? "Размер" : "Size";
     public string ResizeAuto => IsRussian ? "Авто" : "Auto";
     public string ResizeMusicCover => IsRussian ? "Обложка" : "Cover";
-    public string ResizeModeToolTip => IsRussian
-        ? "Авто — ближайшая сотня по изображению. Обложка — ближайший стандарт: 1400, 1200, 1000, 700, 600, 500."
-        : "Auto — nearest 100 px image-based size. Cover — nearest standard size: 1400, 1200, 1000, 700, 600, 500.";
+    public string ResizeAutoToolTip => IsRussian
+        ? "Подбирает размер по изображению и округляет его выбранным шагом"
+        : "Chooses a size from the image and rounds it by the selected step";
+
+    public string ResizeMusicCoverToolTip => IsRussian
+        ? "Подбирает ближайший стандартный размер обложки: 500, 600, 700, 1000, 1200, 1400"
+        : "Chooses the nearest standard cover size: 500, 600, 700, 1000, 1200, 1400";
 
     public string QualityLabel => IsRussian ? "Качество" : "Quality";
 
@@ -44,18 +48,23 @@ internal sealed class Localization
 
     public string SmartMode => IsRussian ? "Умный режим" : "Smart mode";
     public string SmartModeToolTip => IsRussian
-        ? "Программа попробует дорисовать недостающую сторону цветом фона, в противном случае используется обычное сжатие/растяжение до квадрата"
-        : "Tries to fill the missing side with a background color; otherwise uses regular square resizing";
+        ? "Дорисует фон к короткой стороне, если разница сторон укладывается в лимиты"
+        : "Adds background to the short side if the side difference fits the limits";
 
     public string ManualMode => IsRussian ? "Ручной режим" : "Manual mode";
     public string ManualModeToolTip => IsRussian
-        ? "Изображение можно будет открыть в предпросмотре, кроп-рамку можно двигать мышью или стрелками"
-        : "Opens the image in preview; the crop frame can be moved with the mouse or arrow keys";
+        ? "Позволяет вручную выбрать область изображения"
+        : "Lets you choose the image area manually";
 
     public string OpenFileButton => IsRussian ? "Открыть файл" : "Open file";
+    public string SelectFileButton => IsRussian ? "Выберите файл" : "Select file";
+    public string DropOrText => IsRussian ? "или" : "or";
+    public string DropHereText => IsRussian ? "перенесите его сюда" : "drop it here";
     public string SaveButton => IsRussian ? "Сохранить" : "Save";
+    public string CloseFileMenuItem => IsRussian ? "Закрыть файл" : "Close file";
     public string CenterCropButtonToolTip => IsRussian ? "Центрировать рамку" : "Center crop frame";
     public string SettingsButtonToolTip => IsRussian ? "Настройки" : "Settings";
+    public string AdvancedSettingsButtonText => IsRussian ? "Дополнительно" : "Advanced";
 
     public string OpenDialogTitle => IsRussian ? "Выберите изображение" : "Select image";
     public string OpenDialogFilter => IsRussian
@@ -82,19 +91,19 @@ internal sealed class Localization
     public string OpenErrorTitle => IsRussian ? "Ошибка открытия" : "Open error";
     public string OpenImageErrorTitle => IsRussian ? "Ошибка открытия изображения" : "Image open error";
     public string SaveErrorTitle => IsRussian ? "Ошибка сохранения" : "Save error";
-    public string SaveErrorStatus => IsRussian ? "Ошибка сохранения." : "Save error.";
+    public string SaveErrorStatus => IsRussian ? "Ошибка сохранения" : "Save error";
 
-    public string DoneStatus => IsRussian ? "Готово." : "Done.";
+    public string DoneStatus => IsRussian ? "Готово" : "Done";
 
     public string DoneWithFile(string fileName) =>
         IsRussian ? $"Готово: {fileName}" : $"Done: {fileName}";
 
     public string CreatedFilesStatus(int count) =>
-        IsRussian ? $"Готово. Создано файлов: {count}" : $"Done. Created files: {count}";
+        IsRussian ? $"Готово – создано файлов: {count}" : $"Done – created files: {count}";
 
     public string FileAlreadyCorrectSize => IsRussian
-        ? "Файл уже нужного размера."
-        : "The file already has the required size.";
+        ? "Файл уже нужного размера"
+        : "The file already has the required size";
 
     public string ProcessingSummary(int created, int alreadyCorrect, int failed) =>
         IsRussian
@@ -102,8 +111,8 @@ internal sealed class Localization
             : $"Created: {created}, already ready: {alreadyCorrect}, errors: {failed}";
 
     public string ManualPreviewStatus => IsRussian
-        ? "Ручной режим: настройте квадрат и нажмите «Сохранить»."
-        : "Manual mode: adjust the square and click Save.";
+        ? "Ручной режим: настройте квадрат и нажмите «Сохранить»"
+        : "Manual mode: adjust the square and click Save";
 
     public string EmptyPath => IsRussian ? "Пустой путь к файлу." : "Empty file path.";
     public string FileNotFound => IsRussian ? "Файл не найден." : "File not found.";

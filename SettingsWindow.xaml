@@ -11,7 +11,8 @@
         WindowStartupLocation="CenterOwner"
         Background="Transparent"
         AllowsTransparency="True"
-        UseLayoutRounding="True">
+        UseLayoutRounding="True"
+        FocusVisualStyle="{x:Null}">
 
     <Window.Resources>
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#202020" />
@@ -44,10 +45,42 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <Style TargetType="{x:Type ToolTip}">
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="HasDropShadow" Value="True" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToolTip}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <TextBlock Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontFamily="{TemplateBinding FontFamily}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       TextWrapping="NoWrap" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
         <Style x:Key="RoundedButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -91,7 +124,7 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource TitleButtonForegroundBrush}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Focusable" Value="False" />
@@ -128,7 +161,7 @@
         <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -136,6 +169,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="TextAlignment" Value="Center" />
             <Setter Property="Padding" Value="4,1" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -169,6 +203,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="Margin" Value="1" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
@@ -195,7 +230,7 @@
         <Style x:Key="RoundedComboBoxStyle" TargetType="ComboBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -214,7 +249,7 @@
                                         <Border x:Name="RootBorder"
                                                 Background="{DynamicResource InputBackgroundBrush}"
                                                 BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                                BorderThickness="1"
+                                                BorderThickness="0"
                                                 CornerRadius="6"
                                                 SnapsToDevicePixels="True" />
                                         <ControlTemplate.Triggers>
@@ -258,7 +293,7 @@
                                         Padding="2"
                                         Background="{DynamicResource InputBackgroundBrush}"
                                         BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                        BorderThickness="1"
+                                        BorderThickness="0"
                                         CornerRadius="6"
                                         SnapsToDevicePixels="True">
                                     <ScrollViewer CanContentScroll="True"
@@ -301,7 +336,7 @@
                                     VerticalAlignment="Center"
                                     Background="{DynamicResource InputBackgroundBrush}"
                                     BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                    BorderThickness="1"
+                                    BorderThickness="0"
                                     CornerRadius="3"
                                     SnapsToDevicePixels="True" />
 
@@ -376,7 +411,7 @@
                       Background="Transparent"
                       MouseLeftButtonDown="TitleBar_OnMouseLeftButtonDown">
                     <TextBlock x:Name="TitleTextBlock"
-                               Text="Settings"
+                               Text="Advanced"
                                Margin="0"
                                HorizontalAlignment="Left"
                                VerticalAlignment="Center"
@@ -479,9 +514,9 @@
             <StackPanel>
                 <TextBlock x:Name="AdvancedSectionTextBlock"
                            Style="{StaticResource SectionTitleStyle}"
-                           Text="Advanced" />
+                           Text="Processing" />
 
-                <Grid>
+                <Grid Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="115" />
                         <ColumnDefinition Width="150" />
@@ -501,6 +536,40 @@
                         <ComboBoxItem Content="Maximum" Tag="3" />
                     </ComboBox>
                 </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="115" />
+                        <ColumnDefinition Width="150" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="AutoSizeStepLabel"
+                               Grid.Column="0"
+                               Style="{StaticResource LabelTextStyle}"
+                               Text="Auto size step" />
+                    <ComboBox x:Name="AutoSizeStepComboBox"
+                              Grid.Column="1"
+                              Style="{StaticResource RoundedComboBoxStyle}"
+                              Width="150"
+                              Height="26"
+                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
+                        <ComboBoxItem Content="5 px" Tag="5" />
+                        <ComboBoxItem Content="10 px" Tag="10" />
+                        <ComboBoxItem Content="15 px" Tag="15" />
+                        <ComboBoxItem Content="20 px" Tag="20" />
+                        <ComboBoxItem Content="25 px" Tag="25" />
+                        <ComboBoxItem Content="30 px" Tag="30" />
+                        <ComboBoxItem Content="35 px" Tag="35" />
+                        <ComboBoxItem Content="40 px" Tag="40" />
+                        <ComboBoxItem Content="45 px" Tag="45" />
+                        <ComboBoxItem Content="50 px" Tag="50" />
+                        <ComboBoxItem Content="60 px" Tag="60" />
+                        <ComboBoxItem Content="70 px" Tag="70" />
+                        <ComboBoxItem Content="80 px" Tag="80" />
+                        <ComboBoxItem Content="90 px" Tag="90" />
+                        <ComboBoxItem Content="100 px" Tag="100" />
+                        <ComboBoxItem Content="200 px" Tag="200" />
+                    </ComboBox>
+                </Grid>
             </StackPanel>
         </Border>
 
@@ -514,7 +583,7 @@
             <StackPanel>
                 <TextBlock x:Name="SmartPaddingSectionTextBlock"
                            Style="{StaticResource SectionTitleStyle}"
-                           Text="Smart padding" />
+                           Text="Smart mode" />
 
                 <Grid Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
@@ -548,7 +617,7 @@
                     <TextBlock x:Name="SmartPaddingMaxPxLabel"
                                Grid.Column="0"
                                Style="{StaticResource LabelTextStyle}"
-                               Text="Padding limit" />
+                               Text="Max fill" />
                     <TextBox x:Name="SmartPaddingMaxPxTextBox"
                              Grid.Column="1"
                              Height="26"
@@ -567,6 +636,36 @@
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
+            <Button x:Name="AboutButton"
+                    Width="30"
+                    Height="30"
+                    Margin="0,0,10,0"
+                    Style="{StaticResource RoundedButtonStyle}"
+                    Click="OnAboutButtonClick">
+                <Viewbox Width="15"
+                         Height="15"
+                         Stretch="Uniform">
+                    <Canvas Width="24"
+                            Height="24">
+                        <Ellipse Width="20"
+                                 Height="20"
+                                 Canvas.Left="2"
+                                 Canvas.Top="2"
+                                 Stroke="{DynamicResource AccentBorderBrush}"
+                                 StrokeThickness="2" />
+                        <Path Stroke="{DynamicResource AccentBorderBrush}"
+                              StrokeThickness="2"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              Data="M12,11 L12,16" />
+                        <Ellipse Width="2"
+                                 Height="2"
+                                 Canvas.Left="11"
+                                 Canvas.Top="7"
+                                 Fill="{DynamicResource AccentBorderBrush}" />
+                    </Canvas>
+                </Viewbox>
+            </Button>
             <Button x:Name="ResetButton"
                     Width="78"
                     Height="30"

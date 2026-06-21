@@ -7,19 +7,23 @@
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowBackgroundBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         Focusable="True"
+        FocusVisualStyle="{x:Null}"
         PreviewKeyDown="OnWindowPreviewKeyDown">
 
     <Window.Resources>
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F3F3F3" />
         <SolidColorBrush x:Key="DropAreaBackgroundBrush" Color="#F5F5F5" />
-        <SolidColorBrush x:Key="DropAreaBorderBrush" Color="#828282" />
+        <SolidColorBrush x:Key="DropAreaBorderBrush" Color="#E6E6E6" />
+        <SolidColorBrush x:Key="DropAreaDashedBorderBrush" Color="#D0D0D0" />
         <SolidColorBrush x:Key="MainTextBrush" Color="#464646" />
         <SolidColorBrush x:Key="SecondaryTextBrush" Color="#505050" />
         <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#FAFAFA" />
         <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="#F5F9FF" />
         <SolidColorBrush x:Key="ButtonPressedBackgroundBrush" Color="#E6F2FF" />
-        <SolidColorBrush x:Key="ButtonBorderBrush" Color="#AAAAAA" />
+        <SolidColorBrush x:Key="ButtonBorderBrush" Color="#E6E6E6" />
         <SolidColorBrush x:Key="AccentBorderBrush" Color="#0078D7" />
         <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="StatusTextBrush" Color="#505050" />
@@ -27,11 +31,10 @@
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="MaxWidth" Value="440" />
             <Setter Property="HasDropShadow" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -48,8 +51,7 @@
                                Foreground="{TemplateBinding Foreground}"
                                FontFamily="{TemplateBinding FontFamily}"
                                FontSize="{TemplateBinding FontSize}"
-                               TextWrapping="Wrap"
-                               MaxWidth="300" />
+                               TextWrapping="NoWrap" />
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -59,7 +61,7 @@
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -85,10 +87,84 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style TargetType="{x:Type ContextMenu}">
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+            <Setter Property="HasDropShadow" Value="True" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ContextMenu}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <StackPanel IsItemsHost="True"
+                                        KeyboardNavigation.DirectionalNavigation="Cycle" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type MenuItem}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type MenuItem}">
+                        <Border x:Name="ItemBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter Grid.Column="0"
+                                                  ContentSource="Icon"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center" />
+                                <ContentPresenter Grid.Column="2"
+                                                  ContentSource="Header"
+                                                  RecognizesAccessKey="True"
+                                                  VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ButtonHoverBackgroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="RoundedButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -125,10 +201,51 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ResizeModeToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="RootBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonHoverBackgroundBrush}" />
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonPressedBackgroundBrush}" />
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -136,6 +253,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="TextAlignment" Value="Center" />
             <Setter Property="Padding" Value="4,1" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -166,6 +284,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="Margin" Value="1" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
@@ -192,7 +311,7 @@
         <Style x:Key="RoundedComboBoxStyle" TargetType="ComboBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
@@ -211,7 +330,7 @@
                                         <Border x:Name="RootBorder"
                                         Background="{DynamicResource InputBackgroundBrush}"
                                         BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                        BorderThickness="1"
+                                        BorderThickness="0"
                                         CornerRadius="6"
                                         SnapsToDevicePixels="True" />
                                         <ControlTemplate.Triggers>
@@ -255,7 +374,7 @@
                                 Padding="2"
                                 Background="{DynamicResource InputBackgroundBrush}"
                                 BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                BorderThickness="1"
+                                BorderThickness="0"
                                 CornerRadius="6"
                                 SnapsToDevicePixels="True">
                                     <ScrollViewer CanContentScroll="True"
@@ -290,10 +409,11 @@
                             Grid.Column="0"
                             Width="14"
                             Height="14"
+                            HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Background="{DynamicResource InputBackgroundBrush}"
                             BorderBrush="{DynamicResource ButtonBorderBrush}"
-                            BorderThickness="1"
+                            BorderThickness="0"
                             CornerRadius="3"
                             SnapsToDevicePixels="True" />
 
@@ -301,7 +421,8 @@
                           Grid.Column="0"
                           Width="9"
                           Height="7"
-                          HorizontalAlignment="Center"
+                          HorizontalAlignment="Left"
+                          Margin="2.5,0,0,0"
                           VerticalAlignment="Center"
                           Data="M 1 3.5 L 3.5 6 L 8 1"
                           Stroke="White"
@@ -341,218 +462,355 @@
         </Style>
     </Window.Resources>
 
-    <Canvas Width="360"
-            Height="477"
-            Background="{DynamicResource WindowBackgroundBrush}"
-            AllowDrop="True"
-            DragEnter="OnDragEnter"
-            Drop="OnDrop">
+    <Grid Background="{DynamicResource WindowBackgroundBrush}"
+          AllowDrop="True"
+          DragEnter="OnDragEnter"
+          DragOver="OnDragOver"
+          DragLeave="OnDragLeave"
+          Drop="OnDrop">
+        <StackPanel Margin="12">
+            <Border x:Name="DropArea"
+                    Background="{DynamicResource DropAreaBackgroundBrush}"
+                    BorderBrush="{DynamicResource DropAreaBorderBrush}"
+                    BorderThickness="0"
+                    CornerRadius="6"
+                    AllowDrop="True"
+                    DragEnter="OnDragEnter"
+                    DragOver="OnDragOver"
+                    DragLeave="OnDragLeave"
+                    Drop="OnDrop"
+                    Margin="0,0,0,12">
+                <Grid x:Name="PreviewHost"
+                      ClipToBounds="True"
+                      Focusable="True"
+                      FocusVisualStyle="{x:Null}"
+                      ContextMenuOpening="OnPreviewHostContextMenuOpening"
+                      MouseLeftButtonDown="OnPreviewMouseLeftButtonDown"
+                      MouseMove="OnPreviewMouseMove"
+                      MouseLeftButtonUp="OnPreviewMouseLeftButtonUp">
+                    <Grid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem x:Name="CloseFileMenuItem"
+                                      Header="Close file"
+                                      Click="OnCloseFileMenuItemClick">
+                                <MenuItem.Icon>
+                                    <Viewbox Width="12"
+                                             Height="12"
+                                             Stretch="Uniform">
+                                        <Canvas Width="12"
+                                                Height="12">
+                                            <Path Stroke="{DynamicResource MainTextBrush}"
+                                                  StrokeThickness="1.5"
+                                                  StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round"
+                                                  Data="M3,3 L9,9 M9,3 L3,9" />
+                                        </Canvas>
+                                    </Viewbox>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </Grid.ContextMenu>
 
-        <TextBlock x:Name="ResizeModeLabel"
-                   Canvas.Left="22"
-                   Canvas.Top="9"
-                   Text="Size"
-                   Foreground="{DynamicResource SecondaryTextBrush}"
-                   FontFamily="Segoe UI"
-                   FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <Image x:Name="PreviewImage"
+                           Stretch="Uniform"
+                           Visibility="Collapsed"
+                           IsHitTestVisible="False" />
 
-        <ComboBox x:Name="ResizeModeComboBox"
-                  Canvas.Left="71"
-                  Canvas.Top="5"
-                  Width="82"
-                  Height="26"
-                  Style="{StaticResource RoundedComboBoxStyle}"
-                  SelectionChanged="OnResizeModeSelectionChanged" HorizontalAlignment="Left" VerticalAlignment="Center">
-            <ComboBoxItem Content="Auto" Tag="auto" />
-            <ComboBoxItem Content="Cover" Tag="music_cover" />
-        </ComboBox>
+                    <StackPanel x:Name="DropIdleContent"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="True">
+                        <Button x:Name="SelectFileButton"
+                                Width="134"
+                                Height="30"
+                                Content="Open file"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Style="{StaticResource RoundedButtonStyle}"
+                                Click="OnOpenButtonClick" />
+                        <TextBlock x:Name="DropOrTextBlock"
+                                Margin="0,10,0,0"
+                                Text="or"
+                                TextAlignment="Center"
+                                Foreground="{DynamicResource SecondaryTextBrush}"
+                                FontFamily="Segoe UI"
+                                FontSize="13"
+                                FontWeight="SemiBold" />
+                        <TextBlock x:Name="DropHereTextBlock"
+                                Margin="0,5,0,0"
+                                Text="drop it here"
+                                TextAlignment="Center"
+                                Foreground="{DynamicResource SecondaryTextBrush}"
+                                FontFamily="Segoe UI"
+                                FontSize="13"
+                                FontWeight="SemiBold" />
+                    </StackPanel>
 
-        <TextBlock x:Name="QualityLabel"
-                   Canvas.Left="22"
-                   Canvas.Top="42"
-                   Text="Quality"
-                   Foreground="{DynamicResource SecondaryTextBrush}"
-                   FontFamily="Segoe UI"
-                   FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                    <Viewbox x:Name="DropPlusIcon"
+                             Width="140"
+                             Height="140"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             IsHitTestVisible="False"
+                             Visibility="Collapsed"
+                             Opacity="0.55">
+                        <Path Stroke="{DynamicResource SecondaryTextBrush}"
+                              StrokeThickness="2"
+                              StrokeLineJoin="Miter"
+                              Fill="Transparent"
+                              Data="M 40,5 L 60,5 L 60,40 L 95,40 L 95,60 L 60,60 L 60,95 L 40,95 L 40,60 L 5,60 L 5,40 L 40,40 Z"/>
+                    </Viewbox>
 
-        <TextBox x:Name="QualityTextBox"
-                 Canvas.Left="79"
-                 Canvas.Top="38"
-                 Width="45"
-                 Height="26"
-                 Style="{StaticResource RoundedTextBoxStyle}"
-                 LostFocus="OnQualityLostFocus"
-                 PreviewKeyDown="OnQualityPreviewKeyDown"
-                 PreviewTextInput="OnQualityPreviewTextInput"
-                 PreviewMouseWheel="OnQualityPreviewMouseWheel" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                    <Canvas x:Name="CropCanvas"
+                            Visibility="Collapsed"
+                            Background="Transparent">
+                        <Rectangle x:Name="CropOverlay"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="2"
+                                   Fill="#220078D7"
+                                   Width="100"
+                                   Height="100"
+                                   IsHitTestVisible="False" />
+                    </Canvas>
 
-        <TextBlock x:Name="SharpModeLabel"
-                   Canvas.Left="163"
-                   Canvas.Top="9"
-                   Text="Sharp"
-                   Foreground="{DynamicResource SecondaryTextBrush}"
-                   FontFamily="Segoe UI"
-                   FontSize="12"/>
-
-        <ComboBox x:Name="SharpModeComboBox"
-                  Canvas.Left="218"
-                  Canvas.Top="5"
-                  Width="116"
-                  Height="26"
-                  Style="{StaticResource RoundedComboBoxStyle}"
-                  SelectionChanged="OnSharpModeSelectionChanged">
-            <ComboBoxItem Content="Standard" Tag="standard" />
-            <ComboBoxItem Content="Increased" Tag="increased" />
-            <ComboBoxItem Content="High" Tag="high" />
-            <ComboBoxItem Content="Maximum" Tag="maximum" />
-        </ComboBox>
-
-        <CheckBox x:Name="SmartModeCheckBox"
-                  Canvas.Left="130"
-                  Canvas.Top="40"
-                  Width="100"
-                  Height="22"
-                  Content="Smart mode"
-                  Style="{StaticResource ModeCheckBoxStyle}"
-                  Checked="OnSmartModeChanged"
-                  Unchecked="OnSmartModeChanged" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-
-        <CheckBox x:Name="ManualModeCheckBox"
-                  Canvas.Left="235"
-                  Canvas.Top="40"
-                  Width="104"
-                  Height="22"
-                  Content="Manual mode"
-                  Style="{StaticResource ModeCheckBoxStyle}"
-                  Checked="OnManualModeChanged"
-                  Unchecked="OnManualModeChanged" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-
-        <Border x:Name="DropArea"
-                Canvas.Left="20"
-                Canvas.Top="71"
-                Width="320"
-                Height="320"
-                Background="{DynamicResource DropAreaBackgroundBrush}"
-                BorderBrush="{DynamicResource DropAreaBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="5"
-                AllowDrop="True"
-                DragEnter="OnDragEnter"
-                Drop="OnDrop">
-            <Grid x:Name="PreviewHost"
-                  ClipToBounds="True"
-                  Focusable="True"
-                  MouseLeftButtonDown="OnPreviewMouseLeftButtonDown"
-                  MouseMove="OnPreviewMouseMove"
-                  MouseLeftButtonUp="OnPreviewMouseLeftButtonUp">
-
-                <Image x:Name="PreviewImage"
-                       Stretch="Uniform"
-                       Visibility="Collapsed"
-                       IsHitTestVisible="False" />
-
-                <Viewbox x:Name="DropPlusIcon"
-                         Width="140"
-                         Height="140"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center"
-                         IsHitTestVisible="False"
-                         Opacity="0.55">
-                    <Path Stroke="{DynamicResource DropAreaBorderBrush}"
-                          StrokeThickness="2"
-                          StrokeLineJoin="Miter"
-                          Fill="Transparent"
-                          Data="M 40,5 L 60,5 L 60,40 L 95,40 L 95,60 L 60,60 L 60,95 L 40,95 L 40,60 L 5,60 L 5,40 L 40,40 Z"/>
-                </Viewbox>
-
-                <Canvas x:Name="CropCanvas"
-                        Visibility="Collapsed"
-                        Background="Transparent">
-                    <Rectangle x:Name="CropOverlay"
-                               Stroke="{DynamicResource AccentBorderBrush}"
-                               StrokeThickness="2"
-                               Fill="#220078D7"
-                               Width="100"
-                               Height="100"
+                    <Rectangle x:Name="DropDashedBorder"
+                               Margin="0.75"
+                               RadiusX="6"
+                               RadiusY="6"
+                               Stroke="{DynamicResource DropAreaDashedBorderBrush}"
+                               StrokeThickness="1.5"
+                               StrokeDashArray="6 5"
+                               StrokeDashCap="Round"
+                               Fill="Transparent"
                                IsHitTestVisible="False" />
-                </Canvas>
-            </Grid>
-        </Border>
 
-        <Button x:Name="OpenButton"
-                Canvas.Left="110"
-                Canvas.Top="403"
-                Width="140"
-                Height="40"
-                Content="Open file"
-                Style="{StaticResource RoundedButtonStyle}"
-                Click="OnOpenButtonClick" />
+                    <Button x:Name="CenterCropButton"
+                            Width="40"
+                            Height="40"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            Margin="12"
+                            Style="{StaticResource RoundedButtonStyle}"
+                            Visibility="Collapsed"
+                            Click="OnCenterCropButtonClick">
+                        <Viewbox Width="18"
+                                 Height="18"
+                                 IsHitTestVisible="False">
+                            <Canvas Width="20"
+                                    Height="20">
+                                <Path Stroke="{DynamicResource MainTextBrush}"
+                                      StrokeThickness="1.8"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      StrokeLineJoin="Round"
+                                      Fill="Transparent"
+                                      Data="M 10,2 L 10,18 M 2,10 L 18,10 M 6,6 L 14,6 L 14,14 L 6,14 Z" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
 
-        <Button x:Name="CenterCropButton"
-                Canvas.Left="262"
-                Canvas.Top="403"
-                Width="40"
-                Height="40"
-                Style="{StaticResource RoundedButtonStyle}"
-                Visibility="Collapsed"
-                Click="OnCenterCropButtonClick">
-            <Viewbox Width="18"
-                     Height="18"
-                     IsHitTestVisible="False">
-                <Canvas Width="20"
-                        Height="20">
-                    <Path Stroke="{DynamicResource MainTextBrush}"
-                          StrokeThickness="1.8"
-                          StrokeStartLineCap="Round"
-                          StrokeEndLineCap="Round"
-                          StrokeLineJoin="Round"
-                          Fill="Transparent"
-                          Data="M 10,2 L 10,18 M 2,10 L 18,10 M 6,6 L 14,6 L 14,14 L 6,14 Z" />
-                </Canvas>
-            </Viewbox>
-        </Button>
+                    <Button x:Name="SaveManualButton"
+                            Width="40"
+                            Height="40"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="12"
+                            Style="{StaticResource RoundedButtonStyle}"
+                            Visibility="Collapsed"
+                            Click="OnSaveManualButtonClick">
+                        <Viewbox Width="18"
+                                 Height="18"
+                                 IsHitTestVisible="False">
+                            <Canvas Width="20"
+                                    Height="20">
+                                <Path Stroke="{DynamicResource MainTextBrush}"
+                                      StrokeThickness="1.8"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      StrokeLineJoin="Round"
+                                      Fill="Transparent"
+                                      Data="M 4,2 L 15,2 L 18,5 L 18,18 L 4,18 Z M 7,2 L 7,7 L 14,7 L 14,2 M 7,13 L 15,13 M 7,16 L 15,16" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+                </Grid>
+            </Border>
 
+            <Border x:Name="MainSettingsPanel"
+                    Background="{DynamicResource DropAreaBackgroundBrush}"
+                    BorderBrush="{DynamicResource DropAreaBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="12"
+                    SizeChanged="OnMainSettingsPanelSizeChanged"
+                    Margin="0,0,0,12">
+                <Grid x:Name="SettingsRowsGrid"
+                      MinWidth="311">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="12" />
+                        <RowDefinition Height="26" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="56" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="132" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="132" />
+                    </Grid.ColumnDefinitions>
 
-        <Button x:Name="SettingsButton"
-                Canvas.Left="312"
-                Canvas.Top="409"
-                Width="28"
-                Height="28"
-                Style="{StaticResource RoundedButtonStyle}"
-                Click="OnSettingsButtonClick">
-            <Viewbox Width="16"
-                     Height="16"
-                     IsHitTestVisible="False">
-                <Canvas Width="24"
-                        Height="24">
-                    <Path Stroke="{DynamicResource MainTextBrush}"
-                          StrokeThickness="2"
-                          StrokeStartLineCap="Round"
-                          StrokeEndLineCap="Round"
-                          StrokeLineJoin="Round"
-                          Fill="Transparent"
-                          Data="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-                    <Ellipse Canvas.Left="9"
-                             Canvas.Top="9"
-                             Width="6"
-                             Height="6"
-                             Stroke="{DynamicResource MainTextBrush}"
-                             StrokeThickness="2"
-                             Fill="Transparent" />
-                </Canvas>
-            </Viewbox>
-        </Button>
+                    <TextBlock x:Name="ResizeModeLabel"
+                               Grid.Row="0"
+                               Grid.Column="0"
+                               Text="Size"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="12" />
+                    <ToggleButton x:Name="ResizeAutoButton"
+                                  Grid.Row="0"
+                                  Grid.Column="2"
+                                  Height="26"
+                                  Content="Auto"
+                                  Tag="auto"
+                                  Style="{StaticResource ResizeModeToggleButtonStyle}"
+                                  Click="OnResizeModeButtonClick" />
+                    <ToggleButton x:Name="ResizeCoverButton"
+                                  Grid.Row="0"
+                                  Grid.Column="4"
+                                  Height="26"
+                                  Content="Cover"
+                                  Tag="music_cover"
+                                  Style="{StaticResource ResizeModeToggleButtonStyle}"
+                                  Click="OnResizeModeButtonClick" />
 
-        <TextBlock x:Name="StatusTextBlock"
-                   Canvas.Left="20"
-                   Canvas.Top="451"
-                   Width="320"
-                   Height="18"
-                   Text=""
-                   TextAlignment="Center"
-                   TextTrimming="CharacterEllipsis"
-                   Foreground="{DynamicResource StatusTextBrush}"
-                   FontFamily="Segoe UI"
-                   FontSize="11" />
-    </Canvas>
+                    <TextBlock x:Name="QualityLabel"
+                               Grid.Row="2"
+                               Grid.Column="0"
+                               Text="Quality"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="12" />
+                    <Grid Grid.Row="2"
+                          Grid.Column="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="70" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="QualityTextBox"
+                                 Grid.Column="0"
+                                 Width="70"
+                                 Height="26"
+                                 Style="{StaticResource RoundedTextBoxStyle}"
+                                 LostFocus="OnQualityLostFocus"
+                                 PreviewKeyDown="OnQualityPreviewKeyDown"
+                                 PreviewTextInput="OnQualityPreviewTextInput"
+                                 PreviewMouseWheel="OnQualityPreviewMouseWheel" />
+                        <TextBlock x:Name="SharpModeLabel"
+                                   Grid.Column="2"
+                                   Text="Sharp"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="12" />
+                    </Grid>
+                    <ComboBox x:Name="SharpModeComboBox"
+                              Grid.Row="2"
+                              Grid.Column="4"
+                              Height="26"
+                              Style="{StaticResource RoundedComboBoxStyle}"
+                              SelectionChanged="OnSharpModeSelectionChanged"
+                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
+                        <ComboBoxItem Content="Standard" Tag="standard" />
+                        <ComboBoxItem Content="Increased" Tag="increased" />
+                        <ComboBoxItem Content="High" Tag="high" />
+                        <ComboBoxItem Content="Maximum" Tag="maximum" />
+                    </ComboBox>
+
+                    <Grid Grid.Row="4"
+                          Grid.Column="0"
+                          Grid.ColumnSpan="5"
+                          Height="26">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="SmartModeCheckBox"
+                                  Grid.Column="0"
+                                  Height="22"
+                                  Content="Smart mode"
+                                  VerticalAlignment="Center"
+                                  Style="{StaticResource ModeCheckBoxStyle}"
+                                  Checked="OnSmartModeChanged"
+                                  Unchecked="OnSmartModeChanged" />
+                        <CheckBox x:Name="ManualModeCheckBox"
+                                  Grid.Column="2"
+                                  Height="22"
+                                  Content="Manual mode"
+                                  VerticalAlignment="Center"
+                                  Style="{StaticResource ModeCheckBoxStyle}"
+                                  Checked="OnManualModeChanged"
+                                  Unchecked="OnManualModeChanged" />
+                        <Button x:Name="SettingsButton"
+                                Grid.Column="4"
+                                MinWidth="120"
+                                Height="26"
+                                Style="{StaticResource RoundedButtonStyle}"
+                                Click="OnSettingsButtonClick">
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        IsHitTestVisible="False">
+                                <Viewbox Width="14"
+                                         Height="14"
+                                         Margin="0,0,5,0">
+                                    <Canvas Width="24"
+                                            Height="24">
+                                        <Path Stroke="{DynamicResource MainTextBrush}"
+                                              StrokeThickness="2"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round"
+                                              StrokeLineJoin="Round"
+                                              Fill="Transparent"
+                                              Data="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+                                        <Ellipse Canvas.Left="9"
+                                                 Canvas.Top="9"
+                                                 Width="6"
+                                                 Height="6"
+                                                 Stroke="{DynamicResource MainTextBrush}"
+                                                 StrokeThickness="2"
+                                                 Fill="Transparent" />
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock x:Name="SettingsButtonText"
+                                           Text="Advanced"
+                                           FontFamily="Segoe UI"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MainTextBrush}" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <TextBlock x:Name="StatusTextBlock"
+                       Width="{Binding ActualWidth, ElementName=MainSettingsPanel}"
+                       Height="18"
+                       Text=""
+                       TextAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource StatusTextBrush}"
+                       FontFamily="Segoe UI"
+                       FontSize="11" />
+        </StackPanel>
+    </Grid>
 </Window>
