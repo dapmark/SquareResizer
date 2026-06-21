@@ -15,8 +15,9 @@ public partial class MainWindow : Window
 {
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
-    private readonly AppSettings currentSettings;
-    private readonly Localization text;
+    private AppSettings currentSettings;
+    private Localization text;
+    private bool isApplyingSettingsToUi;
 
     private bool isManualPreviewLoaded;
     private bool isDraggingCrop;
@@ -56,14 +57,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         Title = AppVersion.WindowTitle;
-        ApplyLocalizedText();
-
-        QualityTextBox.Text = currentSettings.Quality.ToString();
-        SmartModeCheckBox.IsChecked = currentSettings.SmartMode;
-        ManualModeCheckBox.IsChecked = currentSettings.ManualMode;
-
-        SelectResizeMode(currentSettings.ResizeMode);
-        SelectSharpMode(currentSettings.SharpMode);
+        ApplySettingsToUi();
 
         DataObject.AddPastingHandler(QualityTextBox, OnQualityPaste);
 
@@ -97,7 +91,7 @@ public partial class MainWindow : Window
 
     private void ApplyLightTheme()
     {
-        Resources["WindowBackgroundBrush"] = BrushFromRgb(240, 240, 240);
+        Resources["WindowBackgroundBrush"] = BrushFromRgb(243, 243, 243);
         Resources["DropAreaBackgroundBrush"] = BrushFromRgb(245, 245, 245);
         Resources["DropAreaBorderBrush"] = BrushFromRgb(130, 130, 130);
         Resources["MainTextBrush"] = BrushFromRgb(70, 70, 70);
@@ -113,7 +107,7 @@ public partial class MainWindow : Window
 
     private void ApplyDarkTheme()
     {
-        Resources["WindowBackgroundBrush"] = BrushFromRgb(30, 30, 30);
+        Resources["WindowBackgroundBrush"] = BrushFromRgb(32, 32, 32);
         Resources["DropAreaBackgroundBrush"] = BrushFromRgb(37, 37, 38);
         Resources["DropAreaBorderBrush"] = BrushFromRgb(63, 63, 70);
         Resources["MainTextBrush"] = BrushFromRgb(212, 212, 212);
@@ -123,7 +117,7 @@ public partial class MainWindow : Window
         Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(0, 122, 204);
         Resources["ButtonBorderBrush"] = BrushFromRgb(63, 63, 70);
         Resources["AccentBorderBrush"] = BrushFromRgb(0, 122, 204);
-        Resources["InputBackgroundBrush"] = BrushFromRgb(30, 30, 30);
+        Resources["InputBackgroundBrush"] = BrushFromRgb(32, 32, 32);
         Resources["StatusTextBrush"] = BrushFromRgb(200, 200, 200);
     }
 
@@ -179,6 +173,30 @@ public partial class MainWindow : Window
         OpenButton.Content = isManualPreviewLoaded ? text.SaveButton : text.OpenFileButton;
         CenterCropButton.ToolTip = text.CenterCropButtonToolTip;
         CenterCropButton.Visibility = isManualPreviewLoaded ? Visibility.Visible : Visibility.Collapsed;
+        SettingsButton.ToolTip = text.SettingsButtonToolTip;
+    }
+
+    private void ApplySettingsToUi()
+    {
+        isApplyingSettingsToUi = true;
+
+        try
+        {
+            text = Localization.For(currentSettings.Language);
+
+            ApplyLocalizedText();
+
+            QualityTextBox.Text = currentSettings.Quality.ToString();
+            SmartModeCheckBox.IsChecked = currentSettings.SmartMode;
+            ManualModeCheckBox.IsChecked = currentSettings.ManualMode;
+
+            SelectResizeMode(currentSettings.ResizeMode);
+            SelectSharpMode(currentSettings.SharpMode);
+        }
+        finally
+        {
+            isApplyingSettingsToUi = false;
+        }
     }
 
     private static void SetComboBoxItemContent(ComboBox comboBox, string tag, string content)
@@ -191,6 +209,36 @@ public partial class MainWindow : Window
                 comboBoxItem.Content = content;
                 return;
             }
+        }
+    }
+
+    private void OnSettingsButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (!SaveQualityFromUi(showMessageOnError: true))
+        {
+            return;
+        }
+
+        var dialog = new SettingsWindow(currentSettings)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        bool wasManualPreviewLoaded = isManualPreviewLoaded;
+
+        currentSettings.CopyFrom(dialog.Settings);
+        currentSettings.Save();
+        ApplySettingsToUi();
+        ApplyTheme();
+
+        if (wasManualPreviewLoaded && !currentSettings.ManualMode)
+        {
+            ResetManualPreview();
         }
     }
 
@@ -303,7 +351,7 @@ public partial class MainWindow : Window
 
     private void OnResizeModeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!IsInitialized || ResizeModeComboBox.SelectedItem is not ComboBoxItem selectedItem)
+        if (!IsInitialized || isApplyingSettingsToUi || ResizeModeComboBox.SelectedItem is not ComboBoxItem selectedItem)
         {
             return;
         }
@@ -314,7 +362,7 @@ public partial class MainWindow : Window
 
     private void OnSharpModeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!IsInitialized || SharpModeComboBox.SelectedItem is not ComboBoxItem selectedItem)
+        if (!IsInitialized || isApplyingSettingsToUi || SharpModeComboBox.SelectedItem is not ComboBoxItem selectedItem)
         {
             return;
         }
@@ -325,7 +373,7 @@ public partial class MainWindow : Window
 
     private void OnSmartModeChanged(object sender, RoutedEventArgs e)
     {
-        if (!IsInitialized)
+        if (!IsInitialized || isApplyingSettingsToUi)
         {
             return;
         }
@@ -336,7 +384,7 @@ public partial class MainWindow : Window
 
     private void OnManualModeChanged(object sender, RoutedEventArgs e)
     {
-        if (!IsInitialized)
+        if (!IsInitialized || isApplyingSettingsToUi)
         {
             return;
         }
@@ -538,7 +586,9 @@ public partial class MainWindow : Window
             currentSettings.SmartMode,
             currentSettings.SharpMode,
             currentSettings.JpegMode,
-            currentSettings.Language);
+            currentSettings.Language,
+            currentSettings.SmartPaddingPercent,
+            currentSettings.SmartPaddingMaxPx);
 
         foreach (ProcessResult result in results.Where(r => !r.Success && !r.AlreadyCorrectSize))
         {

@@ -23,7 +23,9 @@ public partial class App : Application
                     settings.SmartMode,
                     settings.SharpMode,
                     settings.JpegMode,
-                    settings.Language);
+                    settings.Language,
+                    settings.SmartPaddingPercent,
+                    settings.SmartPaddingMaxPx);
 
                 Shutdown();
                 return;

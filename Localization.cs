@@ -28,8 +28,8 @@ internal sealed class Localization
     public string ResizeAuto => IsRussian ? "Авто" : "Auto";
     public string ResizeMusicCover => IsRussian ? "Обложка" : "Cover";
     public string ResizeModeToolTip => IsRussian
-        ? "Авто — ближайший размер по изображению. Обложка — ближайший стандарт: 1400, 1200, 1000, 700, 600, 500."
-        : "Auto — nearest image-based size. Cover — nearest standard size: 1400, 1200, 1000, 700, 600, 500.";
+        ? "Авто — ближайшая сотня по изображению. Обложка — ближайший стандарт: 1400, 1200, 1000, 700, 600, 500."
+        : "Auto — nearest 100 px image-based size. Cover — nearest standard size: 1400, 1200, 1000, 700, 600, 500.";
 
     public string QualityLabel => IsRussian ? "Качество" : "Quality";
 
@@ -55,6 +55,7 @@ internal sealed class Localization
     public string OpenFileButton => IsRussian ? "Открыть файл" : "Open file";
     public string SaveButton => IsRussian ? "Сохранить" : "Save";
     public string CenterCropButtonToolTip => IsRussian ? "Центрировать рамку" : "Center crop frame";
+    public string SettingsButtonToolTip => IsRussian ? "Настройки" : "Settings";
 
     public string OpenDialogTitle => IsRussian ? "Выберите изображение" : "Select image";
     public string OpenDialogFilter => IsRussian

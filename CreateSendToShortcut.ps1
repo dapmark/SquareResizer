@@ -2,7 +2,7 @@
 # Edit these values if needed
 
 $BuildFolder = ""
-$ShortcutName = "Square Resizer"
+$ShortcutName = "SquareResizer"
 
 $ExecutableName = "SquareResizer.exe"
 

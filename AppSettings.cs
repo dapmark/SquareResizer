@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -16,6 +17,8 @@ internal sealed class AppSettings
     public const string DefaultSharpMode = "standard";
     public const int DefaultJpegMode = 1;
     public const string DefaultLanguage = "en";
+    public const double DefaultSmartPaddingPercent = 4.0;
+    public const int DefaultSmartPaddingMaxPx = 32;
 
     private const string SettingsFileName = "settings.txt";
     private const string EmbeddedDefaultSettingsResourceName = "SquareResizer.SettingsDefault";
@@ -28,6 +31,8 @@ internal sealed class AppSettings
         "jpeg_mode",
         "smart_mode",
         "manual_mode",
+        "smart_padding_percent",
+        "smart_padding_max_px",
         "theme",
         "language"
     };
@@ -40,6 +45,8 @@ internal sealed class AppSettings
     public string SharpMode { get; set; } = DefaultSharpMode;
     public int JpegMode { get; set; } = DefaultJpegMode;
     public string Language { get; set; } = DefaultLanguage;
+    public double SmartPaddingPercent { get; set; } = DefaultSmartPaddingPercent;
+    public int SmartPaddingMaxPx { get; set; } = DefaultSmartPaddingMaxPx;
 
     public bool IsDarkTheme =>
         string.Equals(Theme, "dark", StringComparison.OrdinalIgnoreCase);
@@ -47,6 +54,36 @@ internal sealed class AppSettings
     public static string SettingsFilePath =>
         Path.Combine(AppContext.BaseDirectory, SettingsFileName);
 
+    public AppSettings Clone()
+    {
+        return new AppSettings
+        {
+            Quality = Quality,
+            Theme = Theme,
+            ResizeMode = ResizeMode,
+            SmartMode = SmartMode,
+            ManualMode = ManualMode,
+            SharpMode = SharpMode,
+            JpegMode = JpegMode,
+            Language = Language,
+            SmartPaddingPercent = SmartPaddingPercent,
+            SmartPaddingMaxPx = SmartPaddingMaxPx
+        };
+    }
+
+    public void CopyFrom(AppSettings other)
+    {
+        Quality = other.Quality;
+        Theme = other.Theme;
+        ResizeMode = other.ResizeMode;
+        SmartMode = other.SmartMode;
+        ManualMode = other.ManualMode;
+        SharpMode = other.SharpMode;
+        JpegMode = other.JpegMode;
+        Language = other.Language;
+        SmartPaddingPercent = other.SmartPaddingPercent;
+        SmartPaddingMaxPx = other.SmartPaddingMaxPx;
+    }
 
     public static AppSettings Load()
     {
@@ -79,7 +116,7 @@ internal sealed class AppSettings
 
                 if (key.Equals("quality", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (int.TryParse(value, out int quality))
+                    if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int quality))
                     {
                         settings.Quality = NormalizeQuality(quality);
                     }
@@ -125,9 +162,29 @@ internal sealed class AppSettings
 
                 if (key.Equals("jpeg_mode", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (int.TryParse(value, out int jpegMode))
+                    if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int jpegMode))
                     {
                         settings.JpegMode = NormalizeJpegMode(jpegMode);
+                    }
+
+                    continue;
+                }
+
+                if (key.Equals("smart_padding_percent", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (TryParseDouble(value, out double smartPaddingPercent))
+                    {
+                        settings.SmartPaddingPercent = NormalizeSmartPaddingPercent(smartPaddingPercent);
+                    }
+
+                    continue;
+                }
+
+                if (key.Equals("smart_padding_max_px", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int smartPaddingMaxPx))
+                    {
+                        settings.SmartPaddingMaxPx = NormalizeSmartPaddingMaxPx(smartPaddingMaxPx);
                     }
                 }
             }
@@ -145,6 +202,8 @@ internal sealed class AppSettings
             settings.SharpMode = DefaultSharpMode;
             settings.JpegMode = DefaultJpegMode;
             settings.Language = DefaultLanguage;
+            settings.SmartPaddingPercent = DefaultSmartPaddingPercent;
+            settings.SmartPaddingMaxPx = DefaultSmartPaddingMaxPx;
             return settings;
         }
     }
@@ -157,15 +216,19 @@ internal sealed class AppSettings
         SharpMode = NormalizeSharpMode(SharpMode);
         JpegMode = NormalizeJpegMode(JpegMode);
         Language = NormalizeLanguage(Language);
+        SmartPaddingPercent = NormalizeSmartPaddingPercent(SmartPaddingPercent);
+        SmartPaddingMaxPx = NormalizeSmartPaddingMaxPx(SmartPaddingMaxPx);
 
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["quality"] = Quality.ToString(),
+            ["quality"] = Quality.ToString(CultureInfo.InvariantCulture),
             ["resize_mode"] = ResizeMode,
             ["sharp_mode"] = SharpMode,
-            ["jpeg_mode"] = JpegMode.ToString(),
+            ["jpeg_mode"] = JpegMode.ToString(CultureInfo.InvariantCulture),
             ["smart_mode"] = SmartMode.ToString().ToLowerInvariant(),
             ["manual_mode"] = ManualMode.ToString().ToLowerInvariant(),
+            ["smart_padding_percent"] = FormatDouble(SmartPaddingPercent),
+            ["smart_padding_max_px"] = SmartPaddingMaxPx.ToString(CultureInfo.InvariantCulture),
             ["theme"] = Theme,
             ["language"] = Language
         };
@@ -226,7 +289,7 @@ internal sealed class AppSettings
             resultLines.Add(key + "=" + values[key]);
         }
 
-        File.WriteAllLines(SettingsFilePath, resultLines);
+        File.WriteAllLines(SettingsFilePath, resultLines, Encoding.UTF8);
     }
 
     private static void EnsureSettingsFileExists()
@@ -278,40 +341,21 @@ internal sealed class AppSettings
             "jpeg_mode=" + DefaultJpegMode + Environment.NewLine +
             "smart_mode=" + DefaultSmartMode.ToString().ToLowerInvariant() + Environment.NewLine +
             "manual_mode=" + DefaultManualMode.ToString().ToLowerInvariant() + Environment.NewLine +
+            "smart_padding_percent=" + FormatDouble(DefaultSmartPaddingPercent) + Environment.NewLine +
+            "smart_padding_max_px=" + DefaultSmartPaddingMaxPx + Environment.NewLine +
             "theme=" + DefaultTheme + Environment.NewLine +
             "language=" + DefaultLanguage + Environment.NewLine;
     }
 
     public static int NormalizeQuality(int quality)
     {
-        if (quality < 1)
-        {
-            return 1;
-        }
-
-        if (quality > 100)
-        {
-            return 100;
-        }
-
-        return quality;
+        return Math.Clamp(quality, 1, 100);
     }
 
     public static int NormalizeJpegMode(int jpegMode)
     {
-        if (jpegMode < 1)
-        {
-            return 1;
-        }
-
-        if (jpegMode > 3)
-        {
-            return 3;
-        }
-
-        return jpegMode;
+        return Math.Clamp(jpegMode, 1, 3);
     }
-
 
     public static string NormalizeLanguage(string? language)
     {
@@ -321,11 +365,22 @@ internal sealed class AppSettings
             return "ru";
         }
 
+        if (string.Equals(language, "en", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(language, "english", StringComparison.OrdinalIgnoreCase))
+        {
+            return "en";
+        }
+
         return DefaultLanguage;
     }
 
     public static string NormalizeTheme(string? theme)
     {
+        if (string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase))
+        {
+            return "light";
+        }
+
         if (string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase))
         {
             return "dark";
@@ -336,6 +391,11 @@ internal sealed class AppSettings
 
     public static string NormalizeResizeMode(string? resizeMode)
     {
+        if (string.Equals(resizeMode, "auto", StringComparison.OrdinalIgnoreCase))
+        {
+            return "auto";
+        }
+
         if (string.Equals(resizeMode, "music_cover", StringComparison.OrdinalIgnoreCase))
         {
             return "music_cover";
@@ -346,6 +406,14 @@ internal sealed class AppSettings
 
     public static bool NormalizeSmartMode(string? smartMode)
     {
+        if (string.Equals(smartMode, "true", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(smartMode, "1", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(smartMode, "on", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(smartMode, "yes", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
         if (string.Equals(smartMode, "false", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(smartMode, "0", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(smartMode, "off", StringComparison.OrdinalIgnoreCase) ||
@@ -365,6 +433,14 @@ internal sealed class AppSettings
             string.Equals(manualMode, "yes", StringComparison.OrdinalIgnoreCase))
         {
             return true;
+        }
+
+        if (string.Equals(manualMode, "false", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(manualMode, "0", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(manualMode, "off", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(manualMode, "no", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
         }
 
         return DefaultManualMode;
@@ -388,5 +464,31 @@ internal sealed class AppSettings
         }
 
         return DefaultSharpMode;
+    }
+
+    public static double NormalizeSmartPaddingPercent(double smartPaddingPercent)
+    {
+        if (double.IsNaN(smartPaddingPercent) || double.IsInfinity(smartPaddingPercent))
+        {
+            return DefaultSmartPaddingPercent;
+        }
+
+        return Math.Clamp(smartPaddingPercent, 0.0, 20.0);
+    }
+
+    public static int NormalizeSmartPaddingMaxPx(int smartPaddingMaxPx)
+    {
+        return Math.Clamp(smartPaddingMaxPx, 0, 300);
+    }
+
+    public static bool TryParseDouble(string value, out double result)
+    {
+        value = value.Trim().Replace(',', '.');
+        return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
+    }
+
+    public static string FormatDouble(double value)
+    {
+        return value.ToString("0.##", CultureInfo.InvariantCulture);
     }
 }

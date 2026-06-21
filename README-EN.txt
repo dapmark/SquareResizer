@@ -33,7 +33,7 @@ How to use
 Size modes
 ----------
 Auto
-The application creates a square based on the source image size. If smart mode can safely extend the background, the square is created using the larger side. If extension is not possible, the application uses regular square compression/stretching.
+The application creates a square based on the source image size and rounds the final size to the nearest 100 px. If smart mode can safely extend the background, the square is created using the larger side; otherwise the application uses regular square compression/stretching.
 
 Cover
 The application converts the image to the nearest standard cover size: 1400x1400, 1200x1200, 1000x1000, 700x700, 600x600 or 500x500. The minimum size in this mode is 500x500
@@ -110,6 +110,12 @@ smart_mode
 manual_mode
     true — enable manual mode
     false — disable manual mode
+
+smart_padding_percent
+    Maximum side difference in percent for smart background extension
+
+smart_padding_max_px
+    Absolute maximum side difference in pixels for smart background extension
 
 theme
     light — light theme

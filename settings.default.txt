@@ -6,6 +6,8 @@
 # jpeg_mode: 1 = compact JPG / smallest file, 2 = balanced JPG, 3 = maximum JPG / largest file
 # smart_mode: true = try to extend the missing side with a background color, false = regular square resize/stretch
 # manual_mode: true = manual crop before saving, false = regular automatic processing
+# smart_padding_percent: max side difference in percent for smart padding
+# smart_padding_max_px: absolute max side difference in pixels for smart padding
 # theme: light = light theme, dark = dark theme
 # language: en = English interface, ru = Russian interface
 #
@@ -15,5 +17,7 @@ sharp_mode=standard
 jpeg_mode=1
 smart_mode=true
 manual_mode=false
+smart_padding_percent=4
+smart_padding_max_px=32
 theme=dark
 language=en
