@@ -2,36 +2,50 @@ English | [Русский](README-RU.md)
 
 # SquareResizer
 
-SquareResizer is a compact utility for preparing square images. The application opens an image, makes it square, applies the selected size, and saves the resulting JPG file next to the source image.
+SquareResizer is a compact portable Windows utility for preparing square cover images. It opens one or more images, makes them square, applies the selected output size, and saves JPG files next to the originals.
+The app is mainly intended for music cover art and similar images where a clean square result is needed quickly.
 
-## Features
+## Screenshots
 
-- Process one or multiple files in regular mode
-- Manual mode with preview and a square crop frame
-- Move the crop frame with the mouse, arrow keys, Shift + arrow keys, Home and End
-- Close the loaded image in manual mode with Esc or the context menu
-- Smart mode for extending the missing side with the background color
-- Output size selection: Auto or Cover
-- Configurable rounding step for Auto
-- Standard cover sizes: 1400x1400, 1200x1200, 1000x1000, 700x700, 600x600, 500x500
-- JPG quality setting
-- JPEG mode setting
-- Optional sharpening after resizing
-- Light and dark theme switching
-- Interface language switching
-- Save the result next to the source file
-- Automatically add the output size suffix to the file name
-- Fast image processing through the Windows SendTo menu or a custom context menu item
+### Main window (manual mode)
 
-## How to use
+<img src="docs/screenshots/main-window-manual-mode.png" alt="SquareResizer – manual mode" width="395">
 
-1. Start SquareResizer
-2. Select the size: Auto or Cover
-3. In the main window, configure quality, sharpness, smart mode and manual mode
-4. If needed, open Advanced and configure language, theme, JPEG mode, Auto size step and smart mode limits
-5. Open an image with the Select file button or drag it into the application window
-6. In regular mode, the application immediately saves the square JPG file next to the source image
-7. In manual mode, adjust the crop frame position or use the center button, then click Save
+### Advanced window
+
+<img src="docs/screenshots/advanced-window.png" alt="SquareResizer – Advanced window" width="324">
+
+## Quick start
+
+1. Download the portable ZIP from [Releases](https://github.com/dapmark/SquareResizer/releases)
+2. Unpack it to any convenient writable folder
+3. Run `SquareResizer.exe`
+4. Choose `Auto` or `Cover`
+5. Open an image with the `Select file` button or drag it into the window
+6. The result is saved next to the source file, for example `cover_1000x1000.jpg`
+
+No installation is required. Settings are stored next to the application in `settings.txt`.
+
+## Main features
+
+- One-file and multi-file processing
+- Auto mode with configurable size rounding
+- Cover mode with standard cover sizes
+- Smart mode for extending the missing side with background color
+- Manual mode with preview and a movable square crop frame
+- JPG quality, JPEG compression mode and sharpness settings
+- Light and dark themes
+- English and Russian interface
+- Portable settings stored next to the app
+- Optional Windows SendTo shortcut and custom context menu script
+
+## Supported input formats
+
+JPG, JPEG, PNG, WEBP, BMP, TIF, TIFF
+
+## Output format
+
+The result is always saved as JPG. For images with transparency, transparent areas are replaced with a white background because JPG does not support an alpha channel.
 
 ## Size modes
 
@@ -66,11 +80,21 @@ The loaded image in manual mode can be closed with Esc or through the Close file
 
 After clicking Save, the application takes the selected square, applies the selected size, and saves the result next to the source file.
 
-## Sharpness
+## Quality, JPEG mode and sharpness
+
+Quality applies to the output JPG file. Allowed value: 1 to 100.
+
+JPEG mode controls the compression level of the output JPG file. It does not replace JPG quality and works together with it.
+
+Available JPEG modes:
+
+- Compact – reduces file size at the cost of some quality loss
+- Balanced – intermediate option
+- Maximum – preserves quality but increases file size
 
 Sharpness is applied only after resizing.
 
-Available modes:
+Available sharpness modes:
 
 - Standard
 - Increased
@@ -78,20 +102,6 @@ Available modes:
 - Maximum
 
 Stronger sharpening can emphasize details, but on some images it may increase artifacts.
-
-## Quality
-
-Quality applies to the output JPG file. Allowed value: 1 to 100. The value can be changed in the main window.
-
-## JPEG mode
-
-JPEG mode controls the compression level of the output JPG file. It does not replace JPG quality and works together with it.
-
-Available modes:
-
-- Compact – reduces file size at the cost of some quality loss
-- Balanced – intermediate option
-- Maximum – preserves quality but increases file size
 
 ## Advanced settings
 
@@ -106,13 +116,13 @@ The Advanced window contains settings that are not needed for every processing r
 
 Changes are applied after clicking Apply.
 
-## Settings
+## Settings file
 
-Settings are stored in settings.txt next to the application. If the file is missing next to the application, it is created from the built-in template. The template is edited in the source files.
+Settings are stored in `settings.txt` next to the application. If the file is missing next to the application, it is created from the built-in template.
 
-Many settings are available through the application interface. Manual changes in settings.txt are applied after restarting the application.
+Many settings are available through the application interface. Manual changes in `settings.txt` are applied after restarting the application.
 
-settings.txt example:
+Example:
 
 ```txt
 quality=95
@@ -128,58 +138,25 @@ theme=dark
 language=en
 ```
 
-**quality**
-- JPG saving quality
-- Allowed value: 1 to 100
+Main keys:
 
-**resize_mode**
-- auto – Auto mode
-- music_cover – Cover mode
-
-**sharp_mode**
-- standard – standard sharpness
-- increased – increased sharpness
-- high – high sharpness
-- maximum – maximum sharpness
-
-**jpeg_mode**
-- 1 – compact JPG
-- 2 – balanced JPG
-- 3 – maximum JPG
-
-**smart_mode**
-- true – enable smart mode
-- false – disable smart mode
-
-**manual_mode**
-- true – enable manual mode
-- false – disable manual mode
-
-**smart_padding_percent**
-- Maximum side difference in percent for smart mode
-- Allowed value: 0 to 20
-
-**smart_padding_max_px**
-- Maximum number of pixels that smart mode can add as background
-- Allowed value: 0 to 300
-
-**auto_size_step**
-- Rounding step for Auto
-- Available values: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200
-
-**theme**
-- light – light theme
-- dark – dark theme
-
-**language**
-- en – English interface
-- ru – Russian interface
+- `quality` – JPG saving quality, from 1 to 100
+- `resize_mode` – `auto` or `music_cover`
+- `sharp_mode` – `standard`, `increased`, `high`, `maximum`
+- `jpeg_mode` – `1` compact, `2` balanced, `3` maximum
+- `smart_mode` – enable or disable smart mode
+- `manual_mode` – enable or disable manual mode
+- `smart_padding_percent` – maximum side difference in percent for smart mode, from 0 to 20
+- `smart_padding_max_px` – maximum number of pixels that smart mode can add as background, from 0 to 300
+- `auto_size_step` – rounding step for Auto
+- `theme` – `light` or `dark`
+- `language` – `en` or `ru`
 
 ## File names
 
 The output file is saved next to the source image in JPG format.
 
-The output size suffix is added to the file name, for example:
+The output size suffix is added to the file name:
 
 ```txt
 cover.png -> cover_1000x1000.jpg
@@ -197,7 +174,7 @@ If the source PNG, WEBP, BMP, TIF or TIFF already has the required square size a
 
 ## Windows integration
 
-The final build contains two PowerShell scripts next to SquareResizer.exe:
+The final build contains two PowerShell scripts next to `SquareResizer.exe`:
 
 **InstallContextMenu.ps1**
 - Adds a custom context menu item for supported image files
@@ -223,19 +200,9 @@ powershell -ExecutionPolicy Bypass -File .\CreateSendToShortcut.ps1
 
 The scripts work in the current user profile and do not require administrator rights.
 
-## Supported input formats
-
-The application is intended for common image formats:
-
-JPG, JPEG, PNG, WEBP, BMP, TIF, TIFF
-
-## Output format
-
-The result is always saved as JPG. For images with transparency, transparent areas are replaced with a white background because JPG does not support an alpha channel.
-
 ## System requirements
 
-Windows 11 x64. Other Windows editions are not guaranteed.
+Tested on Windows 11 x64. Other Windows versions are not guaranteed.
 
 ## License
 

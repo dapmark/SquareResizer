@@ -880,9 +880,13 @@ public partial class MainWindow : Window
         manualCropY = 0;
 
         PreviewImage.Source = null;
+        PreviewImage.Width = double.NaN;
+        PreviewImage.Height = double.NaN;
+        PreviewImage.Margin = new Thickness(0);
         PreviewImage.Visibility = Visibility.Collapsed;
         DropIdleContent.Visibility = Visibility.Visible;
         DropPlusIcon.Visibility = Visibility.Collapsed;
+        CropCanvas.Clip = null;
         CropCanvas.Visibility = Visibility.Collapsed;
 
         CenterCropButton.Visibility = Visibility.Collapsed;
@@ -987,8 +991,13 @@ public partial class MainWindow : Window
         manualPreviewLeft = (hostWidth - renderedWidth) / 2.0;
         manualPreviewTop = (hostHeight - renderedHeight) / 2.0;
 
+        PreviewImage.Width = renderedWidth;
+        PreviewImage.Height = renderedHeight;
+        PreviewImage.Margin = new Thickness(manualPreviewLeft, manualPreviewTop, 0, 0);
+
         CropCanvas.Width = hostWidth;
         CropCanvas.Height = hostHeight;
+        CropCanvas.Clip = new RectangleGeometry(new Rect(manualPreviewLeft, manualPreviewTop, renderedWidth, renderedHeight));
 
         double cropLeft = manualPreviewLeft + manualCropX * manualPreviewScale;
         double cropTop = manualPreviewTop + manualCropY * manualPreviewScale;

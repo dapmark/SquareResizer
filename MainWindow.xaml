@@ -484,6 +484,8 @@
                       ClipToBounds="True"
                       Focusable="True"
                       FocusVisualStyle="{x:Null}"
+                      UseLayoutRounding="False"
+                      SnapsToDevicePixels="False"
                       ContextMenuOpening="OnPreviewHostContextMenuOpening"
                       MouseLeftButtonDown="OnPreviewMouseLeftButtonDown"
                       MouseMove="OnPreviewMouseMove"
@@ -512,7 +514,11 @@
                     </Grid.ContextMenu>
 
                     <Image x:Name="PreviewImage"
-                           Stretch="Uniform"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Top"
+                           Stretch="Fill"
+                           UseLayoutRounding="False"
+                           SnapsToDevicePixels="False"
                            Visibility="Collapsed"
                            IsHitTestVisible="False" />
 
@@ -563,10 +569,14 @@
 
                     <Canvas x:Name="CropCanvas"
                             Visibility="Collapsed"
-                            Background="Transparent">
+                            Background="Transparent"
+                            UseLayoutRounding="False"
+                            SnapsToDevicePixels="False">
                         <Rectangle x:Name="CropOverlay"
                                    Stroke="{DynamicResource AccentBorderBrush}"
                                    StrokeThickness="2"
+                                   UseLayoutRounding="False"
+                                   SnapsToDevicePixels="False"
                                    Fill="#220078D7"
                                    Width="100"
                                    Height="100"
