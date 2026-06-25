@@ -8,6 +8,7 @@ set "PROJECT=%ROOT%SquareResizer.csproj"
 set "VERSION_FILE=%ROOT%version.txt"
 set "BUILD_DIR=%ROOT%.build"
 set "PUBLISH_DIR=%BUILD_DIR%\_publish"
+set "WIN_INTEGRATION_DIR=%ROOT%windows-integration"
 
 if not exist "%PROJECT%" (
     echo.
@@ -83,6 +84,41 @@ xcopy "%PUBLISH_DIR%\*.*" "%OUTPUT_DIR%" /Y /I >nul
 if errorlevel 1 (
     echo.
     echo Failed to copy published files
+    pause
+    exit /b 1
+)
+
+for %%F in ("README.md" "README-RU.md" "LICENSE") do (
+    if not exist "%ROOT%%%~F" (
+        echo.
+        echo Required release file not found:
+        echo %ROOT%%%~F
+        pause
+        exit /b 1
+    )
+
+    copy /Y "%ROOT%%%~F" "%OUTPUT_DIR%\" >nul
+    if errorlevel 1 (
+        echo.
+        echo Failed to copy release file:
+        echo %ROOT%%%~F
+        pause
+        exit /b 1
+    )
+)
+
+if not exist "%WIN_INTEGRATION_DIR%\" (
+    echo.
+    echo Windows integration folder not found:
+    echo %WIN_INTEGRATION_DIR%
+    pause
+    exit /b 1
+)
+
+xcopy "%WIN_INTEGRATION_DIR%\*.*" "%OUTPUT_DIR%\windows-integration\" /Y /I /E >nul
+if errorlevel 1 (
+    echo.
+    echo Failed to copy Windows integration scripts
     pause
     exit /b 1
 )

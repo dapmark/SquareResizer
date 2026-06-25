@@ -16,6 +16,34 @@ public partial class MainWindow : Window
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
     private const double DarkBorderMixRatio = 0.03;
     private const double LightBorderMixRatio = 0.06;
+    private const double CropCornerHitSize = 12.0;
+    private const double CropSideHitSize = 8.0;
+    private const int MinManualCropSize = 32;
+
+    private enum ManualCropDragMode
+    {
+        None,
+        Move,
+        ResizeTopLeft,
+        ResizeTopRight,
+        ResizeBottomLeft,
+        ResizeBottomRight,
+        ResizeLeft,
+        ResizeRight,
+        ResizeTop,
+        ResizeBottom
+    }
+
+    private readonly record struct ManualResultState(
+        string SourcePath,
+        int CropX,
+        int CropY,
+        int CropSize,
+        int Quality,
+        string ResizeMode,
+        string SharpMode,
+        int JpegMode,
+        int AutoSizeStep);
 
     private AppSettings currentSettings;
     private Localization text;
@@ -23,6 +51,7 @@ public partial class MainWindow : Window
 
     private bool isManualPreviewLoaded;
     private bool isDraggingCrop;
+    private ManualCropDragMode manualCropDragMode = ManualCropDragMode.None;
 
     private string? manualSourcePath;
     private int manualImageWidth;
@@ -30,6 +59,7 @@ public partial class MainWindow : Window
     private int manualCropSize;
     private int manualCropX;
     private int manualCropY;
+    private ManualResultState? savedManualResultState;
 
     private double manualPreviewLeft;
     private double manualPreviewTop;
@@ -38,6 +68,7 @@ public partial class MainWindow : Window
     private Point dragStartPoint;
     private int dragStartCropX;
     private int dragStartCropY;
+    private int dragStartCropSize;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(
@@ -67,6 +98,53 @@ public partial class MainWindow : Window
 
         ApplyTheme();
         SourceInitialized += OnSourceInitialized;
+    }
+
+    internal void OpenManualStartupFiles(string[] paths)
+    {
+        OpenManualFiles(paths);
+    }
+
+    private void OpenManualFiles(string[] files)
+    {
+        EnableManualModeForCurrentSession();
+
+        string[] supportedFiles = files
+            .Where(path => ImageProcessor.IsSupportedInputFile(path) && File.Exists(path))
+            .ToArray();
+
+        if (supportedFiles.Length == 0)
+        {
+            SetStatusText(text.ManualNoSupportedFileStatus);
+            PreviewHost.Focus();
+            return;
+        }
+
+        if (LoadManualPreview(supportedFiles[0]) && supportedFiles.Length > 1)
+        {
+            SetStatusText(text.ManualFirstFileStatus);
+        }
+
+        PreviewHost.Focus();
+    }
+
+    private void EnableManualModeForCurrentSession()
+    {
+        if (ManualModeCheckBox.IsChecked == true)
+        {
+            return;
+        }
+
+        isApplyingSettingsToUi = true;
+
+        try
+        {
+            ManualModeCheckBox.IsChecked = true;
+        }
+        finally
+        {
+            isApplyingSettingsToUi = false;
+        }
     }
 
     private void OnMainSettingsPanelSizeChanged(object sender, SizeChangedEventArgs e)
@@ -214,8 +292,10 @@ public partial class MainWindow : Window
         SelectFileButton.Content = text.SelectFileButton;
         DropOrTextBlock.Text = text.DropOrText;
         DropHereTextBlock.Text = text.DropHereText;
-        CenterCropButton.ToolTip = text.CenterCropButtonToolTip;
-        SaveManualButton.ToolTip = text.SaveButton;
+        CenterCropButtonText.Text = text.CenterCropButton;
+        CenterCropButton.ToolTip = null;
+        SaveManualButtonText.Text = text.SaveButton;
+        SaveManualButton.ToolTip = null;
         SettingsButtonText.Text = text.AdvancedSettingsButtonText;
         SettingsButton.ToolTip = null;
         CloseFileMenuItem.Header = text.CloseFileMenuItem;
@@ -235,6 +315,7 @@ public partial class MainWindow : Window
             QualityTextBox.Text = currentSettings.Quality.ToString();
             SmartModeCheckBox.IsChecked = currentSettings.SmartMode;
             ManualModeCheckBox.IsChecked = currentSettings.ManualMode;
+            UpdateManualActionsPanel();
 
             SelectResizeMode(currentSettings.ResizeMode);
             SelectSharpMode(currentSettings.SharpMode);
@@ -276,11 +357,19 @@ public partial class MainWindow : Window
         }
 
         bool wasManualPreviewLoaded = isManualPreviewLoaded;
+        ManualResultState? previousManualResultState = wasManualPreviewLoaded
+            ? CaptureManualResultState()
+            : null;
 
         currentSettings.CopyFrom(dialog.Settings);
         currentSettings.Save();
         ApplySettingsToUi();
         ApplyTheme();
+
+        if (wasManualPreviewLoaded && previousManualResultState != CaptureManualResultState())
+        {
+            UpdateManualActionButtons();
+        }
 
         if (wasManualPreviewLoaded && !currentSettings.ManualMode)
         {
@@ -405,19 +494,7 @@ public partial class MainWindow : Window
 
         if (ManualModeCheckBox.IsChecked == true)
         {
-            if (files.Length != 1)
-            {
-                MessageBox.Show(
-                    this,
-                    text.ManualSingleFileMessage,
-                    text.ManualModeTitle,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-
-                return;
-            }
-
-            LoadManualPreview(files[0]);
+            OpenManualFiles(files);
             return;
         }
 
@@ -483,6 +560,7 @@ public partial class MainWindow : Window
         currentSettings.ResizeMode = AppSettings.NormalizeResizeMode(element.Tag as string);
         currentSettings.Save();
         SelectResizeMode(currentSettings.ResizeMode);
+        UpdateManualActionButtons();
     }
 
     private void OnSharpModeSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -494,6 +572,7 @@ public partial class MainWindow : Window
 
         currentSettings.SharpMode = AppSettings.NormalizeSharpMode(selectedItem.Tag as string);
         currentSettings.Save();
+        UpdateManualActionButtons();
     }
 
     private void OnSmartModeChanged(object sender, RoutedEventArgs e)
@@ -516,6 +595,7 @@ public partial class MainWindow : Window
 
         currentSettings.ManualMode = ManualModeCheckBox.IsChecked == true;
         currentSettings.Save();
+        UpdateManualActionsPanel();
 
         if (!currentSettings.ManualMode)
         {
@@ -606,6 +686,7 @@ public partial class MainWindow : Window
 
         QualityTextBox.Text = quality.ToString();
         QualityTextBox.CaretIndex = QualityTextBox.Text.Length;
+        UpdateManualActionButtons();
 
         e.Handled = true;
     }
@@ -639,6 +720,7 @@ public partial class MainWindow : Window
         currentSettings.Save();
 
         QualityTextBox.Text = currentSettings.Quality.ToString();
+        UpdateManualActionButtons();
         return true;
     }
 
@@ -751,7 +833,7 @@ public partial class MainWindow : Window
         SetStatusText(text.ProcessingSummary(created, alreadyCorrect, failed));
     }
 
-    private void LoadManualPreview(string sourcePath)
+    private bool LoadManualPreview(string sourcePath)
     {
         try
         {
@@ -764,7 +846,7 @@ public partial class MainWindow : Window
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
 
-                return;
+                return false;
             }
 
             BitmapImage bitmap = LoadBitmapImage(sourcePath);
@@ -775,6 +857,7 @@ public partial class MainWindow : Window
             manualCropSize = Math.Min(manualImageWidth, manualImageHeight);
             manualCropX = (manualImageWidth - manualCropSize) / 2;
             manualCropY = (manualImageHeight - manualCropSize) / 2;
+            savedManualResultState = null;
 
             PreviewImage.Source = bitmap;
             PreviewImage.Visibility = Visibility.Visible;
@@ -790,6 +873,7 @@ public partial class MainWindow : Window
             PreviewHost.Focus();
             UpdateManualPreviewLayout();
             UpdateManualActionButtons();
+            return true;
         }
         catch (Exception ex)
         {
@@ -799,6 +883,7 @@ public partial class MainWindow : Window
                 text.OpenImageErrorTitle,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
+            return false;
         }
     }
 
@@ -824,6 +909,11 @@ public partial class MainWindow : Window
         }
 
         if (!SaveQualityFromUi(showMessageOnError: true))
+        {
+            return;
+        }
+
+        if (!HasManualUnsavedChanges())
         {
             return;
         }
@@ -855,22 +945,26 @@ public partial class MainWindow : Window
             return;
         }
 
+        savedManualResultState = CaptureManualResultState();
+        UpdateManualActionButtons();
+
         if (result.AlreadyCorrectSize || string.IsNullOrWhiteSpace(result.OutputPath))
         {
-            ResetManualPreview();
             SetStatusText(text.FileAlreadyCorrectSize);
+            PreviewHost.Focus();
             return;
         }
 
         string fileName = Path.GetFileName(result.OutputPath);
-        ResetManualPreview();
         SetStatusText(text.DoneWithFile(fileName), fileName);
+        PreviewHost.Focus();
     }
 
     private void ResetManualPreview()
     {
         isManualPreviewLoaded = false;
         isDraggingCrop = false;
+        manualCropDragMode = ManualCropDragMode.None;
 
         manualSourcePath = null;
         manualImageWidth = 0;
@@ -878,6 +972,7 @@ public partial class MainWindow : Window
         manualCropSize = 0;
         manualCropX = 0;
         manualCropY = 0;
+        savedManualResultState = null;
 
         PreviewImage.Source = null;
         PreviewImage.Width = double.NaN;
@@ -889,9 +984,9 @@ public partial class MainWindow : Window
         CropCanvas.Clip = null;
         CropCanvas.Visibility = Visibility.Collapsed;
 
-        CenterCropButton.Visibility = Visibility.Collapsed;
-        SaveManualButton.Visibility = Visibility.Collapsed;
+        UpdateManualActionButtons();
         UpdateDropAreaFrame();
+        PreviewHost.Cursor = null;
         PreviewHost.ReleaseMouseCapture();
     }
 
@@ -903,21 +998,25 @@ public partial class MainWindow : Window
         {
             DropIdleContent.Visibility = Visibility.Collapsed;
             DropPlusIcon.Visibility = Visibility.Collapsed;
-            SaveManualButton.Visibility = Visibility.Visible;
             UpdateManualActionButtons();
             return;
         }
 
         DropIdleContent.Visibility = Visibility.Visible;
         DropPlusIcon.Visibility = Visibility.Collapsed;
-        CenterCropButton.Visibility = Visibility.Collapsed;
-        SaveManualButton.Visibility = Visibility.Collapsed;
+        UpdateManualActionButtons();
     }
 
     private void UpdateDropAreaFrame()
     {
-        DropArea.BorderThickness = isManualPreviewLoaded ? new Thickness(1) : new Thickness(0);
-        DropDashedBorder.Visibility = isManualPreviewLoaded ? Visibility.Collapsed : Visibility.Visible;
+        bool hasPreview = isManualPreviewLoaded;
+
+        DropArea.BorderThickness = hasPreview ? new Thickness(1) : new Thickness(0);
+        DropArea.CornerRadius = hasPreview ? new CornerRadius(0) : new CornerRadius(6);
+
+        DropDashedBorder.Visibility = hasPreview ? Visibility.Collapsed : Visibility.Visible;
+        DropDashedBorder.RadiusX = hasPreview ? 0 : 6;
+        DropDashedBorder.RadiusY = hasPreview ? 0 : 6;
     }
 
     private void CloseManualPreview()
@@ -932,17 +1031,43 @@ public partial class MainWindow : Window
         PreviewHost.Focus();
     }
 
+    private void UpdateManualActionsPanel()
+    {
+        bool manualMode = ManualModeCheckBox.IsChecked == true;
+        ManualActionsPanel.Visibility = manualMode ? Visibility.Visible : Visibility.Collapsed;
+        UpdateManualActionButtons();
+    }
+
     private void UpdateManualActionButtons()
+    {
+        bool manualMode = ManualModeCheckBox.IsChecked == true;
+        SaveManualButton.IsEnabled = manualMode && isManualPreviewLoaded && HasManualUnsavedChanges();
+        CenterCropButton.IsEnabled = manualMode && isManualPreviewLoaded && !IsManualCropCentered();
+    }
+
+    private bool HasManualUnsavedChanges()
     {
         if (!isManualPreviewLoaded)
         {
-            CenterCropButton.Visibility = Visibility.Collapsed;
-            SaveManualButton.Visibility = Visibility.Collapsed;
-            return;
+            return false;
         }
 
-        SaveManualButton.Visibility = Visibility.Visible;
-        CenterCropButton.Visibility = IsManualCropCentered() ? Visibility.Collapsed : Visibility.Visible;
+        return savedManualResultState is not { } savedState ||
+            savedState != CaptureManualResultState();
+    }
+
+    private ManualResultState CaptureManualResultState()
+    {
+        return new ManualResultState(
+            manualSourcePath ?? string.Empty,
+            manualCropX,
+            manualCropY,
+            manualCropSize,
+            AppSettings.NormalizeQuality(currentSettings.Quality),
+            AppSettings.NormalizeResizeMode(currentSettings.ResizeMode),
+            AppSettings.NormalizeSharpMode(currentSettings.SharpMode),
+            AppSettings.NormalizeJpegMode(currentSettings.JpegMode),
+            AppSettings.NormalizeAutoSizeStep(currentSettings.AutoSizeStep));
     }
 
     private bool IsManualCropCentered()
@@ -1008,6 +1133,63 @@ public partial class MainWindow : Window
 
         Canvas.SetLeft(CropOverlay, cropLeft);
         Canvas.SetTop(CropOverlay, cropTop);
+
+        UpdateManualCropAdorners(cropLeft, cropTop, cropSize);
+    }
+
+    private void UpdateManualCropAdorners(double cropLeft, double cropTop, double cropSize)
+    {
+        double centerX = cropLeft + cropSize / 2.0;
+        double centerY = cropTop + cropSize / 2.0;
+
+        CropCenterVerticalLine.X1 = centerX;
+        CropCenterVerticalLine.Y1 = cropTop;
+        CropCenterVerticalLine.X2 = centerX;
+        CropCenterVerticalLine.Y2 = cropTop + cropSize;
+
+        CropCenterHorizontalLine.X1 = cropLeft;
+        CropCenterHorizontalLine.Y1 = centerY;
+        CropCenterHorizontalLine.X2 = cropLeft + cropSize;
+        CropCenterHorizontalLine.Y2 = centerY;
+
+        CropSizeTextBlock.Text = $"{manualCropSize}×{manualCropSize}";
+        CropSizeBadge.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+
+        double badgeLeft = cropLeft + 6;
+        double badgeTop = cropTop + 6;
+        double badgeWidth = CropSizeBadge.DesiredSize.Width;
+        double badgeHeight = CropSizeBadge.DesiredSize.Height;
+
+        if (badgeLeft + badgeWidth > cropLeft + cropSize - 6)
+        {
+            badgeLeft = cropLeft + cropSize - badgeWidth - 6;
+        }
+
+        if (badgeTop + badgeHeight > cropTop + cropSize - 6)
+        {
+            badgeTop = cropTop + cropSize - badgeHeight - 6;
+        }
+
+        Canvas.SetLeft(CropSizeBadge, Math.Max(cropLeft + 2, badgeLeft));
+        Canvas.SetTop(CropSizeBadge, Math.Max(cropTop + 2, badgeTop));
+
+        PositionCropHandle(CropHandleTopLeft, cropLeft, cropTop);
+        PositionCropHandle(CropHandleTopRight, cropLeft + cropSize, cropTop);
+        PositionCropHandle(CropHandleBottomLeft, cropLeft, cropTop + cropSize);
+        PositionCropHandle(CropHandleBottomRight, cropLeft + cropSize, cropTop + cropSize);
+        PositionCropHandle(CropHandleTopSide, centerX, cropTop);
+        PositionCropHandle(CropHandleRightSide, cropLeft + cropSize, centerY);
+        PositionCropHandle(CropHandleBottomSide, centerX, cropTop + cropSize);
+        PositionCropHandle(CropHandleLeftSide, cropLeft, centerY);
+    }
+
+    private static void PositionCropHandle(FrameworkElement handle, double centerX, double centerY)
+    {
+        double width = double.IsNaN(handle.Width) || handle.Width <= 0 ? 9.0 : handle.Width;
+        double height = double.IsNaN(handle.Height) || handle.Height <= 0 ? 9.0 : handle.Height;
+
+        Canvas.SetLeft(handle, centerX - width / 2.0);
+        Canvas.SetTop(handle, centerY - height / 2.0);
     }
 
     private void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1017,41 +1199,63 @@ public partial class MainWindow : Window
             return;
         }
 
+        Point point = e.GetPosition(PreviewHost);
+        manualCropDragMode = GetManualCropDragMode(point);
+
+        if (manualCropDragMode == ManualCropDragMode.None)
+        {
+            return;
+        }
+
         isDraggingCrop = true;
-        dragStartPoint = e.GetPosition(PreviewHost);
+        dragStartPoint = point;
         dragStartCropX = manualCropX;
         dragStartCropY = manualCropY;
+        dragStartCropSize = manualCropSize;
 
         PreviewHost.CaptureMouse();
         PreviewHost.Focus();
+        PreviewHost.Cursor = GetManualCropCursor(manualCropDragMode);
 
         e.Handled = true;
     }
 
     private void OnPreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if (!isManualPreviewLoaded || !isDraggingCrop || manualPreviewScale <= 0)
+        if (!isManualPreviewLoaded || manualPreviewScale <= 0)
         {
             return;
         }
 
         Point currentPoint = e.GetPosition(PreviewHost);
-        double deltaX = currentPoint.X - dragStartPoint.X;
-        double deltaY = currentPoint.Y - dragStartPoint.Y;
 
-        if (manualImageWidth > manualImageHeight)
+        if (!isDraggingCrop)
         {
-            int offsetX = (int)Math.Round(deltaX / manualPreviewScale);
-            manualCropX = ClampCropCoordinate(dragStartCropX + offsetX, manualImageWidth - manualCropSize);
-        }
-        else if (manualImageHeight > manualImageWidth)
-        {
-            int offsetY = (int)Math.Round(deltaY / manualPreviewScale);
-            manualCropY = ClampCropCoordinate(dragStartCropY + offsetY, manualImageHeight - manualCropSize);
+            UpdateManualPreviewCursor(currentPoint);
+            return;
         }
 
-        UpdateManualPreviewLayout();
-        UpdateManualActionButtons();
+        int previousCropX = manualCropX;
+        int previousCropY = manualCropY;
+        int previousCropSize = manualCropSize;
+
+        if (manualCropDragMode == ManualCropDragMode.Move)
+        {
+            MoveManualCropByMouse(currentPoint);
+        }
+        else
+        {
+            ResizeManualCropByMouse(currentPoint);
+        }
+
+        if (manualCropX != previousCropX ||
+            manualCropY != previousCropY ||
+            manualCropSize != previousCropSize)
+        {
+            UpdateManualPreviewLayout();
+            UpdateManualActionButtons();
+        }
+
         e.Handled = true;
     }
 
@@ -1063,9 +1267,330 @@ public partial class MainWindow : Window
         }
 
         isDraggingCrop = false;
+        manualCropDragMode = ManualCropDragMode.None;
         PreviewHost.ReleaseMouseCapture();
+        UpdateManualPreviewCursor(e.GetPosition(PreviewHost));
 
         e.Handled = true;
+    }
+
+    private void MoveManualCropByMouse(Point currentPoint)
+    {
+        Point adjustedPoint = GetAdjustedManualDragPoint(currentPoint);
+        double deltaX = adjustedPoint.X - dragStartPoint.X;
+        double deltaY = adjustedPoint.Y - dragStartPoint.Y;
+
+        int offsetX = (int)Math.Round(deltaX / manualPreviewScale);
+        int offsetY = (int)Math.Round(deltaY / manualPreviewScale);
+
+        manualCropX = ClampCropCoordinate(dragStartCropX + offsetX, manualImageWidth - manualCropSize);
+        manualCropY = ClampCropCoordinate(dragStartCropY + offsetY, manualImageHeight - manualCropSize);
+    }
+
+    private void ResizeManualCropByMouse(Point currentPoint)
+    {
+        Point adjustedPoint = GetAdjustedManualDragPoint(currentPoint);
+        Point imagePoint = PreviewPointToImagePoint(adjustedPoint);
+        int minSize = GetMinManualCropSize();
+
+        switch (manualCropDragMode)
+        {
+            case ManualCropDragMode.ResizeTopLeft:
+                ResizeManualCropFromTopLeft(imagePoint, minSize);
+                break;
+
+            case ManualCropDragMode.ResizeTopRight:
+                ResizeManualCropFromTopRight(imagePoint, minSize);
+                break;
+
+            case ManualCropDragMode.ResizeBottomLeft:
+                ResizeManualCropFromBottomLeft(imagePoint, minSize);
+                break;
+
+            case ManualCropDragMode.ResizeBottomRight:
+                ResizeManualCropFromBottomRight(imagePoint, minSize);
+                break;
+
+            case ManualCropDragMode.ResizeLeft:
+                ResizeManualCropFromLeft(imagePoint, minSize);
+                break;
+
+            case ManualCropDragMode.ResizeRight:
+                ResizeManualCropFromRight(imagePoint, minSize);
+                break;
+
+            case ManualCropDragMode.ResizeTop:
+                ResizeManualCropFromTop(imagePoint, minSize);
+                break;
+
+            case ManualCropDragMode.ResizeBottom:
+                ResizeManualCropFromBottom(imagePoint, minSize);
+                break;
+        }
+    }
+
+    private void ResizeManualCropFromTopLeft(Point imagePoint, int minSize)
+    {
+        int anchorX = dragStartCropX + dragStartCropSize;
+        int anchorY = dragStartCropY + dragStartCropSize;
+        int maxSize = Math.Min(anchorX, anchorY);
+        int size = GetClampedManualCropSize(Math.Min(anchorX - imagePoint.X, anchorY - imagePoint.Y), minSize, maxSize);
+
+        manualCropX = anchorX - size;
+        manualCropY = anchorY - size;
+        manualCropSize = size;
+    }
+
+    private void ResizeManualCropFromTopRight(Point imagePoint, int minSize)
+    {
+        int anchorX = dragStartCropX;
+        int anchorY = dragStartCropY + dragStartCropSize;
+        int maxSize = Math.Min(manualImageWidth - anchorX, anchorY);
+        int size = GetClampedManualCropSize(Math.Min(imagePoint.X - anchorX, anchorY - imagePoint.Y), minSize, maxSize);
+
+        manualCropX = anchorX;
+        manualCropY = anchorY - size;
+        manualCropSize = size;
+    }
+
+    private void ResizeManualCropFromBottomLeft(Point imagePoint, int minSize)
+    {
+        int anchorX = dragStartCropX + dragStartCropSize;
+        int anchorY = dragStartCropY;
+        int maxSize = Math.Min(anchorX, manualImageHeight - anchorY);
+        int size = GetClampedManualCropSize(Math.Min(anchorX - imagePoint.X, imagePoint.Y - anchorY), minSize, maxSize);
+
+        manualCropX = anchorX - size;
+        manualCropY = anchorY;
+        manualCropSize = size;
+    }
+
+    private void ResizeManualCropFromBottomRight(Point imagePoint, int minSize)
+    {
+        int anchorX = dragStartCropX;
+        int anchorY = dragStartCropY;
+        int maxSize = Math.Min(manualImageWidth - anchorX, manualImageHeight - anchorY);
+        int size = GetClampedManualCropSize(Math.Min(imagePoint.X - anchorX, imagePoint.Y - anchorY), minSize, maxSize);
+
+        manualCropX = anchorX;
+        manualCropY = anchorY;
+        manualCropSize = size;
+    }
+
+    private void ResizeManualCropFromLeft(Point imagePoint, int minSize)
+    {
+        int right = dragStartCropX + dragStartCropSize;
+        int centerY = dragStartCropY + dragStartCropSize / 2;
+        int maxSize = Math.Min(right, Math.Min(centerY * 2, (manualImageHeight - centerY) * 2));
+        int size = GetClampedManualCropSize(right - imagePoint.X, minSize, maxSize);
+
+        manualCropX = right - size;
+        manualCropY = ClampCropCoordinate(centerY - size / 2, manualImageHeight - size);
+        manualCropSize = size;
+    }
+
+    private void ResizeManualCropFromRight(Point imagePoint, int minSize)
+    {
+        int left = dragStartCropX;
+        int centerY = dragStartCropY + dragStartCropSize / 2;
+        int maxSize = Math.Min(manualImageWidth - left, Math.Min(centerY * 2, (manualImageHeight - centerY) * 2));
+        int size = GetClampedManualCropSize(imagePoint.X - left, minSize, maxSize);
+
+        manualCropX = left;
+        manualCropY = ClampCropCoordinate(centerY - size / 2, manualImageHeight - size);
+        manualCropSize = size;
+    }
+
+    private void ResizeManualCropFromTop(Point imagePoint, int minSize)
+    {
+        int bottom = dragStartCropY + dragStartCropSize;
+        int centerX = dragStartCropX + dragStartCropSize / 2;
+        int maxSize = Math.Min(bottom, Math.Min(centerX * 2, (manualImageWidth - centerX) * 2));
+        int size = GetClampedManualCropSize(bottom - imagePoint.Y, minSize, maxSize);
+
+        manualCropX = ClampCropCoordinate(centerX - size / 2, manualImageWidth - size);
+        manualCropY = bottom - size;
+        manualCropSize = size;
+    }
+
+    private void ResizeManualCropFromBottom(Point imagePoint, int minSize)
+    {
+        int top = dragStartCropY;
+        int centerX = dragStartCropX + dragStartCropSize / 2;
+        int maxSize = Math.Min(manualImageHeight - top, Math.Min(centerX * 2, (manualImageWidth - centerX) * 2));
+        int size = GetClampedManualCropSize(imagePoint.Y - top, minSize, maxSize);
+
+        manualCropX = ClampCropCoordinate(centerX - size / 2, manualImageWidth - size);
+        manualCropY = top;
+        manualCropSize = size;
+    }
+
+    private Point GetAdjustedManualDragPoint(Point currentPoint)
+    {
+        double factor = 1.0;
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+        {
+            factor = 0.25;
+        }
+        else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            factor = 2.0;
+        }
+
+        return new Point(
+            dragStartPoint.X + (currentPoint.X - dragStartPoint.X) * factor,
+            dragStartPoint.Y + (currentPoint.Y - dragStartPoint.Y) * factor);
+    }
+
+    private Point PreviewPointToImagePoint(Point point)
+    {
+        return new Point(
+            (point.X - manualPreviewLeft) / manualPreviewScale,
+            (point.Y - manualPreviewTop) / manualPreviewScale);
+    }
+
+    private int GetMinManualCropSize()
+    {
+        int maxCropSize = Math.Min(manualImageWidth, manualImageHeight);
+        return Math.Min(MinManualCropSize, Math.Max(1, maxCropSize));
+    }
+
+    private static int GetClampedManualCropSize(double rawSize, int minSize, int maxSize)
+    {
+        maxSize = Math.Max(1, maxSize);
+        minSize = Math.Clamp(minSize, 1, maxSize);
+        int size = (int)Math.Round(rawSize);
+
+        return Math.Clamp(size, minSize, maxSize);
+    }
+
+    private void UpdateManualPreviewCursor(Point point)
+    {
+        PreviewHost.Cursor = GetManualCropCursor(GetManualCropDragMode(point));
+    }
+
+    private ManualCropDragMode GetManualCropDragMode(Point point)
+    {
+        if (!TryGetManualCropScreenRect(out Rect cropRect))
+        {
+            return ManualCropDragMode.None;
+        }
+
+        if (IsNearPoint(point, cropRect.Left, cropRect.Top))
+        {
+            return ManualCropDragMode.ResizeTopLeft;
+        }
+
+        if (IsNearPoint(point, cropRect.Right, cropRect.Top))
+        {
+            return ManualCropDragMode.ResizeTopRight;
+        }
+
+        if (IsNearPoint(point, cropRect.Left, cropRect.Bottom))
+        {
+            return ManualCropDragMode.ResizeBottomLeft;
+        }
+
+        if (IsNearPoint(point, cropRect.Right, cropRect.Bottom))
+        {
+            return ManualCropDragMode.ResizeBottomRight;
+        }
+
+        if (IsNearVerticalSide(point, cropRect.Left, cropRect.Top, cropRect.Bottom))
+        {
+            return ManualCropDragMode.ResizeLeft;
+        }
+
+        if (IsNearVerticalSide(point, cropRect.Right, cropRect.Top, cropRect.Bottom))
+        {
+            return ManualCropDragMode.ResizeRight;
+        }
+
+        if (IsNearHorizontalSide(point, cropRect.Top, cropRect.Left, cropRect.Right))
+        {
+            return ManualCropDragMode.ResizeTop;
+        }
+
+        if (IsNearHorizontalSide(point, cropRect.Bottom, cropRect.Left, cropRect.Right))
+        {
+            return ManualCropDragMode.ResizeBottom;
+        }
+
+        return cropRect.Contains(point) ? ManualCropDragMode.Move : ManualCropDragMode.None;
+    }
+
+    private bool TryGetManualCropScreenRect(out Rect cropRect)
+    {
+        cropRect = Rect.Empty;
+
+        if (!isManualPreviewLoaded || manualPreviewScale <= 0 || manualCropSize <= 0)
+        {
+            return false;
+        }
+
+        cropRect = new Rect(
+            manualPreviewLeft + manualCropX * manualPreviewScale,
+            manualPreviewTop + manualCropY * manualPreviewScale,
+            manualCropSize * manualPreviewScale,
+            manualCropSize * manualPreviewScale);
+
+        return true;
+    }
+
+    private static bool IsNearPoint(Point point, double x, double y)
+    {
+        return Math.Abs(point.X - x) <= CropCornerHitSize &&
+               Math.Abs(point.Y - y) <= CropCornerHitSize;
+    }
+
+    private static bool IsNearVerticalSide(Point point, double sideX, double top, double bottom)
+    {
+        double sideStart = top + CropCornerHitSize;
+        double sideEnd = bottom - CropCornerHitSize;
+
+        if (sideStart > sideEnd)
+        {
+            sideStart = top;
+            sideEnd = bottom;
+        }
+
+        return Math.Abs(point.X - sideX) <= CropSideHitSize &&
+               point.Y >= sideStart &&
+               point.Y <= sideEnd;
+    }
+
+    private static bool IsNearHorizontalSide(Point point, double sideY, double left, double right)
+    {
+        double sideStart = left + CropCornerHitSize;
+        double sideEnd = right - CropCornerHitSize;
+
+        if (sideStart > sideEnd)
+        {
+            sideStart = left;
+            sideEnd = right;
+        }
+
+        return Math.Abs(point.Y - sideY) <= CropSideHitSize &&
+               point.X >= sideStart &&
+               point.X <= sideEnd;
+    }
+
+    private static Cursor? GetManualCropCursor(ManualCropDragMode mode)
+    {
+        return mode switch
+        {
+            ManualCropDragMode.Move => Cursors.SizeAll,
+            ManualCropDragMode.ResizeTopLeft => Cursors.SizeNWSE,
+            ManualCropDragMode.ResizeBottomRight => Cursors.SizeNWSE,
+            ManualCropDragMode.ResizeTopRight => Cursors.SizeNESW,
+            ManualCropDragMode.ResizeBottomLeft => Cursors.SizeNESW,
+            ManualCropDragMode.ResizeLeft => Cursors.SizeWE,
+            ManualCropDragMode.ResizeRight => Cursors.SizeWE,
+            ManualCropDragMode.ResizeTop => Cursors.SizeNS,
+            ManualCropDragMode.ResizeBottom => Cursors.SizeNS,
+            _ => null
+        };
     }
 
     private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
@@ -1078,6 +1603,24 @@ public partial class MainWindow : Window
         if (e.Key == Key.Escape)
         {
             CloseManualPreview();
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.S)
+        {
+            if (HasManualUnsavedChanges())
+            {
+                SaveManualPreview();
+            }
+
+            e.Handled = true;
+            return;
+        }
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.Home)
+        {
+            CenterManualCrop();
             e.Handled = true;
             return;
         }
@@ -1143,14 +1686,8 @@ public partial class MainWindow : Window
 
     private void MoveManualCrop(int deltaX, int deltaY)
     {
-        if (manualImageWidth > manualImageHeight)
-        {
-            manualCropX = ClampCropCoordinate(manualCropX + deltaX, manualImageWidth - manualCropSize);
-        }
-        else if (manualImageHeight > manualImageWidth)
-        {
-            manualCropY = ClampCropCoordinate(manualCropY + deltaY, manualImageHeight - manualCropSize);
-        }
+        manualCropX = ClampCropCoordinate(manualCropX + deltaX, manualImageWidth - manualCropSize);
+        manualCropY = ClampCropCoordinate(manualCropY + deltaY, manualImageHeight - manualCropSize);
 
         UpdateManualPreviewLayout();
         UpdateManualActionButtons();
@@ -1158,14 +1695,8 @@ public partial class MainWindow : Window
 
     private void MoveManualCropToStart()
     {
-        if (manualImageWidth > manualImageHeight)
-        {
-            manualCropX = 0;
-        }
-        else if (manualImageHeight > manualImageWidth)
-        {
-            manualCropY = 0;
-        }
+        manualCropX = 0;
+        manualCropY = 0;
 
         UpdateManualPreviewLayout();
         UpdateManualActionButtons();
@@ -1173,14 +1704,8 @@ public partial class MainWindow : Window
 
     private void MoveManualCropToEnd()
     {
-        if (manualImageWidth > manualImageHeight)
-        {
-            manualCropX = manualImageWidth - manualCropSize;
-        }
-        else if (manualImageHeight > manualImageWidth)
-        {
-            manualCropY = manualImageHeight - manualCropSize;
-        }
+        manualCropX = Math.Max(0, manualImageWidth - manualCropSize);
+        manualCropY = Math.Max(0, manualImageHeight - manualCropSize);
 
         UpdateManualPreviewLayout();
         UpdateManualActionButtons();

@@ -1,11 +1,14 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 
 namespace ImageSquareResizer;
 
 public partial class App : Application
 {
+    private const string ManualStartupFlag = "--manual";
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -13,6 +16,17 @@ public partial class App : Application
         try
         {
             AppSettings settings = AppSettings.Load();
+
+            if (e.Args.Length > 0 && IsManualStartup(e.Args))
+            {
+                ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+                var manualWindow = new MainWindow(settings);
+                MainWindow = manualWindow;
+                manualWindow.Show();
+                manualWindow.OpenManualStartupFiles(GetManualStartupPaths(e.Args));
+                return;
+            }
 
             if (e.Args.Length > 0)
             {
@@ -25,7 +39,8 @@ public partial class App : Application
                     settings.JpegMode,
                     settings.Language,
                     settings.SmartPaddingPercent,
-                    settings.SmartPaddingMaxPx);
+                    settings.SmartPaddingMaxPx,
+                    settings.AutoSizeStep);
 
                 Shutdown();
                 return;
@@ -60,4 +75,21 @@ public partial class App : Application
             Shutdown(-1);
         }
     }
+
+    private static bool IsManualStartup(string[] args)
+    {
+        return args.Any(IsManualStartupFlag);
+    }
+
+    private static string[] GetManualStartupPaths(string[] args)
+    {
+        return args.Where(arg => !IsManualStartupFlag(arg)).ToArray();
+    }
+
+    private static bool IsManualStartupFlag(string arg)
+    {
+        return string.Equals(arg, ManualStartupFlag, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(arg, "/manual", StringComparison.OrdinalIgnoreCase);
+    }
+
 }

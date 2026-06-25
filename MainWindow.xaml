@@ -195,6 +195,10 @@
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -581,6 +585,107 @@
                                    Width="100"
                                    Height="100"
                                    IsHitTestVisible="False" />
+
+                        <Line x:Name="CropCenterVerticalLine"
+                              Stroke="{DynamicResource AccentBorderBrush}"
+                              StrokeThickness="1"
+                              StrokeDashArray="4 4"
+                              Opacity="0.9"
+                              IsHitTestVisible="False" />
+
+                        <Line x:Name="CropCenterHorizontalLine"
+                              Stroke="{DynamicResource AccentBorderBrush}"
+                              StrokeThickness="1"
+                              StrokeDashArray="4 4"
+                              Opacity="0.9"
+                              IsHitTestVisible="False" />
+
+                        <Border x:Name="CropSizeBadge"
+                                Background="{DynamicResource InputBackgroundBrush}"
+                                BorderBrush="{DynamicResource ButtonBorderBrush}"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="5,2"
+                                IsHitTestVisible="False">
+                            <TextBlock x:Name="CropSizeTextBlock"
+                                       Text="0×0"
+                                       FontFamily="Segoe UI"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MainTextBrush}" />
+                        </Border>
+
+                        <Rectangle x:Name="CropHandleTopLeft"
+                                   Width="9"
+                                   Height="9"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropHandleTopRight"
+                                   Width="9"
+                                   Height="9"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropHandleBottomLeft"
+                                   Width="9"
+                                   Height="9"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropHandleBottomRight"
+                                   Width="9"
+                                   Height="9"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropHandleTopSide"
+                                   Width="17"
+                                   Height="7"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropHandleRightSide"
+                                   Width="7"
+                                   Height="17"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropHandleBottomSide"
+                                   Width="17"
+                                   Height="7"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropHandleLeftSide"
+                                   Width="7"
+                                   Height="17"
+                                   Fill="{DynamicResource InputBackgroundBrush}"
+                                   Stroke="{DynamicResource AccentBorderBrush}"
+                                   StrokeThickness="1"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False" />
                     </Canvas>
 
                     <Rectangle x:Name="DropDashedBorder"
@@ -594,55 +699,6 @@
                                Fill="Transparent"
                                IsHitTestVisible="False" />
 
-                    <Button x:Name="CenterCropButton"
-                            Width="40"
-                            Height="40"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Bottom"
-                            Margin="12"
-                            Style="{StaticResource RoundedButtonStyle}"
-                            Visibility="Collapsed"
-                            Click="OnCenterCropButtonClick">
-                        <Viewbox Width="18"
-                                 Height="18"
-                                 IsHitTestVisible="False">
-                            <Canvas Width="20"
-                                    Height="20">
-                                <Path Stroke="{DynamicResource MainTextBrush}"
-                                      StrokeThickness="1.8"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      StrokeLineJoin="Round"
-                                      Fill="Transparent"
-                                      Data="M 10,2 L 10,18 M 2,10 L 18,10 M 6,6 L 14,6 L 14,14 L 6,14 Z" />
-                            </Canvas>
-                        </Viewbox>
-                    </Button>
-
-                    <Button x:Name="SaveManualButton"
-                            Width="40"
-                            Height="40"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Bottom"
-                            Margin="12"
-                            Style="{StaticResource RoundedButtonStyle}"
-                            Visibility="Collapsed"
-                            Click="OnSaveManualButtonClick">
-                        <Viewbox Width="18"
-                                 Height="18"
-                                 IsHitTestVisible="False">
-                            <Canvas Width="20"
-                                    Height="20">
-                                <Path Stroke="{DynamicResource MainTextBrush}"
-                                      StrokeThickness="1.8"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      StrokeLineJoin="Round"
-                                      Fill="Transparent"
-                                      Data="M 4,2 L 15,2 L 18,5 L 18,18 L 4,18 Z M 7,2 L 7,7 L 14,7 L 14,2 M 7,13 L 15,13 M 7,16 L 15,16" />
-                            </Canvas>
-                        </Viewbox>
-                    </Button>
                 </Grid>
             </Border>
 
@@ -809,6 +865,88 @@
                             </StackPanel>
                         </Button>
                     </Grid>
+                </Grid>
+            </Border>
+
+            <Border x:Name="ManualActionsPanel"
+                    Width="{Binding ActualWidth, ElementName=MainSettingsPanel}"
+                    Background="{DynamicResource DropAreaBackgroundBrush}"
+                    BorderBrush="{DynamicResource DropAreaBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="12"
+                    Margin="0,0,0,12"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="CenterCropButton"
+                            Grid.Column="0"
+                            Height="30"
+                            Style="{StaticResource RoundedButtonStyle}"
+                            Click="OnCenterCropButtonClick">
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsHitTestVisible="False">
+                            <Viewbox Width="16"
+                                     Height="16"
+                                     Margin="0,0,6,0">
+                                <Canvas Width="20"
+                                        Height="20">
+                                    <Path Stroke="{DynamicResource MainTextBrush}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Fill="Transparent"
+                                          Data="M 10,2 L 10,18 M 2,10 L 18,10 M 6,6 L 14,6 L 14,14 L 6,14 Z" />
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock x:Name="CenterCropButtonText"
+                                       Text="Center"
+                                       FontFamily="Segoe UI"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MainTextBrush}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="SaveManualButton"
+                            Grid.Column="2"
+                            Height="30"
+                            Style="{StaticResource RoundedButtonStyle}"
+                            Click="OnSaveManualButtonClick">
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsHitTestVisible="False">
+                            <Viewbox Width="16"
+                                     Height="16"
+                                     Margin="0,0,6,0">
+                                <Canvas Width="20"
+                                        Height="20">
+                                    <Path Stroke="{DynamicResource MainTextBrush}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Fill="Transparent"
+                                          Data="M 4,2 L 15,2 L 18,5 L 18,18 L 4,18 Z M 7,2 L 7,7 L 14,7 L 14,2 M 7,13 L 15,13 M 7,16 L 15,16" />
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock x:Name="SaveManualButtonText"
+                                       Text="Save"
+                                       FontFamily="Segoe UI"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MainTextBrush}" />
+                        </StackPanel>
+                    </Button>
                 </Grid>
             </Border>
 

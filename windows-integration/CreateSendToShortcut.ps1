@@ -7,7 +7,7 @@ $ShortcutName = "SquareResizer"
 $ExecutableName = "SquareResizer.exe"
 
 if ([string]::IsNullOrWhiteSpace($BuildFolder)) {
-    $BuildFolder = $PSScriptRoot
+    $BuildFolder = Join-Path $PSScriptRoot ".."
 }
 
 try {

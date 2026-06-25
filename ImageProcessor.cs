@@ -256,11 +256,17 @@ internal static class ImageProcessor
             }
             else
             {
-                targetSize = GetTargetSizeForStretch(originalWidth, originalHeight, resizeMode, autoSizeStep);
+                int squareSize = Math.Min(originalWidth, originalHeight);
+                targetSize = GetTargetSizeFromSquareSize(squareSize, resizeMode, autoSizeStep);
 
-                if (originalWidth != targetSize || originalHeight != targetSize)
+                if (originalWidth != squareSize || originalHeight != squareSize)
                 {
-                    ResizeWithAspectRatioIgnored(image, targetSize);
+                    CropToCenteredSquare(image, originalWidth, originalHeight, squareSize);
+                }
+
+                if ((int)image.Width != targetSize || (int)image.Height != targetSize)
+                {
+                    ResizeSquare(image, targetSize);
                     resized = true;
                 }
             }
@@ -626,19 +632,17 @@ internal static class ImageProcessor
         image.Crop(geometry);
     }
 
+    private static void CropToCenteredSquare(MagickImage image, int width, int height, int cropSize)
+    {
+        int cropX = Math.Max(0, (width - cropSize) / 2);
+        int cropY = Math.Max(0, (height - cropSize) / 2);
+
+        CropToSquare(image, cropX, cropY, cropSize);
+    }
+
     private static void ResizeSquare(MagickImage image, int targetSize)
     {
         var geometry = new MagickGeometry((uint)targetSize, (uint)targetSize);
-        image.Resize(geometry);
-    }
-
-    private static void ResizeWithAspectRatioIgnored(MagickImage image, int targetSize)
-    {
-        var geometry = new MagickGeometry((uint)targetSize, (uint)targetSize)
-        {
-            IgnoreAspectRatio = true
-        };
-
         image.Resize(geometry);
     }
 
@@ -670,12 +674,6 @@ internal static class ImageProcessor
             "maximum" => 1.00,
             _ => 0.0
         };
-    }
-
-    private static int GetTargetSizeForStretch(int width, int height, string resizeMode, int autoSizeStep)
-    {
-        int minSide = Math.Min(width, height);
-        return GetTargetSizeFromSquareSize(minSide, resizeMode, autoSizeStep);
     }
 
     private static int GetTargetSizeFromSquareSize(int squareSize, string resizeMode, int autoSizeStep)

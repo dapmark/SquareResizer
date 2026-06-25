@@ -61,6 +61,7 @@ internal sealed class Localization
     public string DropOrText => IsRussian ? "или" : "or";
     public string DropHereText => IsRussian ? "перенесите его сюда" : "drop it here";
     public string SaveButton => IsRussian ? "Сохранить" : "Save";
+    public string CenterCropButton => IsRussian ? "Центрировать" : "Center";
     public string CloseFileMenuItem => IsRussian ? "Закрыть файл" : "Close file";
     public string CenterCropButtonToolTip => IsRussian ? "Центрировать рамку" : "Center crop frame";
     public string SettingsButtonToolTip => IsRussian ? "Настройки" : "Settings";
@@ -113,6 +114,14 @@ internal sealed class Localization
     public string ManualPreviewStatus => IsRussian
         ? "Ручной режим: настройте квадрат и нажмите «Сохранить»"
         : "Manual mode: adjust the square and click Save";
+
+    public string ManualFirstFileStatus => IsRussian
+        ? "Ручной режим: открыт первый файл, остальные пропущены"
+        : "Manual mode: opened first file, skipped the rest";
+
+    public string ManualNoSupportedFileStatus => IsRussian
+        ? "Ручной режим: нет подходящего изображения"
+        : "Manual mode: no supported image found";
 
     public string EmptyPath => IsRussian ? "Пустой путь к файлу." : "Empty file path.";
     public string FileNotFound => IsRussian ? "Файл не найден." : "File not found.";

@@ -6,9 +6,13 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>SquareResizer</AssemblyName>
-    <AssemblyTitle>SquareResizer</AssemblyTitle>
-    <Product>SquareResizer</Product>
+	  <AssemblyName>SquareResizer</AssemblyName>
+	  <AssemblyTitle>SquareResizer</AssemblyTitle>
+	  <Product>SquareResizer</Product>
+	  <Company>DapMark</Company>
+	  <Authors>DapMark</Authors>
+	  <Copyright>Copyright © 2026 DapMark</Copyright>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <SquareResizerInformationalVersion Condition="Exists('$(MSBuildProjectDirectory)\version.txt')">$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\version.txt').Trim())</SquareResizerInformationalVersion>
     <SquareResizerNumericVersionBase Condition="'$(SquareResizerInformationalVersion)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(SquareResizerInformationalVersion)', '[^0-9.]', ''))</SquareResizerNumericVersionBase>
@@ -33,10 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="README-EN.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="README-RU.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="InstallContextMenu.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <None Include="CreateSendToShortcut.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Remove="settings.default.txt" />
     <EmbeddedResource Include="settings.default.txt" LogicalName="SquareResizer.SettingsDefault" />
     <Content Include="settings.default.txt" Link="settings.txt" TargetPath="settings.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

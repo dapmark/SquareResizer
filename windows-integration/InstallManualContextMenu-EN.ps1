@@ -1,15 +1,15 @@
-﻿# SquareResizer context menu installer
+﻿# SquareResizer manual mode context menu installer
 # Edit these values if needed
 
 $BuildFolder = ""
-$MenuTitle = "Преобразовать с SquareResizer"
+$MenuTitle = "Open in SquareResizer manual mode"
 
 $ExecutableName = "SquareResizer.exe"
-$CommandName = "SquareResizer"
+$CommandName = "SquareResizerManual"
 $SupportedExtensions = @(".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff")
 
 if ([string]::IsNullOrWhiteSpace($BuildFolder)) {
-    $BuildFolder = $PSScriptRoot
+    $BuildFolder = Join-Path $PSScriptRoot ".."
 }
 
 try {
@@ -37,7 +37,7 @@ foreach ($ext in $SupportedExtensions) {
     $baseKey.Close()
 
     $commandKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($commandPath)
-    $commandKey.SetValue("", "`"$ExePath`" `"%1`"", [Microsoft.Win32.RegistryValueKind]::String)
+    $commandKey.SetValue("", "`"$ExePath`" --manual `"%1`"", [Microsoft.Win32.RegistryValueKind]::String)
     $commandKey.Close()
 }
 
