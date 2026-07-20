@@ -53,3 +53,6 @@ $RECYCLE.BIN/
 
 # macOS just in case archives are unpacked there
 .DS_Store
+
+CHANGELOG.md
+CHANGELOG_SHORT.md

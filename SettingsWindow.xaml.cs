@@ -88,6 +88,7 @@ internal partial class SettingsWindow : Window
         SmartPaddingMaxPxLabel.ToolTip = smartPaddingMaxPxToolTip;
         SmartPaddingMaxPxTextBox.ToolTip = smartPaddingMaxPxToolTip;
 
+        AboutButton.ToolTip = text.IsRussian ? "О программе" : "About";
         ResetButton.Content = text.IsRussian ? "Сброс" : "Reset";
         CancelButton.Content = text.IsRussian ? "Отмена" : "Cancel";
         SaveButton.Content = text.IsRussian ? "Применить" : "Apply";
@@ -122,15 +123,17 @@ internal partial class SettingsWindow : Window
         Resources["MainTextBrush"] = BrushFromRgb(32, 32, 32);
         Resources["SecondaryTextBrush"] = BrushFromRgb(55, 55, 55);
         Resources["ButtonBackgroundBrush"] = BrushFromRgb(250, 250, 250);
-        Resources["ButtonHoverBackgroundBrush"] = BrushFromRgb(245, 249, 255);
-        Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(230, 242, 255);
+        Resources["ButtonHoverBackgroundBrush"] = BrushFromRgb(234, 244, 255);
+        Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(207, 230, 255);
         Resources["ButtonBorderBrush"] = BrushFromColor(MixColor(panelBackground, Colors.Black, LightBorderMixRatio));
         Resources["AccentBorderBrush"] = BrushFromRgb(0, 120, 215);
+        Resources["ApplyButtonBackgroundBrush"] = BrushFromRgb(215, 235, 255);
+        Resources["ApplyButtonHoverBackgroundBrush"] = BrushFromRgb(197, 225, 255);
         Resources["InputBackgroundBrush"] = BrushFromRgb(255, 255, 255);
         Resources["WindowBorderBrush"] = BrushFromColor(MixColor(windowBackground, Colors.Black, LightBorderMixRatio));
         Resources["TitleButtonForegroundBrush"] = BrushFromRgb(75, 85, 99);
-        Resources["SoftButtonHoverBackgroundBrush"] = BrushFromRgb(234, 243, 255);
-        Resources["SoftButtonPressedBackgroundBrush"] = BrushFromRgb(215, 234, 254);
+        Resources["SoftButtonHoverBackgroundBrush"] = BrushFromRgb(226, 240, 255);
+        Resources["SoftButtonPressedBackgroundBrush"] = BrushFromRgb(203, 227, 255);
     }
 
     private void ApplyDarkTheme()
@@ -147,6 +150,8 @@ internal partial class SettingsWindow : Window
         Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(0, 122, 204);
         Resources["ButtonBorderBrush"] = BrushFromColor(MixColor(panelBackground, Colors.White, DarkBorderMixRatio));
         Resources["AccentBorderBrush"] = BrushFromRgb(0, 122, 204);
+        Resources["ApplyButtonBackgroundBrush"] = BrushFromRgb(6, 50, 77);
+        Resources["ApplyButtonHoverBackgroundBrush"] = BrushFromRgb(9, 71, 113);
         Resources["InputBackgroundBrush"] = BrushFromRgb(32, 32, 32);
         Resources["WindowBorderBrush"] = BrushFromColor(MixColor(windowBackground, Colors.White, DarkBorderMixRatio));
         Resources["TitleButtonForegroundBrush"] = BrushFromRgb(212, 212, 212);

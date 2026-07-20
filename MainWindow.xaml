@@ -21,8 +21,8 @@
         <SolidColorBrush x:Key="MainTextBrush" Color="#464646" />
         <SolidColorBrush x:Key="SecondaryTextBrush" Color="#505050" />
         <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#FAFAFA" />
-        <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="#F5F9FF" />
-        <SolidColorBrush x:Key="ButtonPressedBackgroundBrush" Color="#E6F2FF" />
+        <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="#EAF4FF" />
+        <SolidColorBrush x:Key="ButtonPressedBackgroundBrush" Color="#CFE6FF" />
         <SolidColorBrush x:Key="ButtonBorderBrush" Color="#E6E6E6" />
         <SolidColorBrush x:Key="AccentBorderBrush" Color="#0078D7" />
         <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF" />
@@ -35,6 +35,7 @@
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Normal" />
             <Setter Property="HasDropShadow" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -51,6 +52,7 @@
                                Foreground="{TemplateBinding Foreground}"
                                FontFamily="{TemplateBinding FontFamily}"
                                FontSize="{TemplateBinding FontSize}"
+                               FontWeight="{TemplateBinding FontWeight}"
                                TextWrapping="NoWrap" />
                         </Border>
                     </ControlTemplate>
@@ -65,6 +67,7 @@
             <Setter Property="Padding" Value="8,5" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Normal" />
             <Setter Property="HasDropShadow" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -81,6 +84,7 @@
                                        Foreground="{TemplateBinding Foreground}"
                                        FontFamily="{TemplateBinding FontFamily}"
                                        FontSize="{TemplateBinding FontSize}"
+                                       FontWeight="{TemplateBinding FontWeight}"
                                        TextWrapping="NoWrap" />
                         </Border>
                     </ControlTemplate>
@@ -488,8 +492,8 @@
                       ClipToBounds="True"
                       Focusable="True"
                       FocusVisualStyle="{x:Null}"
-                      UseLayoutRounding="False"
-                      SnapsToDevicePixels="False"
+                      UseLayoutRounding="True"
+                      SnapsToDevicePixels="True"
                       ContextMenuOpening="OnPreviewHostContextMenuOpening"
                       MouseLeftButtonDown="OnPreviewMouseLeftButtonDown"
                       MouseMove="OnPreviewMouseMove"
@@ -521,8 +525,8 @@
                            HorizontalAlignment="Left"
                            VerticalAlignment="Top"
                            Stretch="Fill"
-                           UseLayoutRounding="False"
-                           SnapsToDevicePixels="False"
+                           UseLayoutRounding="True"
+                           SnapsToDevicePixels="True"
                            Visibility="Collapsed"
                            IsHitTestVisible="False" />
 
@@ -539,7 +543,7 @@
                                 Style="{StaticResource RoundedButtonStyle}"
                                 Click="OnOpenButtonClick" />
                         <TextBlock x:Name="DropOrTextBlock"
-                                Margin="0,10,0,0"
+                                Margin="0,0,0,0"
                                 Text="or"
                                 TextAlignment="Center"
                                 Foreground="{DynamicResource SecondaryTextBrush}"
@@ -574,16 +578,31 @@
                     <Canvas x:Name="CropCanvas"
                             Visibility="Collapsed"
                             Background="Transparent"
-                            UseLayoutRounding="False"
-                            SnapsToDevicePixels="False">
+                            UseLayoutRounding="True"
+                            SnapsToDevicePixels="True">
                         <Rectangle x:Name="CropOverlay"
-                                   Stroke="{DynamicResource AccentBorderBrush}"
-                                   StrokeThickness="2"
-                                   UseLayoutRounding="False"
-                                   SnapsToDevicePixels="False"
+                                   UseLayoutRounding="True"
+                                   SnapsToDevicePixels="True"
                                    Fill="#220078D7"
                                    Width="100"
                                    Height="100"
+                                   IsHitTestVisible="False" />
+
+                        <Rectangle x:Name="CropBorderTop"
+                                   Fill="{DynamicResource AccentBorderBrush}"
+                                   SnapsToDevicePixels="True"
+                                   IsHitTestVisible="False" />
+                        <Rectangle x:Name="CropBorderRight"
+                                   Fill="{DynamicResource AccentBorderBrush}"
+                                   SnapsToDevicePixels="True"
+                                   IsHitTestVisible="False" />
+                        <Rectangle x:Name="CropBorderBottom"
+                                   Fill="{DynamicResource AccentBorderBrush}"
+                                   SnapsToDevicePixels="True"
+                                   IsHitTestVisible="False" />
+                        <Rectangle x:Name="CropBorderLeft"
+                                   Fill="{DynamicResource AccentBorderBrush}"
+                                   SnapsToDevicePixels="True"
                                    IsHitTestVisible="False" />
 
                         <Line x:Name="CropCenterVerticalLine"
@@ -606,7 +625,9 @@
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Padding="5,2"
-                                IsHitTestVisible="False">
+                                IsHitTestVisible="True"
+                                MouseEnter="OnCropSizeBadgeMouseEnter"
+                                MouseLeave="OnCropSizeBadgeMouseLeave">
                             <TextBlock x:Name="CropSizeTextBlock"
                                        Text="0×0"
                                        FontFamily="Segoe UI"
@@ -773,6 +794,7 @@
                                  Height="26"
                                  Style="{StaticResource RoundedTextBoxStyle}"
                                  LostFocus="OnQualityLostFocus"
+                                 TextChanged="OnQualityTextChanged"
                                  PreviewKeyDown="OnQualityPreviewKeyDown"
                                  PreviewTextInput="OnQualityPreviewTextInput"
                                  PreviewMouseWheel="OnQualityPreviewMouseWheel" />

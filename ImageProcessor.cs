@@ -388,54 +388,17 @@ internal static class ImageProcessor
             autoSizeStep = AppSettings.NormalizeAutoSizeStep(autoSizeStep);
 
             using var image = new MagickImage(sourcePath);
-
-            image.AutoOrient();
-            image.FilterType = FilterType.Lanczos;
-
-            int imageWidth = (int)image.Width;
-            int imageHeight = (int)image.Height;
-            int maxCropSize = Math.Min(imageWidth, imageHeight);
-
-            if (maxCropSize <= 0)
-            {
-                return Fail(sourcePath, text.InvalidImageSize);
-            }
-
-            cropSize = Math.Clamp(cropSize, 1, maxCropSize);
-            cropX = Math.Clamp(cropX, 0, imageWidth - cropSize);
-            cropY = Math.Clamp(cropY, 0, imageHeight - cropSize);
-
-            CropToSquare(image, cropX, cropY, cropSize);
-
-            int targetSize = GetTargetSizeFromSquareSize(cropSize, resizeMode, autoSizeStep);
-            bool resized = false;
-
-            if ((int)image.Width != targetSize || (int)image.Height != targetSize)
-            {
-                ResizeSquare(image, targetSize);
-                resized = true;
-            }
-
-            ApplySharpnessIfNeeded(image, resized, sharpMode);
-
-            bool dimensionsAlreadyCorrect =
-                imageWidth == cropSize &&
-                imageHeight == cropSize &&
-                imageWidth == targetSize &&
-                imageHeight == targetSize;
-
-            if (dimensionsAlreadyCorrect && IsJpegExtension(extension))
-            {
-                return new ProcessResult
-                {
-                    SourcePath = sourcePath,
-                    Success = true,
-                    AlreadyCorrectSize = true,
-                    TargetSize = targetSize
-                };
-            }
-
-            ApplyJpegOutputSettings(image, quality, jpegMode);
+            int targetSize = PrepareManualCropOutputImage(
+                image,
+                quality,
+                resizeMode,
+                sharpMode,
+                jpegMode,
+                cropX,
+                cropY,
+                cropSize,
+                autoSizeStep,
+                text.InvalidImageSize);
 
             string outputPath = CreateUniqueOutputPath(sourcePath, targetSize);
             image.Write(outputPath);
@@ -452,6 +415,103 @@ internal static class ImageProcessor
         {
             return Fail(sourcePath, ex.Message);
         }
+    }
+
+    public static long EstimateManualCropFileSize(
+        string sourcePath,
+        int quality,
+        string resizeMode,
+        string sharpMode,
+        int jpegMode,
+        int cropX,
+        int cropY,
+        int cropSize,
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath))
+        {
+            throw new ArgumentException("Source path is empty.", nameof(sourcePath));
+        }
+
+        if (!File.Exists(sourcePath))
+        {
+            throw new FileNotFoundException("Source file was not found.", sourcePath);
+        }
+
+        string extension = Path.GetExtension(sourcePath);
+
+        if (!SupportedExtensions.Contains(extension))
+        {
+            throw new NotSupportedException($"Unsupported image format: {extension}");
+        }
+
+        quality = AppSettings.NormalizeQuality(quality);
+        resizeMode = AppSettings.NormalizeResizeMode(resizeMode);
+        sharpMode = AppSettings.NormalizeSharpMode(sharpMode);
+        jpegMode = AppSettings.NormalizeJpegMode(jpegMode);
+        autoSizeStep = AppSettings.NormalizeAutoSizeStep(autoSizeStep);
+
+        using var image = new MagickImage(sourcePath);
+        _ = PrepareManualCropOutputImage(
+            image,
+            quality,
+            resizeMode,
+            sharpMode,
+            jpegMode,
+            cropX,
+            cropY,
+            cropSize,
+            autoSizeStep,
+            "Invalid image size.");
+
+        using var output = new MemoryStream();
+        image.Write(output);
+        return output.Length;
+    }
+
+    private static int PrepareManualCropOutputImage(
+        MagickImage image,
+        int quality,
+        string resizeMode,
+        string sharpMode,
+        int jpegMode,
+        int cropX,
+        int cropY,
+        int cropSize,
+        int autoSizeStep,
+        string invalidImageSizeMessage)
+    {
+        image.AutoOrient();
+        image.FilterType = FilterType.Lanczos;
+
+        int imageWidth = (int)image.Width;
+        int imageHeight = (int)image.Height;
+        int maxCropSize = Math.Min(imageWidth, imageHeight);
+
+        if (maxCropSize <= 0)
+        {
+            throw new InvalidDataException(invalidImageSizeMessage);
+        }
+
+        cropSize = Math.Clamp(cropSize, 1, maxCropSize);
+        cropX = Math.Clamp(cropX, 0, imageWidth - cropSize);
+        cropY = Math.Clamp(cropY, 0, imageHeight - cropSize);
+
+        CropToSquare(image, cropX, cropY, cropSize);
+
+        int targetSize = GetTargetSizeFromSquareSize(cropSize, resizeMode, autoSizeStep);
+        bool resized = false;
+
+        if ((int)image.Width != targetSize || (int)image.Height != targetSize)
+        {
+            ResizeSquare(image, targetSize);
+            resized = true;
+        }
+
+        ApplySharpnessIfNeeded(image, resized, sharpMode);
+        ApplyJpegOutputSettings(image, quality, jpegMode);
+
+        return targetSize;
     }
 
     private static bool TryApplySmartPadding(
