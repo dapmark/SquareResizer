@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "clean build SquareResizer",
-      "program": "${workspaceFolder}\\bin\\Debug\\net10.0-windows\\SquareResizer.exe",
+      "program": "${workspaceFolder}\\bin\\Debug\\net10.0-windows\\win-x64\\SquareResizer.exe",
       "args": [],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false

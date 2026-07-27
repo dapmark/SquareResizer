@@ -163,46 +163,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="CloseIconButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="28" />
-            <Setter Property="Height" Value="28" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource TitleButtonForegroundBrush}" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Focusable" Value="False" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="RootBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource SoftButtonHoverBackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource SoftButtonPressedBackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-                                <Setter Property="Opacity" Value="0.55" />
-                                <Setter Property="Cursor" Value="Arrow" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
@@ -440,7 +400,8 @@
             </Border.Effect>
         </Border>
 
-        <Border Background="{DynamicResource WindowBackgroundBrush}"
+        <Border x:Name="SettingsContentRoot"
+                Background="{DynamicResource WindowBackgroundBrush}"
                 BorderBrush="{DynamicResource WindowBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
@@ -465,24 +426,12 @@
                                FontSize="18"
                                FontWeight="SemiBold" />
 
-                    <Button HorizontalAlignment="Right"
+                    <Button x:Name="CloseButton"
+                            HorizontalAlignment="Right"
                             VerticalAlignment="Top"
                             Margin="0"
-                            Style="{StaticResource CloseIconButtonStyle}"
-                            Click="CloseButton_OnClick">
-                    <Viewbox Width="14"
-                             Height="14"
-                             Stretch="Uniform">
-                        <Canvas Width="12"
-                                Height="12">
-                            <Path Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                                  StrokeThickness="1.5"
-                                  StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"
-                                  Data="M3,3 L9,9 M9,3 L3,9" />
-                        </Canvas>
-                    </Viewbox>
-                </Button>
+                            Style="{StaticResource AuxiliaryWindowCloseButtonStyle}"
+                            Click="CloseButton_OnClick" />
             </Grid>
 
                 <Grid Grid.Row="1" Margin="10,0,10,10">
@@ -546,6 +495,11 @@
                         <ComboBoxItem Content="Light" Tag="light" />
                     </ComboBox>
                 </Grid>
+
+                <CheckBox x:Name="ShowManualResultEstimateCheckBox"
+                          Margin="0,10,0,0"
+                          Style="{StaticResource ModeCheckBoxStyle}"
+                          Content="Show result dimensions and estimated size" />
             </StackPanel>
         </Border>
 
@@ -678,60 +632,34 @@
             </StackPanel>
         </Border>
 
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
             <Button x:Name="AboutButton"
-                    Width="30"
+                    Grid.Column="0"
                     Height="30"
-                    Margin="0,0,10,0"
                     Style="{StaticResource RoundedButtonStyle}"
-                    Click="OnAboutButtonClick">
-                <Viewbox Width="15"
-                         Height="15"
-                         Stretch="Uniform">
-                    <Canvas Width="24"
-                            Height="24">
-                        <Ellipse Width="20"
-                                 Height="20"
-                                 Canvas.Left="2"
-                                 Canvas.Top="2"
-                                 Stroke="{DynamicResource AccentBorderBrush}"
-                                 StrokeThickness="2" />
-                        <Path Stroke="{DynamicResource AccentBorderBrush}"
-                              StrokeThickness="2"
-                              StrokeStartLineCap="Round"
-                              StrokeEndLineCap="Round"
-                              Data="M12,11 L12,16" />
-                        <Ellipse Width="2"
-                                 Height="2"
-                                 Canvas.Left="11"
-                                 Canvas.Top="7"
-                                 Fill="{DynamicResource AccentBorderBrush}" />
-                    </Canvas>
-                </Viewbox>
-            </Button>
+                    Content="About"
+                    Click="OnAboutButtonClick" />
             <Button x:Name="ResetButton"
-                    Width="78"
+                    Grid.Column="2"
                     Height="30"
-                    Margin="0,0,10,0"
                     Style="{StaticResource RoundedButtonStyle}"
                     Content="Reset"
                     Click="OnResetButtonClick" />
-            <Button x:Name="CancelButton"
-                    Width="78"
-                    Height="30"
-                    Margin="0,0,10,0"
-                    Style="{StaticResource RoundedButtonStyle}"
-                    Content="Cancel"
-                    Click="OnCancelButtonClick" />
             <Button x:Name="SaveButton"
-                    Width="86"
+                    Grid.Column="4"
                     Height="30"
                     Style="{StaticResource ApplyButtonStyle}"
                     Content="Apply"
                     Click="OnSaveButtonClick" />
-        </StackPanel>
+        </Grid>
     </Grid>
             </Grid>
         </Border>

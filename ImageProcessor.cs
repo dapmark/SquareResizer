@@ -736,27 +736,27 @@ internal static class ImageProcessor
         };
     }
 
-    private static int GetTargetSizeFromSquareSize(int squareSize, string resizeMode, int autoSizeStep)
+    internal static int GetTargetSizeFromSquareSize(int squareSize, string resizeMode, int autoSizeStep)
     {
         if (string.Equals(resizeMode, "music_cover", StringComparison.OrdinalIgnoreCase))
         {
             return GetNearestMusicCoverSize(squareSize);
         }
 
-        return GetNearestAutoSize(squareSize, autoSizeStep);
+        return GetAutoSizeRoundedDown(squareSize, autoSizeStep);
     }
 
-    private static int GetNearestAutoSize(int size, int autoSizeStep)
+    private static int GetAutoSizeRoundedDown(int size, int autoSizeStep)
     {
         autoSizeStep = AppSettings.NormalizeAutoSizeStep(autoSizeStep);
 
         if (size <= 0)
         {
-            return autoSizeStep;
+            return 1;
         }
 
-        int rounded = (int)Math.Round(size / (double)autoSizeStep, MidpointRounding.AwayFromZero) * autoSizeStep;
-        return Math.Max(autoSizeStep, rounded);
+        int roundedDown = size / autoSizeStep * autoSizeStep;
+        return roundedDown > 0 ? roundedDown : size;
     }
 
     private static int GetNearestMusicCoverSize(int size)

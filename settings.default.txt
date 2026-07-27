@@ -6,9 +6,10 @@
 # jpeg_mode: 1 = compact JPG, 2 = balanced JPG, 3 = maximum JPG
 # smart_mode: true = extend the short side with background within limits, false = regular square resize/stretch
 # manual_mode: true = manual crop before saving, false = regular automatic processing
+# show_manual_result_estimate: true = show result dimensions and estimated JPG size in manual mode, false = hide them
 # smart_padding_percent: maximum side difference in percent for smart mode, from 0 to 20
 # smart_padding_max_px: maximum pixels that smart mode can add as background, from 0 to 300
-# auto_size_step: Auto rounding step in pixels, allowed values: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200
+# auto_size_step: Auto downward rounding step in pixels, allowed values: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200
 # theme: light = light theme, dark = dark theme
 # language: en = English interface, ru = Russian interface
 #
@@ -18,6 +19,7 @@ sharp_mode=standard
 jpeg_mode=1
 smart_mode=true
 manual_mode=false
+show_manual_result_estimate=true
 smart_padding_percent=4
 smart_padding_max_px=32
 auto_size_step=100

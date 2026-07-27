@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
@@ -18,6 +19,7 @@ namespace ImageSquareResizer;
 public partial class MainWindow : Window
 {
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_BORDER_COLOR = 34;
     private const double DarkBorderMixRatio = 0.03;
     private const double LightBorderMixRatio = 0.06;
     private const double CropCornerHitSize = 12.0;
@@ -198,6 +200,7 @@ public partial class MainWindow : Window
         var dropAreaBackground = Color.FromRgb(245, 245, 245);
 
         Resources["WindowBackgroundBrush"] = BrushFromColor(windowBackground);
+        Resources["WindowBorderBrush"] = BrushFromColor(MixColor(windowBackground, Colors.Black, LightBorderMixRatio));
         Resources["DropAreaBackgroundBrush"] = BrushFromColor(dropAreaBackground);
         Resources["DropAreaBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.Black, LightBorderMixRatio));
         Resources["DropAreaDashedBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.Black, 0.16));
@@ -218,6 +221,7 @@ public partial class MainWindow : Window
         var dropAreaBackground = Color.FromRgb(37, 37, 38);
 
         Resources["WindowBackgroundBrush"] = BrushFromColor(windowBackground);
+        Resources["WindowBorderBrush"] = BrushFromColor(MixColor(windowBackground, Colors.White, DarkBorderMixRatio));
         Resources["DropAreaBackgroundBrush"] = BrushFromColor(dropAreaBackground);
         Resources["DropAreaBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.White, DarkBorderMixRatio));
         Resources["DropAreaDashedBorderBrush"] = BrushFromColor(MixColor(dropAreaBackground, Colors.White, 0.18));
@@ -275,6 +279,22 @@ public partial class MainWindow : Window
             DWMWA_USE_IMMERSIVE_DARK_MODE,
             ref useDarkMode,
             sizeof(int));
+
+        if (Resources["WindowBorderBrush"] is SolidColorBrush borderBrush)
+        {
+            int borderColor = ToColorRef(borderBrush.Color);
+
+            _ = DwmSetWindowAttribute(
+                handle,
+                DWMWA_BORDER_COLOR,
+                ref borderColor,
+                sizeof(int));
+        }
+    }
+
+    private static int ToColorRef(Color color)
+    {
+        return color.R | (color.G << 8) | (color.B << 16);
     }
 
 
@@ -312,6 +332,7 @@ public partial class MainWindow : Window
         SettingsButton.ToolTip = null;
         CloseFileMenuItem.Header = text.CloseFileMenuItem;
         UpdateDropAreaState();
+        UpdateManualResultEstimateText();
     }
 
     private void ApplySettingsToUi()
@@ -358,17 +379,35 @@ public partial class MainWindow : Window
             return;
         }
 
-        var dialog = new SettingsWindow(currentSettings)
+        bool? dialogResult = null;
+        SettingsWindow? dialog = null;
+        MainContentRoot.Effect = new BlurEffect
         {
-            Owner = this
+            Radius = 4,
+            RenderingBias = RenderingBias.Performance,
         };
 
-        if (dialog.ShowDialog() != true)
+        try
+        {
+            dialog = new SettingsWindow(currentSettings)
+            {
+                Owner = this
+            };
+
+            dialogResult = dialog.ShowDialog();
+        }
+        finally
+        {
+            MainContentRoot.Effect = null;
+        }
+
+        if (dialogResult != true || dialog is null)
         {
             return;
         }
 
         bool wasManualPreviewLoaded = isManualPreviewLoaded;
+        bool wasManualResultEstimateVisible = currentSettings.ShowManualResultEstimate;
         ManualResultState? previousManualResultState = wasManualPreviewLoaded
             ? CaptureManualResultState()
             : null;
@@ -388,10 +427,22 @@ public partial class MainWindow : Window
             UpdateManualActionButtons();
             ScheduleManualFileSizeEstimate();
         }
+        else if (wasManualPreviewLoaded &&
+                 !wasManualResultEstimateVisible &&
+                 currentSettings.ShowManualResultEstimate)
+        {
+            ScheduleManualFileSizeEstimate();
+        }
+        else if (!currentSettings.ShowManualResultEstimate)
+        {
+            CancelManualFileSizeEstimate(clearEstimate: true);
+            UpdateManualResultEstimateText();
+        }
 
         if (wasManualPreviewLoaded && !currentSettings.ManualMode)
         {
             ResetManualPreview();
+            SetStatusText(string.Empty);
         }
     }
 
@@ -631,6 +682,7 @@ public partial class MainWindow : Window
         if (!currentSettings.ManualMode)
         {
             ResetManualPreview();
+            SetStatusText(string.Empty);
         }
     }
 
@@ -758,12 +810,19 @@ public partial class MainWindow : Window
 
     private void ScheduleManualFileSizeEstimate()
     {
+        if (!currentSettings.ShowManualResultEstimate)
+        {
+            CancelManualFileSizeEstimate(clearEstimate: true);
+            UpdateManualResultEstimateText();
+            return;
+        }
+
         if (!isManualPreviewLoaded ||
             string.IsNullOrWhiteSpace(manualSourcePath) ||
             !int.TryParse(QualityTextBox.Text.Trim(), out int quality))
         {
             CancelManualFileSizeEstimate(clearEstimate: true);
-            UpdateManualPreviewLayout();
+            UpdateManualResultEstimateText();
             return;
         }
 
@@ -777,7 +836,7 @@ public partial class MainWindow : Window
         isManualFileSizeEstimatePending = true;
 
         ManualResultState state = CaptureManualResultState(AppSettings.NormalizeQuality(quality));
-        UpdateManualPreviewLayout();
+        UpdateManualResultEstimateText();
 
         _ = EstimateManualFileSizeAsync(state, requestId, cancellation);
     }
@@ -788,7 +847,8 @@ public partial class MainWindow : Window
         manualFileSizeEstimateCancellation = null;
         manualFileSizeEstimateRequestId++;
         manualEstimatedFileSizeBytes = null;
-        isManualFileSizeEstimatePending = isManualPreviewLoaded;
+        isManualFileSizeEstimatePending = isManualPreviewLoaded && currentSettings.ShowManualResultEstimate;
+        UpdateManualResultEstimateText();
     }
 
     private void CancelManualFileSizeEstimate(bool clearEstimate)
@@ -802,6 +862,8 @@ public partial class MainWindow : Window
         {
             manualEstimatedFileSizeBytes = null;
         }
+
+        UpdateManualResultEstimateText();
     }
 
     private async Task EstimateManualFileSizeAsync(
@@ -856,7 +918,7 @@ public partial class MainWindow : Window
 
                 manualEstimatedFileSizeBytes = estimatedBytes;
                 isManualFileSizeEstimatePending = false;
-                UpdateManualPreviewLayout();
+                UpdateManualResultEstimateText();
             });
         }
         catch (OperationCanceledException)
@@ -878,7 +940,7 @@ public partial class MainWindow : Window
 
                 manualEstimatedFileSizeBytes = null;
                 isManualFileSizeEstimatePending = false;
-                UpdateManualPreviewLayout();
+                UpdateManualResultEstimateText();
             });
         }
         finally
@@ -889,16 +951,40 @@ public partial class MainWindow : Window
 
     private string GetManualCropBadgeText()
     {
-        string dimensions = $"{manualCropSize}×{manualCropSize}";
+        return $"{manualCropSize}×{manualCropSize}";
+    }
+
+    private void UpdateManualResultEstimateText()
+    {
+        bool showEstimate = currentSettings.ShowManualResultEstimate &&
+            ManualModeCheckBox.IsChecked == true &&
+            isManualPreviewLoaded &&
+            manualCropSize > 0;
+
+        ManualResultEstimateTextBlock.Visibility = showEstimate
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (!showEstimate)
+        {
+            ManualResultEstimateTextBlock.Text = string.Empty;
+            return;
+        }
+
+        int targetSize = ImageProcessor.GetTargetSizeFromSquareSize(
+            manualCropSize,
+            currentSettings.ResizeMode,
+            currentSettings.AutoSizeStep);
 
         if (isManualFileSizeEstimatePending)
         {
-            return dimensions + " · …";
+            ManualResultEstimateTextBlock.Text = text.ManualResultEstimate(targetSize, "…");
+            return;
         }
 
-        return manualEstimatedFileSizeBytes is long bytes
-            ? $"{dimensions} · ≈{FormatFileSize(bytes)}"
-            : dimensions;
+        ManualResultEstimateTextBlock.Text = manualEstimatedFileSizeBytes is long bytes
+            ? text.ManualResultEstimate(targetSize, FormatFileSize(bytes))
+            : text.ManualResultDimensions(targetSize);
     }
 
     private string FormatFileSize(long bytes)
@@ -1076,6 +1162,7 @@ public partial class MainWindow : Window
             PreviewHost.Focus();
             UpdateManualPreviewLayout();
             UpdateManualActionButtons();
+            UpdateManualResultEstimateText();
             ScheduleManualFileSizeEstimate();
             return true;
         }
@@ -1123,7 +1210,7 @@ public partial class MainWindow : Window
         }
 
         CancelManualFileSizeEstimate(clearEstimate: false);
-        UpdateManualPreviewLayout();
+        UpdateManualResultEstimateText();
         SetStatusText(text.SavingStatus);
 
         ProcessResult result = ImageProcessor.ProcessManualCropFile(
@@ -1166,7 +1253,7 @@ public partial class MainWindow : Window
         {
             manualEstimatedFileSizeBytes = new FileInfo(result.OutputPath).Length;
             isManualFileSizeEstimatePending = false;
-            UpdateManualPreviewLayout();
+            UpdateManualResultEstimateText();
         }
         catch
         {
@@ -1205,6 +1292,7 @@ public partial class MainWindow : Window
         CropCanvas.Visibility = Visibility.Collapsed;
 
         UpdateManualActionButtons();
+        UpdateManualResultEstimateText();
         UpdateDropAreaFrame();
         PreviewHost.Cursor = null;
         PreviewHost.ReleaseMouseCapture();
@@ -1256,13 +1344,21 @@ public partial class MainWindow : Window
         bool manualMode = ManualModeCheckBox.IsChecked == true;
         ManualActionsPanel.Visibility = manualMode ? Visibility.Visible : Visibility.Collapsed;
         UpdateManualActionButtons();
+        UpdateManualResultEstimateText();
     }
 
     private void UpdateManualActionButtons()
     {
         bool manualMode = ManualModeCheckBox.IsChecked == true;
-        SaveManualButton.IsEnabled = manualMode && isManualPreviewLoaded && HasManualUnsavedChanges();
+        bool hasUnsavedChanges = manualMode && isManualPreviewLoaded && HasManualUnsavedChanges();
+
+        SaveManualButton.IsEnabled = hasUnsavedChanges;
         CenterCropButton.IsEnabled = manualMode && isManualPreviewLoaded && !IsManualCropCentered();
+
+        if (hasUnsavedChanges)
+        {
+            SetStatusText(text.ManualPreviewStatus);
+        }
     }
 
     private bool HasManualUnsavedChanges()
@@ -1615,6 +1711,12 @@ public partial class MainWindow : Window
         Point imagePoint = PreviewPointToImagePoint(adjustedPoint);
         int minSize = GetMinManualCropSize();
 
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+        {
+            ResizeManualCropFromCenter(imagePoint, minSize);
+            return;
+        }
+
         switch (manualCropDragMode)
         {
             case ManualCropDragMode.ResizeTopLeft:
@@ -1649,6 +1751,73 @@ public partial class MainWindow : Window
                 ResizeManualCropFromBottom(imagePoint, minSize);
                 break;
         }
+    }
+
+    private void ResizeManualCropFromCenter(Point imagePoint, int minSize)
+    {
+        double centerX = dragStartCropX + dragStartCropSize / 2.0;
+        double centerY = dragStartCropY + dragStartCropSize / 2.0;
+        Point startImagePoint = PreviewPointToImagePoint(dragStartPoint);
+        double deltaX = imagePoint.X - startImagePoint.X;
+        double deltaY = imagePoint.Y - startImagePoint.Y;
+
+        double rawSize = manualCropDragMode switch
+        {
+            ManualCropDragMode.ResizeTopLeft =>
+                dragStartCropSize + 2.0 * Math.Min(-deltaX, -deltaY),
+            ManualCropDragMode.ResizeTopRight =>
+                dragStartCropSize + 2.0 * Math.Min(deltaX, -deltaY),
+            ManualCropDragMode.ResizeBottomLeft =>
+                dragStartCropSize + 2.0 * Math.Min(-deltaX, deltaY),
+            ManualCropDragMode.ResizeBottomRight =>
+                dragStartCropSize + 2.0 * Math.Min(deltaX, deltaY),
+            ManualCropDragMode.ResizeLeft => dragStartCropSize - 2.0 * deltaX,
+            ManualCropDragMode.ResizeRight => dragStartCropSize + 2.0 * deltaX,
+            ManualCropDragMode.ResizeTop => dragStartCropSize - 2.0 * deltaY,
+            ManualCropDragMode.ResizeBottom => dragStartCropSize + 2.0 * deltaY,
+            _ => dragStartCropSize
+        };
+
+        double maxHalfSize = Math.Min(
+            Math.Min(centerX, manualImageWidth - centerX),
+            Math.Min(centerY, manualImageHeight - centerY));
+        int maxSize = Math.Max(1, (int)Math.Floor(maxHalfSize * 2.0));
+        int size = GetClampedCenteredManualCropSize(rawSize, minSize, maxSize, dragStartCropSize);
+
+        manualCropX = (int)Math.Round(centerX - size / 2.0);
+        manualCropY = (int)Math.Round(centerY - size / 2.0);
+        manualCropSize = size;
+    }
+
+    private static int GetClampedCenteredManualCropSize(
+        double rawSize,
+        int minSize,
+        int maxSize,
+        int startSize)
+    {
+        int parity = Math.Abs(startSize) % 2;
+        maxSize = Math.Max(1, maxSize);
+
+        if (maxSize % 2 != parity)
+        {
+            maxSize--;
+        }
+
+        maxSize = Math.Max(1, maxSize);
+        minSize = Math.Clamp(minSize, 1, maxSize);
+
+        if (minSize % 2 != parity)
+        {
+            minSize++;
+        }
+
+        if (minSize > maxSize)
+        {
+            minSize = maxSize;
+        }
+
+        int size = 2 * (int)Math.Round((rawSize - parity) / 2.0, MidpointRounding.AwayFromZero) + parity;
+        return Math.Clamp(size, minSize, maxSize);
     }
 
     private void ResizeManualCropFromTopLeft(Point imagePoint, int minSize)

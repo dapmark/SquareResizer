@@ -15,6 +15,7 @@ internal sealed class AppSettings
     public const string DefaultResizeMode = "music_cover";
     public const bool DefaultSmartMode = true;
     public const bool DefaultManualMode = false;
+    public const bool DefaultShowManualResultEstimate = true;
     public const string DefaultSharpMode = "standard";
     public const int DefaultJpegMode = 1;
     public const string DefaultLanguage = "en";
@@ -33,6 +34,7 @@ internal sealed class AppSettings
         "jpeg_mode",
         "smart_mode",
         "manual_mode",
+        "show_manual_result_estimate",
         "smart_padding_percent",
         "smart_padding_max_px",
         "auto_size_step",
@@ -45,6 +47,7 @@ internal sealed class AppSettings
     public string ResizeMode { get; set; } = DefaultResizeMode;
     public bool SmartMode { get; set; } = DefaultSmartMode;
     public bool ManualMode { get; set; } = DefaultManualMode;
+    public bool ShowManualResultEstimate { get; set; } = DefaultShowManualResultEstimate;
     public string SharpMode { get; set; } = DefaultSharpMode;
     public int JpegMode { get; set; } = DefaultJpegMode;
     public string Language { get; set; } = DefaultLanguage;
@@ -67,6 +70,7 @@ internal sealed class AppSettings
             ResizeMode = ResizeMode,
             SmartMode = SmartMode,
             ManualMode = ManualMode,
+            ShowManualResultEstimate = ShowManualResultEstimate,
             SharpMode = SharpMode,
             JpegMode = JpegMode,
             Language = Language,
@@ -83,6 +87,7 @@ internal sealed class AppSettings
         ResizeMode = other.ResizeMode;
         SmartMode = other.SmartMode;
         ManualMode = other.ManualMode;
+        ShowManualResultEstimate = other.ShowManualResultEstimate;
         SharpMode = other.SharpMode;
         JpegMode = other.JpegMode;
         Language = other.Language;
@@ -160,6 +165,12 @@ internal sealed class AppSettings
                     continue;
                 }
 
+                if (key.Equals("show_manual_result_estimate", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.ShowManualResultEstimate = NormalizeShowManualResultEstimate(value);
+                    continue;
+                }
+
                 if (key.Equals("sharp_mode", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.SharpMode = NormalizeSharpMode(value);
@@ -215,6 +226,7 @@ internal sealed class AppSettings
             settings.ResizeMode = DefaultResizeMode;
             settings.SmartMode = DefaultSmartMode;
             settings.ManualMode = DefaultManualMode;
+            settings.ShowManualResultEstimate = DefaultShowManualResultEstimate;
             settings.SharpMode = DefaultSharpMode;
             settings.JpegMode = DefaultJpegMode;
             settings.Language = DefaultLanguage;
@@ -245,6 +257,7 @@ internal sealed class AppSettings
             ["jpeg_mode"] = JpegMode.ToString(CultureInfo.InvariantCulture),
             ["smart_mode"] = SmartMode.ToString().ToLowerInvariant(),
             ["manual_mode"] = ManualMode.ToString().ToLowerInvariant(),
+            ["show_manual_result_estimate"] = ShowManualResultEstimate.ToString().ToLowerInvariant(),
             ["smart_padding_percent"] = FormatDouble(SmartPaddingPercent),
             ["smart_padding_max_px"] = SmartPaddingMaxPx.ToString(CultureInfo.InvariantCulture),
             ["auto_size_step"] = AutoSizeStep.ToString(CultureInfo.InvariantCulture),
@@ -360,6 +373,7 @@ internal sealed class AppSettings
             "jpeg_mode=" + DefaultJpegMode + Environment.NewLine +
             "smart_mode=" + DefaultSmartMode.ToString().ToLowerInvariant() + Environment.NewLine +
             "manual_mode=" + DefaultManualMode.ToString().ToLowerInvariant() + Environment.NewLine +
+            "show_manual_result_estimate=" + DefaultShowManualResultEstimate.ToString().ToLowerInvariant() + Environment.NewLine +
             "smart_padding_percent=" + FormatDouble(DefaultSmartPaddingPercent) + Environment.NewLine +
             "smart_padding_max_px=" + DefaultSmartPaddingMaxPx + Environment.NewLine +
             "auto_size_step=" + DefaultAutoSizeStep + Environment.NewLine +
@@ -464,6 +478,27 @@ internal sealed class AppSettings
         }
 
         return DefaultManualMode;
+    }
+
+    public static bool NormalizeShowManualResultEstimate(string? value)
+    {
+        if (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "1", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "on", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "yes", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(value, "false", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "0", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "off", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "no", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return DefaultShowManualResultEstimate;
     }
 
     public static string NormalizeSharpMode(string? sharpMode)

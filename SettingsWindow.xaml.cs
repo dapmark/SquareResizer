@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 
 namespace ImageSquareResizer;
 
@@ -48,6 +49,7 @@ internal partial class SettingsWindow : Window
             SelectComboBoxItem(ThemeComboBox, settingsDraft.Theme);
             SelectComboBoxItem(JpegModeComboBox, settingsDraft.JpegMode.ToString(CultureInfo.InvariantCulture));
             SelectComboBoxItem(AutoSizeStepComboBox, settingsDraft.AutoSizeStep.ToString(CultureInfo.InvariantCulture));
+            ShowManualResultEstimateCheckBox.IsChecked = settingsDraft.ShowManualResultEstimate;
 
             SmartPaddingPercentTextBox.Text = AppSettings.FormatDouble(settingsDraft.SmartPaddingPercent);
             SmartPaddingMaxPxTextBox.Text = settingsDraft.SmartPaddingMaxPx.ToString(CultureInfo.InvariantCulture);
@@ -67,6 +69,9 @@ internal partial class SettingsWindow : Window
         InterfaceSectionTextBlock.Text = text.IsRussian ? "Интерфейс" : "Interface";
         LanguageLabel.Text = text.IsRussian ? "Язык" : "Language";
         ThemeLabel.Text = text.IsRussian ? "Тема" : "Theme";
+        ShowManualResultEstimateCheckBox.Content = text.IsRussian
+            ? "Показывать размер и примерный вес результата"
+            : "Show result dimensions and estimated size";
         AdvancedSectionTextBlock.Text = text.IsRussian ? "Обработка" : "Processing";
         JpegModeLabel.Text = text.IsRussian ? "JPEG режим" : "JPEG mode";
         AutoSizeStepLabel.Text = text.IsRussian ? "Шаг авторазмера" : "Auto size step";
@@ -75,7 +80,7 @@ internal partial class SettingsWindow : Window
         SmartPaddingMaxPxLabel.Text = text.IsRussian ? "Макс. дорисовка" : "Max fill";
 
         var jpegModeToolTip = text.IsRussian ? "Компактный режим уменьшает вес за счет некоторого снижения качества, максимальный режим сохраняет качество, но увеличивает вес" : "Compact mode reduces file size with some quality loss, maximum mode keeps quality but increases file size";
-        var autoSizeStepToolTip = text.IsRussian ? "Задаёт шаг округления для варианта «Авто»" : "Sets the rounding step for the Auto option";
+        var autoSizeStepToolTip = text.IsRussian ? "Задаёт шаг округления вниз для варианта «Авто»" : "Sets the downward rounding step for the Auto option";
         var smartPaddingPercentToolTip = text.IsRussian ? "Проверяет разницу сторон относительно большей стороны" : "Checks the side difference relative to the larger side";
         var smartPaddingMaxPxToolTip = text.IsRussian ? "Ограничивает кол-во пикселей, которое можно добавить фоном" : "Limits the number of pixels that can be added as background";
 
@@ -88,9 +93,10 @@ internal partial class SettingsWindow : Window
         SmartPaddingMaxPxLabel.ToolTip = smartPaddingMaxPxToolTip;
         SmartPaddingMaxPxTextBox.ToolTip = smartPaddingMaxPxToolTip;
 
-        AboutButton.ToolTip = text.IsRussian ? "О программе" : "About";
+        CloseButton.ToolTip = text.IsRussian ? "Отменить и закрыть" : "Cancel and close";
+        AboutButton.Content = text.IsRussian ? "О программе" : "About";
+        AboutButton.ToolTip = null;
         ResetButton.Content = text.IsRussian ? "Сброс" : "Reset";
-        CancelButton.Content = text.IsRussian ? "Отмена" : "Cancel";
         SaveButton.Content = text.IsRussian ? "Применить" : "Apply";
 
         SetComboBoxItemContent(LanguageComboBox, "en", "English");
@@ -227,12 +233,25 @@ internal partial class SettingsWindow : Window
 
     private void OnAboutButtonClick(object sender, RoutedEventArgs e)
     {
-        var aboutWindow = new AboutWindow(settingsDraft)
+        SettingsContentRoot.Effect = new BlurEffect
         {
-            Owner = this
+            Radius = 4,
+            RenderingBias = RenderingBias.Performance,
         };
 
-        aboutWindow.ShowDialog();
+        try
+        {
+            var aboutWindow = new AboutWindow(settingsDraft)
+            {
+                Owner = this
+            };
+
+            aboutWindow.ShowDialog();
+        }
+        finally
+        {
+            SettingsContentRoot.Effect = null;
+        }
     }
 
     private void OnResetButtonClick(object sender, RoutedEventArgs e)
@@ -240,17 +259,13 @@ internal partial class SettingsWindow : Window
         settingsDraft.Language = AppSettings.DefaultLanguage;
         settingsDraft.Theme = AppSettings.DefaultTheme;
         settingsDraft.JpegMode = AppSettings.DefaultJpegMode;
+        settingsDraft.ShowManualResultEstimate = AppSettings.DefaultShowManualResultEstimate;
         settingsDraft.SmartPaddingPercent = AppSettings.DefaultSmartPaddingPercent;
         settingsDraft.SmartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx;
         settingsDraft.AutoSizeStep = AppSettings.DefaultAutoSizeStep;
 
         ApplyDraftToUi();
         ApplyTheme();
-    }
-
-    private void OnCancelButtonClick(object sender, RoutedEventArgs e)
-    {
-        DialogResult = false;
     }
 
     private void OnSaveButtonClick(object sender, RoutedEventArgs e)
@@ -285,6 +300,7 @@ internal partial class SettingsWindow : Window
         settingsDraft.Theme = AppSettings.NormalizeTheme(GetSelectedTag(ThemeComboBox));
         settingsDraft.JpegMode = AppSettings.NormalizeJpegMode(ParseJpegMode(GetSelectedTag(JpegModeComboBox)));
         settingsDraft.AutoSizeStep = AppSettings.NormalizeAutoSizeStep(ParseAutoSizeStep(GetSelectedTag(AutoSizeStepComboBox)));
+        settingsDraft.ShowManualResultEstimate = ShowManualResultEstimateCheckBox.IsChecked == true;
         settingsDraft.SmartPaddingPercent = AppSettings.NormalizeSmartPaddingPercent(smartPaddingPercent);
         settingsDraft.SmartPaddingMaxPx = AppSettings.NormalizeSmartPaddingMaxPx(smartPaddingMaxPx);
 

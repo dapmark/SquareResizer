@@ -22,6 +22,7 @@ internal partial class AboutWindow : Window
     {
         var text = Localization.For(settings.Language);
         Title = text.IsRussian ? "О программе" : "About";
+        CloseButton.ToolTip = text.IsRussian ? "Закрыть" : "Close";
         VersionTextBlock.Text = text.IsRussian
             ? $"Версия: {AppVersion.Current}"
             : $"Version: {AppVersion.Current}";

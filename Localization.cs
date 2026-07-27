@@ -28,8 +28,8 @@ internal sealed class Localization
     public string ResizeAuto => IsRussian ? "Авто" : "Auto";
     public string ResizeMusicCover => IsRussian ? "Обложка" : "Cover";
     public string ResizeAutoToolTip => IsRussian
-        ? "Подбирает размер по изображению и округляет его выбранным шагом"
-        : "Chooses a size from the image and rounds it by the selected step";
+        ? "Подбирает размер по изображению и округляет его вниз выбранным шагом"
+        : "Chooses a size from the image and rounds it down by the selected step";
 
     public string ResizeMusicCoverToolTip => IsRussian
         ? "Подбирает ближайший стандартный размер обложки: 500, 600, 700, 1000, 1200, 1400"
@@ -112,8 +112,15 @@ internal sealed class Localization
             : $"Created: {created}, already ready: {alreadyCorrect}, errors: {failed}";
 
     public string ManualPreviewStatus => IsRussian
-        ? "Ручной режим: настройте квадрат и нажмите «Сохранить»"
-        : "Manual mode: adjust the square and click Save";
+        ? "Ручной режим: настройте рамку и нажмите «Сохранить»"
+        : "Manual mode: adjust the frame and click Save";
+
+    public string ManualResultDimensions(int targetSize) => IsRussian
+        ? $"Результат: {targetSize} × {targetSize} px"
+        : $"Result: {targetSize} × {targetSize} px";
+
+    public string ManualResultEstimate(int targetSize, string fileSize) =>
+        ManualResultDimensions(targetSize) + $" · ≈ {fileSize}";
 
     public string ManualFirstFileStatus => IsRussian
         ? "Ручной режим: открыт первый файл, остальные пропущены"

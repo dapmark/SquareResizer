@@ -48,7 +48,7 @@ The main use case is music covers and similar images where you need a quick, cle
 ## Size modes
 
 Auto\
-The application creates a square based on the source image size and rounds the final size using the selected Auto size step. The default step is 100 px.
+The application creates a square based on the source image size and rounds the final size down to the nearest value divisible by the selected Auto size step. The image is never enlarged. If the square is smaller than the selected step, its current size is preserved. The default step is 100 px.
 
 If smart mode can safely extend the background, the square is created using the larger side. If extension is not possible, the image is first cropped to a square by the shorter side and then resized evenly to the final size.
 
@@ -72,7 +72,7 @@ Both conditions are applied at the same time. If the background cannot be detect
 
 Manual mode is intended for images where automatic processing may damage important details near the edge or where you need to manually select an exact square fragment. In this mode, the image opens in preview and a square crop frame appears on top of it.
 
-The crop frame can be moved as a whole or resized from corners and sides. When resizing from a corner, the opposite corner stays in place. When resizing from a side, the opposite side stays in place. The frame always remains square.
+The crop frame can be moved as a whole or resized from corners and sides. During normal resizing, the opposite corner or side stays in place. Hold Alt to resize the frame symmetrically around its center. The frame always remains square.
 
 Crop frame controls:
 
@@ -80,6 +80,7 @@ Crop frame controls:
 - Drag a corner or side – resize the frame
 - Shift while dragging – more precise movement
 - Ctrl while dragging – faster movement
+- Alt while resizing – resize the frame symmetrically around its center
 - Arrow keys – move the frame by 1 pixel
 - Shift + arrow keys – move the frame by 10 pixels
 - Ctrl + S – save
@@ -187,7 +188,7 @@ Maximum number of pixels that smart mode can add as background\
 Allowed value: 0 to 300
 
 auto_size_step\
-Rounding step for Auto\
+Downward rounding step for Auto\
 Available values: 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200
 
 theme\

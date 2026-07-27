@@ -15,6 +15,7 @@
 
     <Window.Resources>
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F3F3F3" />
+        <SolidColorBrush x:Key="WindowBorderBrush" Color="#E4E4E4" />
         <SolidColorBrush x:Key="DropAreaBackgroundBrush" Color="#F5F5F5" />
         <SolidColorBrush x:Key="DropAreaBorderBrush" Color="#E6E6E6" />
         <SolidColorBrush x:Key="DropAreaDashedBorderBrush" Color="#D0D0D0" />
@@ -470,7 +471,8 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="{DynamicResource WindowBackgroundBrush}"
+    <Grid x:Name="MainContentRoot"
+          Background="{DynamicResource WindowBackgroundBrush}"
           AllowDrop="True"
           DragEnter="OnDragEnter"
           DragOver="OnDragOver"
@@ -899,12 +901,23 @@
                     Padding="12"
                     Margin="0,0,0,12"
                     Visibility="Collapsed">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock x:Name="ManualResultEstimateTextBlock"
+                               Margin="0,-1,0,8"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Text=""
+                               Foreground="{DynamicResource StatusTextBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="11"
+                               Visibility="Collapsed" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
                     <Button x:Name="CenterCropButton"
                             Grid.Column="0"
@@ -969,7 +982,9 @@
                                        Foreground="{DynamicResource MainTextBrush}" />
                         </StackPanel>
                     </Button>
-                </Grid>
+                    </Grid>
+
+                </StackPanel>
             </Border>
 
             <TextBlock x:Name="StatusTextBlock"

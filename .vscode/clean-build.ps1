@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $project = Join-Path $root "SquareResizer.csproj"
-$outputDll = Join-Path $root "bin\Debug\net10.0-windows\SquareResizer.dll"
+$outputDll = Join-Path $root "bin\Debug\net10.0-windows\win-x64\SquareResizer.dll"
 
 if (-not (Test-Path $project)) {
     throw "SquareResizer.csproj was not found: $project"
