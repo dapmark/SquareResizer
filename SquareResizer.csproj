@@ -24,12 +24,13 @@
     <InformationalVersion Condition="'$(SquareResizerInformationalVersion)' != ''">$(SquareResizerInformationalVersion)</InformationalVersion>
     <AssemblyVersion Condition="'$(SquareResizerFileVersion)' != ''">$(SquareResizerFileVersion)</AssemblyVersion>
     <FileVersion Condition="'$(SquareResizerFileVersion)' != ''">$(SquareResizerFileVersion)</FileVersion>
-    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q8-x64" Version="14.15.0" />
+    <PackageReference Include="SharpVectors.Wpf" Version="1.8.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,19 +39,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="settings.default.txt" />
-    <EmbeddedResource Include="settings.default.txt" LogicalName="SquareResizer.SettingsDefault" />
-    <Content Include="settings.default.txt" Link="settings.txt" TargetPath="settings.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Remove="Config\settings.default.txt" />
+    <EmbeddedResource Include="Config\settings.default.txt" LogicalName="SquareResizer.SettingsDefault" />
+    <Content Include="Config\settings.default.txt" Link="settings.txt" TargetPath="settings.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="app.ico" />
-    <Resource Include="app.ico" />
+    <None Remove="Assets\app.ico" />
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="squareresizer-about.png" />
-    <Resource Include="squareresizer-about.png" />
+    <None Remove="Assets\squareresizer-about.png" />
+    <Resource Include="Assets\squareresizer-about.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Icons\close.svg" />
+    <Resource Include="Assets\Icons\save.svg" />
+    <Resource Include="Assets\Icons\settings.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="LICENSE" />
+    <None Remove="Licenses\**\*" />
+    <Resource Include="LICENSE" />
+    <Resource Include="Licenses\**\*" />
   </ItemGroup>
 
 </Project>

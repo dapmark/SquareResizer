@@ -84,18 +84,13 @@ internal partial class SettingsWindow : Window
         var smartPaddingPercentToolTip = text.IsRussian ? "Проверяет разницу сторон относительно большей стороны" : "Checks the side difference relative to the larger side";
         var smartPaddingMaxPxToolTip = text.IsRussian ? "Ограничивает кол-во пикселей, которое можно добавить фоном" : "Limits the number of pixels that can be added as background";
 
-        JpegModeLabel.ToolTip = jpegModeToolTip;
-        JpegModeComboBox.ToolTip = jpegModeToolTip;
-        AutoSizeStepLabel.ToolTip = autoSizeStepToolTip;
-        AutoSizeStepComboBox.ToolTip = autoSizeStepToolTip;
-        SmartPaddingPercentLabel.ToolTip = smartPaddingPercentToolTip;
-        SmartPaddingPercentTextBox.ToolTip = smartPaddingPercentToolTip;
-        SmartPaddingMaxPxLabel.ToolTip = smartPaddingMaxPxToolTip;
-        SmartPaddingMaxPxTextBox.ToolTip = smartPaddingMaxPxToolTip;
+        HoverTip.SetText(JpegModeLabel, jpegModeToolTip);
+        HoverTip.SetText(AutoSizeStepLabel, autoSizeStepToolTip);
+        HoverTip.SetText(SmartPaddingPercentLabel, smartPaddingPercentToolTip);
+        HoverTip.SetText(SmartPaddingMaxPxLabel, smartPaddingMaxPxToolTip);
 
-        CloseButton.ToolTip = text.IsRussian ? "Отменить и закрыть" : "Cancel and close";
+        HoverTip.SetText(CloseButton, text.IsRussian ? "Отменить и закрыть" : "Cancel and close");
         AboutButton.Content = text.IsRussian ? "О программе" : "About";
-        AboutButton.ToolTip = null;
         ResetButton.Content = text.IsRussian ? "Сброс" : "Reset";
         SaveButton.Content = text.IsRussian ? "Применить" : "Apply";
 

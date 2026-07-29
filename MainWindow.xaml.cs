@@ -301,35 +301,32 @@ public partial class MainWindow : Window
     private void ApplyLocalizedText()
     {
         ResizeModeLabel.Text = text.ResizeModeLabel;
-        ResizeModeLabel.ToolTip = null;
         ResizeAutoButton.Content = text.ResizeAuto;
-        ResizeAutoButton.ToolTip = text.ResizeAutoToolTip;
+        HoverTip.SetText(ResizeAutoButton, text.ResizeAutoToolTip);
         ResizeCoverButton.Content = text.ResizeMusicCover;
-        ResizeCoverButton.ToolTip = text.ResizeMusicCoverToolTip;
+        HoverTip.SetText(ResizeCoverButton, text.ResizeMusicCoverToolTip);
 
         QualityLabel.Text = text.QualityLabel;
 
         SharpModeLabel.Text = text.SharpModeLabel;
+        HoverTip.SetText(SharpModeLabel, text.SharpModeToolTip);
         SetComboBoxItemContent(SharpModeComboBox, "standard", text.SharpStandard);
         SetComboBoxItemContent(SharpModeComboBox, "increased", text.SharpIncreased);
         SetComboBoxItemContent(SharpModeComboBox, "high", text.SharpHigh);
         SetComboBoxItemContent(SharpModeComboBox, "maximum", text.SharpMaximum);
 
         SmartModeCheckBox.Content = text.SmartMode;
-        SmartModeCheckBox.ToolTip = text.SmartModeToolTip;
+        HoverTip.SetText(SmartModeCheckBox, text.SmartModeToolTip);
 
         ManualModeCheckBox.Content = text.ManualMode;
-        ManualModeCheckBox.ToolTip = text.ManualModeToolTip;
+        HoverTip.SetText(ManualModeCheckBox, text.ManualModeToolTip);
 
         SelectFileButton.Content = text.SelectFileButton;
         DropOrTextBlock.Text = text.DropOrText;
         DropHereTextBlock.Text = text.DropHereText;
         CenterCropButtonText.Text = text.CenterCropButton;
-        CenterCropButton.ToolTip = null;
         SaveManualButtonText.Text = text.SaveButton;
-        SaveManualButton.ToolTip = null;
         SettingsButtonText.Text = text.AdvancedSettingsButtonText;
-        SettingsButton.ToolTip = null;
         CloseFileMenuItem.Header = text.CloseFileMenuItem;
         UpdateDropAreaState();
         UpdateManualResultEstimateText();
@@ -1016,50 +1013,8 @@ public partial class MainWindow : Window
     private void SetStatusText(string text, string? toolTip = null)
     {
         StatusTextBlock.Text = text;
-
-        if (string.IsNullOrWhiteSpace(toolTip) || !IsStatusTextOverflowing(text))
-        {
-            StatusTextBlock.ToolTip = null;
-            return;
-        }
-
-        StatusTextBlock.ToolTip = new ToolTip
-        {
-            Content = toolTip,
-            Style = (Style)FindResource("StatusFileNameToolTipStyle")
-        };
-    }
-
-    private bool IsStatusTextOverflowing(string text)
-    {
-        double availableWidth = StatusTextBlock.ActualWidth;
-
-        if (availableWidth <= 0 && !double.IsNaN(StatusTextBlock.Width))
-        {
-            availableWidth = StatusTextBlock.Width;
-        }
-
-        if (availableWidth <= 0)
-        {
-            return false;
-        }
-
-        var typeface = new Typeface(
-            StatusTextBlock.FontFamily,
-            StatusTextBlock.FontStyle,
-            StatusTextBlock.FontWeight,
-            StatusTextBlock.FontStretch);
-
-        var formattedText = new FormattedText(
-            text,
-            System.Globalization.CultureInfo.CurrentUICulture,
-            StatusTextBlock.FlowDirection,
-            typeface,
-            StatusTextBlock.FontSize,
-            StatusTextBlock.Foreground,
-            VisualTreeHelper.GetDpi(StatusTextBlock).PixelsPerDip);
-
-        return formattedText.WidthIncludingTrailingWhitespace > availableWidth;
+        HoverTip.SetShowWhenTrimmed(StatusTextBlock, true);
+        HoverTip.SetText(StatusTextBlock, toolTip);
     }
 
     private void ProcessSelectedFiles(string[] files)

@@ -107,6 +107,22 @@ for %%F in ("README.md" "README-RU.md" "LICENSE") do (
     )
 )
 
+if not exist "%ROOT%Licenses\" (
+    echo.
+    echo Licenses folder not found:
+    echo %ROOT%Licenses
+    pause
+    exit /b 1
+)
+
+xcopy "%ROOT%Licenses\*.*" "%OUTPUT_DIR%\Licenses\" /Y /I /E >nul
+if errorlevel 1 (
+    echo.
+    echo Failed to copy license files
+    pause
+    exit /b 1
+)
+
 if not exist "%WIN_INTEGRATION_DIR%\" (
     echo.
     echo Windows integration folder not found:

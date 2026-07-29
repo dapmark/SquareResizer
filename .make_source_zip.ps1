@@ -117,8 +117,8 @@ try {
     if (-not ($files -contains "MainWindow.xaml")) {
         throw (Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gTWFpbldpbmRvdy54YW1s")
     }
-    if (-not ($files -contains "ImageProcessor.cs")) {
-        throw (Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gSW1hZ2VQcm9jZXNzb3IuY3M=")
+    if (-not ($files -contains "Services/ImageProcessor.cs")) {
+        throw (Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gU2VydmljZXMvSW1hZ2VQcm9jZXNzb3IuY3M=")
     }
 
     if ($files.Count -eq 0) {
