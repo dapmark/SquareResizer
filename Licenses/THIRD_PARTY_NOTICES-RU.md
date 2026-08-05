@@ -25,7 +25,6 @@ SquareResizer использует сторонние компоненты дл�
 
 ## Lucide Icons
 
-- Назначение: SVG-значок закрытия
-- Лицензия: ISC License и MIT License для значка, производного от Feather Icons
+- Лицензия: ISC; для иконок на основе Feather Icons также MIT
 - Исходный проект: https://lucide.dev
 - Полный текст: `Licenses/Lucide-ISC-and-Feather-MIT.txt`

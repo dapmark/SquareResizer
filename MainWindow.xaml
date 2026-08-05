@@ -491,20 +491,15 @@
                                 FontWeight="SemiBold" />
                     </StackPanel>
 
-                    <Viewbox x:Name="DropPlusIcon"
-                             Width="140"
-                             Height="140"
-                             HorizontalAlignment="Center"
-                             VerticalAlignment="Center"
-                             IsHitTestVisible="False"
-                             Visibility="Collapsed"
-                             Opacity="0.55">
-                        <Path Stroke="{DynamicResource SecondaryTextBrush}"
-                              StrokeThickness="2"
-                              StrokeLineJoin="Miter"
-                              Fill="Transparent"
-                              Data="M 40,5 L 60,5 L 60,40 L 95,40 L 95,60 L 60,60 L 60,95 L 40,95 L 40,60 L 5,60 L 5,40 L 40,40 Z"/>
-                    </Viewbox>
+                    <controls:SvgIcon x:Name="DropPlusIcon"
+                                      Width="140"
+                                      Height="140"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Foreground="{DynamicResource SecondaryTextBrush}"
+                                      Source="/Assets/Icons/plus-outline.svg"
+                                      Visibility="Collapsed"
+                                      Opacity="0.55" />
 
                     <Canvas x:Name="CropCanvas"
                             Visibility="Collapsed"
@@ -816,7 +811,7 @@
                     Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock x:Name="ManualResultEstimateTextBlock"
-                               Margin="0,-1,0,8"
+                               Margin="0,-6,0,8"
                                HorizontalAlignment="Center"
                                TextAlignment="Center"
                                Text=""
@@ -841,20 +836,11 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     IsHitTestVisible="False">
-                            <Viewbox Width="16"
-                                     Height="16"
-                                     Margin="0,0,6,0">
-                                <Canvas Width="20"
-                                        Height="20">
-                                    <Path Stroke="{DynamicResource MainTextBrush}"
-                                          StrokeThickness="1.8"
-                                          StrokeStartLineCap="Round"
-                                          StrokeEndLineCap="Round"
-                                          StrokeLineJoin="Round"
-                                          Fill="Transparent"
-                                          Data="M 10,2 L 10,18 M 2,10 L 18,10 M 6,6 L 14,6 L 14,14 L 6,14 Z" />
-                                </Canvas>
-                            </Viewbox>
+                            <controls:SvgIcon Width="16"
+                                              Height="16"
+                                              Margin="0,0,6,0"
+                                              Foreground="{DynamicResource MainTextBrush}"
+                                              Source="/Assets/Icons/centered.svg" />
                             <TextBlock x:Name="CenterCropButtonText"
                                        Text="Center"
                                        FontFamily="Segoe UI"

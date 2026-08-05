@@ -487,27 +487,6 @@
                         <ColumnDefinition Width="115" />
                         <ColumnDefinition Width="150" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="JpegModeLabel"
-                               Grid.Column="0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="JPEG mode" />
-                    <ComboBox x:Name="JpegModeComboBox"
-                              Grid.Column="1"
-                              Style="{StaticResource RoundedComboBoxStyle}"
-                              Width="150"
-                              Height="26"
-                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
-                        <ComboBoxItem Content="Compact" Tag="1" />
-                        <ComboBoxItem Content="Balanced" Tag="2" />
-                        <ComboBoxItem Content="Maximum" Tag="3" />
-                    </ComboBox>
-                </Grid>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115" />
-                        <ColumnDefinition Width="150" />
-                    </Grid.ColumnDefinitions>
                     <TextBlock x:Name="AutoSizeStepLabel"
                                Grid.Column="0"
                                Style="{StaticResource LabelTextStyle}"
@@ -534,6 +513,27 @@
                         <ComboBoxItem Content="90 px" Tag="90" />
                         <ComboBoxItem Content="100 px" Tag="100" />
                         <ComboBoxItem Content="200 px" Tag="200" />
+                    </ComboBox>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="115" />
+                        <ColumnDefinition Width="150" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="JpegModeLabel"
+                               Grid.Column="0"
+                               Style="{StaticResource LabelTextStyle}"
+                               Text="JPEG mode" />
+                    <ComboBox x:Name="JpegModeComboBox"
+                              Grid.Column="1"
+                              Style="{StaticResource RoundedComboBoxStyle}"
+                              Width="150"
+                              Height="26"
+                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
+                        <ComboBoxItem Content="Compact" Tag="1" />
+                        <ComboBoxItem Content="Balanced" Tag="2" />
+                        <ComboBoxItem Content="Maximum" Tag="3" />
                     </ComboBox>
                 </Grid>
             </StackPanel>

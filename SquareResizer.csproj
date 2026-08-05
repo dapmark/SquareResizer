@@ -55,7 +55,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\Icons\centered.svg" />
     <Resource Include="Assets\Icons\close.svg" />
+    <Resource Include="Assets\Icons\plus-outline.svg" />
     <Resource Include="Assets\Icons\save.svg" />
     <Resource Include="Assets\Icons\settings.svg" />
   </ItemGroup>

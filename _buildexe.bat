@@ -8,7 +8,7 @@ set "PROJECT=%ROOT%SquareResizer.csproj"
 set "VERSION_FILE=%ROOT%version.txt"
 set "BUILD_DIR=%ROOT%.build"
 set "PUBLISH_DIR=%BUILD_DIR%\_publish"
-set "WIN_INTEGRATION_DIR=%ROOT%windows-integration"
+set "WIN_INTEGRATION_DIR=%ROOT%WindowsIntegration"
 
 if not exist "%PROJECT%" (
     echo.
@@ -131,7 +131,7 @@ if not exist "%WIN_INTEGRATION_DIR%\" (
     exit /b 1
 )
 
-xcopy "%WIN_INTEGRATION_DIR%\*.*" "%OUTPUT_DIR%\windows-integration\" /Y /I /E >nul
+xcopy "%WIN_INTEGRATION_DIR%\*.*" "%OUTPUT_DIR%\WindowsIntegration\" /Y /I /E >nul
 if errorlevel 1 (
     echo.
     echo Failed to copy Windows integration scripts

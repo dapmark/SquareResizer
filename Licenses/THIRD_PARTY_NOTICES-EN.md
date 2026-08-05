@@ -25,7 +25,6 @@ SquareResizer uses third-party components for image processing and SVG rendering
 
 ## Lucide Icons
 
-- Purpose: SVG close icon
-- License: ISC License and the MIT License for the icon derived from Feather Icons
+- License: ISC; MIT also applies to icons derived from Feather Icons
 - Source project: https://lucide.dev
 - Full text: `Licenses/Lucide-ISC-and-Feather-MIT.txt`
