@@ -79,10 +79,16 @@ internal sealed class Localization
     public string ManualModeTitle => IsRussian ? "Ручной режим" : "Manual mode";
 
     public string InvalidQualityMessage => IsRussian
-        ? "Введите число качества от 1 до 100."
-        : "Enter a quality value from 1 to 100.";
+        ? "Введите число качества от 1 до 100"
+        : "Enter a quality value from 1 to 100";
 
-    public string InvalidValueTitle => IsRussian ? "Некорректное значение" : "Invalid value";
+    public string InvalidSmartPaddingPercentStatus => IsRussian
+        ? "Введите максимальную разницу сторон от 0 до 20 %"
+        : "Enter a max side difference from 0 to 20%";
+
+    public string InvalidSmartPaddingMaxPxStatus => IsRussian
+        ? "Введите лимит дорисовки от 0 до 300 px"
+        : "Enter a padding limit from 0 to 300 px";
 
     public string ProcessingStatus => IsRussian ? "Обработка..." : "Processing...";
     public string SavingStatus => IsRussian ? "Сохранение..." : "Saving...";

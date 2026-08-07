@@ -45,6 +45,7 @@ packages/
 
 # Runtime local settings generated near exe/source during manual testing
 settings.txt
+startup_error.txt
 
 # Windows / Explorer
 Thumbs.db

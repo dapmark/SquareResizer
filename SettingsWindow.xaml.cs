@@ -4,16 +4,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Effects;
 
 namespace ImageSquareResizer;
 
 internal partial class SettingsWindow : Window
 {
-    private const double DarkBorderMixRatio = 0.03;
-    private const double LightBorderMixRatio = 0.06;
-
     private AppSettings settingsDraft;
     private Localization text;
     private bool isApplyingUi;
@@ -105,81 +101,7 @@ internal partial class SettingsWindow : Window
 
     private void ApplyTheme()
     {
-        if (settingsDraft.IsDarkTheme)
-        {
-            ApplyDarkTheme();
-            return;
-        }
-
-        ApplyLightTheme();
-    }
-
-    private void ApplyLightTheme()
-    {
-        var windowBackground = Color.FromRgb(243, 243, 243);
-        var panelBackground = Color.FromRgb(255, 255, 255);
-
-        Resources["WindowBackgroundBrush"] = BrushFromColor(windowBackground);
-        Resources["PanelBackgroundBrush"] = BrushFromColor(panelBackground);
-        Resources["MainTextBrush"] = BrushFromRgb(32, 32, 32);
-        Resources["SecondaryTextBrush"] = BrushFromRgb(55, 55, 55);
-        Resources["ButtonBackgroundBrush"] = BrushFromRgb(250, 250, 250);
-        Resources["ButtonHoverBackgroundBrush"] = BrushFromRgb(234, 244, 255);
-        Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(207, 230, 255);
-        Resources["ButtonBorderBrush"] = BrushFromColor(MixColor(panelBackground, Colors.Black, LightBorderMixRatio));
-        Resources["AccentBorderBrush"] = BrushFromRgb(0, 120, 215);
-        Resources["ApplyButtonBackgroundBrush"] = BrushFromRgb(215, 235, 255);
-        Resources["ApplyButtonHoverBackgroundBrush"] = BrushFromRgb(197, 225, 255);
-        Resources["InputBackgroundBrush"] = BrushFromRgb(255, 255, 255);
-        Resources["WindowBorderBrush"] = BrushFromColor(MixColor(windowBackground, Colors.Black, LightBorderMixRatio));
-        Resources["TitleButtonForegroundBrush"] = BrushFromRgb(75, 85, 99);
-        Resources["SoftButtonHoverBackgroundBrush"] = BrushFromRgb(226, 240, 255);
-        Resources["SoftButtonPressedBackgroundBrush"] = BrushFromRgb(203, 227, 255);
-    }
-
-    private void ApplyDarkTheme()
-    {
-        var windowBackground = Color.FromRgb(32, 32, 32);
-        var panelBackground = Color.FromRgb(37, 37, 38);
-
-        Resources["WindowBackgroundBrush"] = BrushFromColor(windowBackground);
-        Resources["PanelBackgroundBrush"] = BrushFromColor(panelBackground);
-        Resources["MainTextBrush"] = BrushFromRgb(212, 212, 212);
-        Resources["SecondaryTextBrush"] = BrushFromRgb(212, 212, 212);
-        Resources["ButtonBackgroundBrush"] = BrushFromRgb(45, 45, 48);
-        Resources["ButtonHoverBackgroundBrush"] = BrushFromRgb(62, 62, 66);
-        Resources["ButtonPressedBackgroundBrush"] = BrushFromRgb(0, 122, 204);
-        Resources["ButtonBorderBrush"] = BrushFromColor(MixColor(panelBackground, Colors.White, DarkBorderMixRatio));
-        Resources["AccentBorderBrush"] = BrushFromRgb(0, 122, 204);
-        Resources["ApplyButtonBackgroundBrush"] = BrushFromRgb(6, 50, 77);
-        Resources["ApplyButtonHoverBackgroundBrush"] = BrushFromRgb(9, 71, 113);
-        Resources["InputBackgroundBrush"] = BrushFromRgb(32, 32, 32);
-        Resources["WindowBorderBrush"] = BrushFromColor(MixColor(windowBackground, Colors.White, DarkBorderMixRatio));
-        Resources["TitleButtonForegroundBrush"] = BrushFromRgb(212, 212, 212);
-        Resources["SoftButtonHoverBackgroundBrush"] = BrushFromRgb(51, 51, 51);
-        Resources["SoftButtonPressedBackgroundBrush"] = BrushFromRgb(62, 62, 66);
-    }
-
-
-    private static SolidColorBrush BrushFromRgb(byte red, byte green, byte blue)
-    {
-        return BrushFromColor(Color.FromRgb(red, green, blue));
-    }
-
-    private static SolidColorBrush BrushFromColor(Color color)
-    {
-        var brush = new SolidColorBrush(color);
-        brush.Freeze();
-        return brush;
-    }
-
-    private static Color MixColor(Color source, Color target, double ratio)
-    {
-        ratio = Math.Clamp(ratio, 0.0, 1.0);
-        byte red = (byte)Math.Round(source.R + (target.R - source.R) * ratio);
-        byte green = (byte)Math.Round(source.G + (target.G - source.G) * ratio);
-        byte blue = (byte)Math.Round(source.B + (target.B - source.B) * ratio);
-        return Color.FromRgb(red, green, blue);
+        ThemeResources.ApplySettings(Resources, settingsDraft.IsDarkTheme);
     }
 
     private void TitleBar_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -213,6 +135,7 @@ internal partial class SettingsWindow : Window
         settingsDraft.Language = AppSettings.NormalizeLanguage(GetSelectedTag(LanguageComboBox));
         text = Localization.For(settingsDraft.Language);
         ApplyLocalizedText();
+        ClearValidationStatus();
     }
 
     private void OnThemeSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -261,6 +184,7 @@ internal partial class SettingsWindow : Window
 
         ApplyDraftToUi();
         ApplyTheme();
+        ClearValidationStatus();
     }
 
     private void OnSaveButtonClick(object sender, RoutedEventArgs e)
@@ -277,17 +201,21 @@ internal partial class SettingsWindow : Window
 
     private bool TrySaveUiToDraft()
     {
-        if (!AppSettings.TryParseDouble(SmartPaddingPercentTextBox.Text, out double smartPaddingPercent))
+        if (!AppSettings.TryParseDouble(SmartPaddingPercentTextBox.Text, out double smartPaddingPercent) ||
+            smartPaddingPercent is < 0.0 or > 20.0)
         {
-            ShowInvalidValue(text.IsRussian ? "Введите максимальную разницу сторон от 0 до 20 %." : "Enter a max side difference from 0 to 20%.");
-            SmartPaddingPercentTextBox.Focus();
+            ShowValidationError(SmartPaddingPercentTextBox, text.InvalidSmartPaddingPercentStatus);
             return false;
         }
 
-        if (!int.TryParse(SmartPaddingMaxPxTextBox.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int smartPaddingMaxPx))
+        if (!int.TryParse(
+                SmartPaddingMaxPxTextBox.Text.Trim(),
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out int smartPaddingMaxPx) ||
+            smartPaddingMaxPx is < 0 or > 300)
         {
-            ShowInvalidValue(text.IsRussian ? "Введите лимит дорисовки от 0 до 300 px." : "Enter a padding limit from 0 to 300 px.");
-            SmartPaddingMaxPxTextBox.Focus();
+            ShowValidationError(SmartPaddingMaxPxTextBox, text.InvalidSmartPaddingMaxPxStatus);
             return false;
         }
 
@@ -296,15 +224,31 @@ internal partial class SettingsWindow : Window
         settingsDraft.JpegMode = AppSettings.NormalizeJpegMode(ParseJpegMode(GetSelectedTag(JpegModeComboBox)));
         settingsDraft.AutoSizeStep = AppSettings.NormalizeAutoSizeStep(ParseAutoSizeStep(GetSelectedTag(AutoSizeStepComboBox)));
         settingsDraft.ShowManualResultEstimate = ShowManualResultEstimateCheckBox.IsChecked == true;
-        settingsDraft.SmartPaddingPercent = AppSettings.NormalizeSmartPaddingPercent(smartPaddingPercent);
-        settingsDraft.SmartPaddingMaxPx = AppSettings.NormalizeSmartPaddingMaxPx(smartPaddingMaxPx);
+        settingsDraft.SmartPaddingPercent = smartPaddingPercent;
+        settingsDraft.SmartPaddingMaxPx = smartPaddingMaxPx;
 
+        ClearValidationStatus();
         return true;
     }
 
-    private void ShowInvalidValue(string message)
+    private void ShowValidationError(TextBox input, string message)
     {
-        MessageBox.Show(this, message, text.InvalidValueTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        ValidationStatusTextBlock.Text = message;
+        input.Focus();
+        input.SelectAll();
+    }
+
+    private void ClearValidationStatus()
+    {
+        if (ValidationStatusTextBlock is not null)
+        {
+            ValidationStatusTextBlock.Text = string.Empty;
+        }
+    }
+
+    private void OnValidationTextChanged(object sender, TextChangedEventArgs e)
+    {
+        ClearValidationStatus();
     }
 
     private static int ParseJpegMode(string? value)

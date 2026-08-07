@@ -17,6 +17,20 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "cleanup SquareResizer F5",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.vscode\\clean-build.ps1",
+        "-CleanupOnly"
+      ],
+      "problemMatcher": []
     }
   ]
 }

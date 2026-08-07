@@ -15,22 +15,6 @@
         FocusVisualStyle="{x:Null}">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#202020" />
-        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#252526" />
-        <SolidColorBrush x:Key="MainTextBrush" Color="#D4D4D4" />
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#D4D4D4" />
-        <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#2D2D30" />
-        <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="#3E3E42" />
-        <SolidColorBrush x:Key="ButtonPressedBackgroundBrush" Color="#007ACC" />
-        <SolidColorBrush x:Key="ButtonBorderBrush" Color="#2E2E2F" />
-        <SolidColorBrush x:Key="AccentBorderBrush" Color="#007ACC" />
-        <SolidColorBrush x:Key="ApplyButtonBackgroundBrush" Color="#06324D" />
-        <SolidColorBrush x:Key="ApplyButtonHoverBackgroundBrush" Color="#094771" />
-        <SolidColorBrush x:Key="InputBackgroundBrush" Color="#202020" />
-        <SolidColorBrush x:Key="WindowBorderBrush" Color="#292929" />
-        <SolidColorBrush x:Key="TitleButtonForegroundBrush" Color="#D4D4D4" />
-        <SolidColorBrush x:Key="SoftButtonHoverBackgroundBrush" Color="#333333" />
-        <SolidColorBrush x:Key="SoftButtonPressedBackgroundBrush" Color="#3E3E42" />
 
         <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
@@ -48,310 +32,6 @@
         </Style>
 
 
-        <Style x:Key="RoundedButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="RootBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource SoftButtonHoverBackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource SoftButtonPressedBackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-                                <Setter Property="Opacity" Value="0.55" />
-                                <Setter Property="Cursor" Value="Arrow" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="ApplyButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource ApplyButtonBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="RootBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ApplyButtonHoverBackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonPressedBackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-                                <Setter Property="Opacity" Value="0.55" />
-                                <Setter Property="Cursor" Value="Arrow" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="RoundedTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="TextAlignment" Value="Center" />
-            <Setter Property="Padding" Value="4,1" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="RootBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
-                                SnapsToDevicePixels="True">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.55" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
-            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="Margin" Value="1" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="ItemBorder"
-                                Background="{TemplateBinding Background}"
-                                Padding="{TemplateBinding Padding}"
-                                CornerRadius="4"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter TextElement.Foreground="{DynamicResource MainTextBrush}" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ButtonHoverBackgroundBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource ButtonPressedBackgroundBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="RoundedComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton x:Name="ToggleButton"
-                                          Focusable="False"
-                                          ClickMode="Press"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                <ToggleButton.Template>
-                                    <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="RootBorder"
-                                                Background="{DynamicResource InputBackgroundBrush}"
-                                                BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                                BorderThickness="0"
-                                                CornerRadius="6"
-                                                SnapsToDevicePixels="True" />
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonHoverBackgroundBrush}" />
-                                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
-                                            </Trigger>
-                                            <Trigger Property="IsChecked" Value="True">
-                                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonPressedBackgroundBrush}" />
-                                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </ToggleButton.Template>
-                            </ToggleButton>
-
-                            <TextBlock Margin="8,0,22,0"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Left"
-                                       IsHitTestVisible="False"
-                                       Foreground="{DynamicResource MainTextBrush}"
-                                       Text="{TemplateBinding SelectionBoxItem}" />
-
-                            <Path Width="8"
-                                  Height="4"
-                                  HorizontalAlignment="Right"
-                                  VerticalAlignment="Center"
-                                  Margin="0,0,10,0"
-                                  Fill="{DynamicResource MainTextBrush}"
-                                  IsHitTestVisible="False"
-                                  Data="M 0 0 L 4 4 L 8 0 Z" />
-
-                            <Popup x:Name="PART_Popup"
-                                   Placement="Bottom"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   AllowsTransparency="True"
-                                   Focusable="False"
-                                   PopupAnimation="Slide">
-                                <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                        Margin="0,2,0,0"
-                                        Padding="2"
-                                        Background="{DynamicResource InputBackgroundBrush}"
-                                        BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                        BorderThickness="0"
-                                        CornerRadius="6"
-                                        SnapsToDevicePixels="True">
-                                    <ScrollViewer CanContentScroll="True"
-                                                  Background="Transparent">
-                                        <ItemsPresenter />
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.55" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="ModeCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <Grid SnapsToDevicePixels="True">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="18" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Border x:Name="CheckBoxBorder"
-                                    Grid.Column="0"
-                                    Width="14"
-                                    Height="14"
-                                    VerticalAlignment="Center"
-                                    Background="{DynamicResource InputBackgroundBrush}"
-                                    BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                    BorderThickness="0"
-                                    CornerRadius="3"
-                                    SnapsToDevicePixels="True" />
-
-                            <Path x:Name="CheckMark"
-                                  Grid.Column="0"
-                                  Width="9"
-                                  Height="7"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  Data="M 1 3.5 L 3.5 6 L 8 1"
-                                  Stroke="White"
-                                  StrokeThickness="2"
-                                  StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"
-                                  StrokeLineJoin="Round"
-                                  Visibility="Collapsed" />
-
-                            <ContentPresenter Grid.Column="1"
-                                              Margin="4,-1,0,0"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                              Content="{TemplateBinding Content}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              RecognizesAccessKey="True" />
-                        </Grid>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="{DynamicResource ButtonHoverBackgroundBrush}" />
-                                <Setter TargetName="CheckBoxBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="CheckBoxBorder" Property="Background" Value="{DynamicResource AccentBorderBrush}" />
-                                <Setter TargetName="CheckBoxBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
-                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.55" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </Window.Resources>
 
     <Grid Margin="28">
@@ -399,235 +79,250 @@
                             Margin="0"
                             Style="{StaticResource AuxiliaryWindowCloseButtonStyle}"
                             Click="CloseButton_OnClick" />
-            </Grid>
+                </Grid>
 
                 <Grid Grid.Row="1" Margin="10,0,10,10">
                     <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-        <Border Grid.Row="0"
-                Margin="0,0,0,10"
-                Padding="10"
-                Background="{DynamicResource PanelBackgroundBrush}"
-                BorderBrush="{DynamicResource ButtonBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-            <StackPanel>
-                <TextBlock x:Name="InterfaceSectionTextBlock"
-                           Style="{StaticResource SectionTitleStyle}"
-                           Text="Interface" />
+                    <Border Grid.Row="0"
+                            Margin="0,0,0,10"
+                            Padding="10"
+                            Background="{DynamicResource PanelBackgroundBrush}"
+                            BorderBrush="{DynamicResource ButtonBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock x:Name="InterfaceSectionTextBlock"
+                                       Style="{StaticResource SectionTitleStyle}"
+                                       Text="Interface" />
 
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115" />
-                        <ColumnDefinition Width="150" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="LanguageLabel"
-                               Grid.Column="0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="Language" />
-                    <ComboBox x:Name="LanguageComboBox"
-                              Grid.Column="1"
-                              Style="{StaticResource RoundedComboBoxStyle}"
-                              Width="150"
-                              Height="26"
-                              SelectionChanged="OnLanguageSelectionChanged"
-                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
-                        <ComboBoxItem Content="English" Tag="en" />
-                        <ComboBoxItem Content="Русский" Tag="ru" />
-                    </ComboBox>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="115" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="LanguageLabel"
+                                           Grid.Column="0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="Language" />
+                                <ComboBox x:Name="LanguageComboBox"
+                                          Grid.Column="1"
+                                          Style="{StaticResource RoundedComboBoxStyle}"
+                                          Width="150"
+                                          Height="26"
+                                          SelectionChanged="OnLanguageSelectionChanged"
+                                          PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
+                                    <ComboBoxItem Content="English" Tag="en" />
+                                    <ComboBoxItem Content="Русский" Tag="ru" />
+                                </ComboBox>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="115" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="ThemeLabel"
+                                           Grid.Column="0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="Theme" />
+                                <ComboBox x:Name="ThemeComboBox"
+                                          Grid.Column="1"
+                                          Style="{StaticResource RoundedComboBoxStyle}"
+                                          Width="150"
+                                          Height="26"
+                                          SelectionChanged="OnThemeSelectionChanged"
+                                          PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
+                                    <ComboBoxItem Content="Dark" Tag="dark" />
+                                    <ComboBoxItem Content="Light" Tag="light" />
+                                </ComboBox>
+                            </Grid>
+
+                            <CheckBox x:Name="ShowManualResultEstimateCheckBox"
+                                      Margin="0,10,0,0"
+                                      Style="{StaticResource ModeCheckBoxStyle}"
+                                      Content="Show result dimensions and estimated size" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Padding="10"
+                            Background="{DynamicResource PanelBackgroundBrush}"
+                            BorderBrush="{DynamicResource ButtonBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock x:Name="AdvancedSectionTextBlock"
+                                       Style="{StaticResource SectionTitleStyle}"
+                                       Text="Processing" />
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="115" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="AutoSizeStepLabel"
+                                           Grid.Column="0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="Auto size step" />
+                                <ComboBox x:Name="AutoSizeStepComboBox"
+                                          Grid.Column="1"
+                                          Style="{StaticResource RoundedComboBoxStyle}"
+                                          Width="150"
+                                          Height="26"
+                                          PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
+                                    <ComboBoxItem Content="5 px" Tag="5" />
+                                    <ComboBoxItem Content="10 px" Tag="10" />
+                                    <ComboBoxItem Content="15 px" Tag="15" />
+                                    <ComboBoxItem Content="20 px" Tag="20" />
+                                    <ComboBoxItem Content="25 px" Tag="25" />
+                                    <ComboBoxItem Content="30 px" Tag="30" />
+                                    <ComboBoxItem Content="35 px" Tag="35" />
+                                    <ComboBoxItem Content="40 px" Tag="40" />
+                                    <ComboBoxItem Content="45 px" Tag="45" />
+                                    <ComboBoxItem Content="50 px" Tag="50" />
+                                    <ComboBoxItem Content="60 px" Tag="60" />
+                                    <ComboBoxItem Content="70 px" Tag="70" />
+                                    <ComboBoxItem Content="80 px" Tag="80" />
+                                    <ComboBoxItem Content="90 px" Tag="90" />
+                                    <ComboBoxItem Content="100 px" Tag="100" />
+                                    <ComboBoxItem Content="200 px" Tag="200" />
+                                </ComboBox>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="115" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="JpegModeLabel"
+                                           Grid.Column="0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="JPEG mode" />
+                                <ComboBox x:Name="JpegModeComboBox"
+                                          Grid.Column="1"
+                                          Style="{StaticResource RoundedComboBoxStyle}"
+                                          Width="150"
+                                          Height="26"
+                                          PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
+                                    <ComboBoxItem Content="Compact" Tag="1" />
+                                    <ComboBoxItem Content="Balanced" Tag="2" />
+                                    <ComboBoxItem Content="Maximum" Tag="3" />
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="2"
+                            Margin="0,0,0,10"
+                            Padding="10"
+                            Background="{DynamicResource PanelBackgroundBrush}"
+                            BorderBrush="{DynamicResource ButtonBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                        <StackPanel>
+                            <TextBlock x:Name="SmartPaddingSectionTextBlock"
+                                       Style="{StaticResource SectionTitleStyle}"
+                                       Text="Smart mode" />
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="115" />
+                                    <ColumnDefinition Width="76" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="SmartPaddingPercentLabel"
+                                           Grid.Column="0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="Max difference" />
+                                <TextBox x:Name="SmartPaddingPercentTextBox"
+                                         Grid.Column="1"
+                                         Height="26"
+                                         Style="{StaticResource RoundedTextBoxStyle}"
+                                         PreviewTextInput="OnDecimalPreviewTextInput"
+                                         PreviewKeyDown="OnNumberPreviewKeyDown"
+                                         PreviewMouseWheel="OnSmartPaddingPercentPreviewMouseWheel"
+                                         TextChanged="OnValidationTextChanged" />
+                                <TextBlock Grid.Column="2"
+                                           Margin="10,0,0,0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="%" />
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="115" />
+                                    <ColumnDefinition Width="76" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="SmartPaddingMaxPxLabel"
+                                           Grid.Column="0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="Max fill" />
+                                <TextBox x:Name="SmartPaddingMaxPxTextBox"
+                                         Grid.Column="1"
+                                         Height="26"
+                                         Style="{StaticResource RoundedTextBoxStyle}"
+                                         PreviewTextInput="OnIntegerPreviewTextInput"
+                                         PreviewKeyDown="OnNumberPreviewKeyDown"
+                                         PreviewMouseWheel="OnSmartPaddingMaxPxPreviewMouseWheel"
+                                         TextChanged="OnValidationTextChanged" />
+                                <TextBlock Grid.Column="2"
+                                           Margin="10,0,0,0"
+                                           Style="{StaticResource LabelTextStyle}"
+                                           Text="px" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock x:Name="ValidationStatusTextBlock"
+                               Grid.Row="3"
+                               Height="18"
+                               Margin="0,0,0,4"
+                               HorizontalAlignment="Stretch"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource StatusErrorTextBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="11" />
+
+                    <Grid Grid.Row="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="AboutButton"
+                                Grid.Column="0"
+                                Height="26"
+                                Style="{StaticResource AuxiliaryButtonStyle}"
+                                Content="About"
+                                Click="OnAboutButtonClick" />
+                        <Button x:Name="ResetButton"
+                                Grid.Column="2"
+                                Height="26"
+                                Style="{StaticResource AuxiliaryButtonStyle}"
+                                Content="Reset"
+                                Click="OnResetButtonClick" />
+                        <Button x:Name="SaveButton"
+                                Grid.Column="4"
+                                Height="26"
+                                Style="{StaticResource AuxiliaryApplyButtonStyle}"
+                                Content="Apply"
+                                Click="OnSaveButtonClick" />
+                    </Grid>
                 </Grid>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115" />
-                        <ColumnDefinition Width="150" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="ThemeLabel"
-                               Grid.Column="0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="Theme" />
-                    <ComboBox x:Name="ThemeComboBox"
-                              Grid.Column="1"
-                              Style="{StaticResource RoundedComboBoxStyle}"
-                              Width="150"
-                              Height="26"
-                              SelectionChanged="OnThemeSelectionChanged"
-                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
-                        <ComboBoxItem Content="Dark" Tag="dark" />
-                        <ComboBoxItem Content="Light" Tag="light" />
-                    </ComboBox>
-                </Grid>
-
-                <CheckBox x:Name="ShowManualResultEstimateCheckBox"
-                          Margin="0,10,0,0"
-                          Style="{StaticResource ModeCheckBoxStyle}"
-                          Content="Show result dimensions and estimated size" />
-            </StackPanel>
-        </Border>
-
-        <Border Grid.Row="1"
-                Margin="0,0,0,10"
-                Padding="10"
-                Background="{DynamicResource PanelBackgroundBrush}"
-                BorderBrush="{DynamicResource ButtonBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-            <StackPanel>
-                <TextBlock x:Name="AdvancedSectionTextBlock"
-                           Style="{StaticResource SectionTitleStyle}"
-                           Text="Processing" />
-
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115" />
-                        <ColumnDefinition Width="150" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="AutoSizeStepLabel"
-                               Grid.Column="0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="Auto size step" />
-                    <ComboBox x:Name="AutoSizeStepComboBox"
-                              Grid.Column="1"
-                              Style="{StaticResource RoundedComboBoxStyle}"
-                              Width="150"
-                              Height="26"
-                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
-                        <ComboBoxItem Content="5 px" Tag="5" />
-                        <ComboBoxItem Content="10 px" Tag="10" />
-                        <ComboBoxItem Content="15 px" Tag="15" />
-                        <ComboBoxItem Content="20 px" Tag="20" />
-                        <ComboBoxItem Content="25 px" Tag="25" />
-                        <ComboBoxItem Content="30 px" Tag="30" />
-                        <ComboBoxItem Content="35 px" Tag="35" />
-                        <ComboBoxItem Content="40 px" Tag="40" />
-                        <ComboBoxItem Content="45 px" Tag="45" />
-                        <ComboBoxItem Content="50 px" Tag="50" />
-                        <ComboBoxItem Content="60 px" Tag="60" />
-                        <ComboBoxItem Content="70 px" Tag="70" />
-                        <ComboBoxItem Content="80 px" Tag="80" />
-                        <ComboBoxItem Content="90 px" Tag="90" />
-                        <ComboBoxItem Content="100 px" Tag="100" />
-                        <ComboBoxItem Content="200 px" Tag="200" />
-                    </ComboBox>
-                </Grid>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115" />
-                        <ColumnDefinition Width="150" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="JpegModeLabel"
-                               Grid.Column="0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="JPEG mode" />
-                    <ComboBox x:Name="JpegModeComboBox"
-                              Grid.Column="1"
-                              Style="{StaticResource RoundedComboBoxStyle}"
-                              Width="150"
-                              Height="26"
-                              PreviewMouseWheel="OnComboBoxPreviewMouseWheel">
-                        <ComboBoxItem Content="Compact" Tag="1" />
-                        <ComboBoxItem Content="Balanced" Tag="2" />
-                        <ComboBoxItem Content="Maximum" Tag="3" />
-                    </ComboBox>
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <Border Grid.Row="2"
-                Margin="0,0,0,10"
-                Padding="10"
-                Background="{DynamicResource PanelBackgroundBrush}"
-                BorderBrush="{DynamicResource ButtonBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-            <StackPanel>
-                <TextBlock x:Name="SmartPaddingSectionTextBlock"
-                           Style="{StaticResource SectionTitleStyle}"
-                           Text="Smart mode" />
-
-                <Grid Margin="0,0,0,10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115" />
-                        <ColumnDefinition Width="76" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="SmartPaddingPercentLabel"
-                               Grid.Column="0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="Max difference" />
-                    <TextBox x:Name="SmartPaddingPercentTextBox"
-                             Grid.Column="1"
-                             Height="26"
-                             Style="{StaticResource RoundedTextBoxStyle}"
-                             PreviewTextInput="OnDecimalPreviewTextInput"
-                             PreviewKeyDown="OnNumberPreviewKeyDown"
-                             PreviewMouseWheel="OnSmartPaddingPercentPreviewMouseWheel" />
-                    <TextBlock Grid.Column="2"
-                               Margin="10,0,0,0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="%" />
-                </Grid>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115" />
-                        <ColumnDefinition Width="76" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="SmartPaddingMaxPxLabel"
-                               Grid.Column="0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="Max fill" />
-                    <TextBox x:Name="SmartPaddingMaxPxTextBox"
-                             Grid.Column="1"
-                             Height="26"
-                             Style="{StaticResource RoundedTextBoxStyle}"
-                             PreviewTextInput="OnIntegerPreviewTextInput"
-                             PreviewKeyDown="OnNumberPreviewKeyDown"
-                             PreviewMouseWheel="OnSmartPaddingMaxPxPreviewMouseWheel" />
-                    <TextBlock Grid.Column="2"
-                               Margin="10,0,0,0"
-                               Style="{StaticResource LabelTextStyle}"
-                               Text="px" />
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <Button x:Name="AboutButton"
-                    Grid.Column="0"
-                    Height="26"
-                    Style="{StaticResource RoundedButtonStyle}"
-                    Content="About"
-                    Click="OnAboutButtonClick" />
-            <Button x:Name="ResetButton"
-                    Grid.Column="2"
-                    Height="26"
-                    Style="{StaticResource RoundedButtonStyle}"
-                    Content="Reset"
-                    Click="OnResetButtonClick" />
-            <Button x:Name="SaveButton"
-                    Grid.Column="4"
-                    Height="26"
-                    Style="{StaticResource ApplyButtonStyle}"
-                    Content="Apply"
-                    Click="OnSaveButtonClick" />
-        </Grid>
-    </Grid>
             </Grid>
         </Border>
     </Grid>

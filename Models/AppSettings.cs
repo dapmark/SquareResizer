@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace ImageSquareResizer;
@@ -331,7 +330,7 @@ internal sealed class AppSettings
             return;
         }
 
-        string defaultSettingsContent = LoadEmbeddedDefaultSettingsContent() ?? BuildFallbackSettingsContent();
+        string defaultSettingsContent = LoadEmbeddedDefaultSettingsContent();
         File.WriteAllText(SettingsFilePath, defaultSettingsContent, Encoding.UTF8);
     }
 
@@ -342,43 +341,21 @@ internal sealed class AppSettings
             return File.ReadAllLines(SettingsFilePath);
         }
 
-        string templateContent = LoadEmbeddedDefaultSettingsContent() ?? BuildFallbackSettingsContent();
+        string templateContent = LoadEmbeddedDefaultSettingsContent();
 
         return templateContent
             .Replace("\r\n", "\n", StringComparison.Ordinal)
             .Split('\n');
     }
 
-    private static string? LoadEmbeddedDefaultSettingsContent()
+    private static string LoadEmbeddedDefaultSettingsContent()
     {
-        using Stream? stream = typeof(AppSettings).Assembly.GetManifestResourceStream(EmbeddedDefaultSettingsResourceName);
-
-        if (stream is null)
-        {
-            return null;
-        }
+        using Stream stream = typeof(AppSettings).Assembly.GetManifestResourceStream(EmbeddedDefaultSettingsResourceName)
+            ?? throw new InvalidOperationException(
+                $"Embedded settings template was not found: {EmbeddedDefaultSettingsResourceName}");
 
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
         return reader.ReadToEnd();
-    }
-
-    private static string BuildFallbackSettingsContent()
-    {
-        return
-            "# SquareResizer settings" + Environment.NewLine +
-            Environment.NewLine +
-            "quality=" + DefaultQuality + Environment.NewLine +
-            "resize_mode=" + DefaultResizeMode + Environment.NewLine +
-            "sharp_mode=" + DefaultSharpMode + Environment.NewLine +
-            "jpeg_mode=" + DefaultJpegMode + Environment.NewLine +
-            "smart_mode=" + DefaultSmartMode.ToString().ToLowerInvariant() + Environment.NewLine +
-            "manual_mode=" + DefaultManualMode.ToString().ToLowerInvariant() + Environment.NewLine +
-            "show_manual_result_estimate=" + DefaultShowManualResultEstimate.ToString().ToLowerInvariant() + Environment.NewLine +
-            "smart_padding_percent=" + FormatDouble(DefaultSmartPaddingPercent) + Environment.NewLine +
-            "smart_padding_max_px=" + DefaultSmartPaddingMaxPx + Environment.NewLine +
-            "auto_size_step=" + DefaultAutoSizeStep + Environment.NewLine +
-            "theme=" + DefaultTheme + Environment.NewLine +
-            "language=" + DefaultLanguage + Environment.NewLine;
     }
 
     public static int NormalizeQuality(int quality)

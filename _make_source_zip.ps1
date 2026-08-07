@@ -21,6 +21,44 @@ function Format-FileSize {
     return ("{0:N1} KB" -f ($Bytes / 1KB))
 }
 
+function Remove-DirectoryStrict {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+
+    Remove-Item -LiteralPath $Path -Recurse -Force
+
+    if (Test-Path -LiteralPath $Path) {
+        throw ((Get-Utf8Text "0J3QtSDRg9C00LDQu9C+0YHRjCDRg9C00LDQu9C40YLRjCDQutCw0YLQsNC70L7QszogezB9") -f $Path)
+    }
+}
+
+function Remove-EmptyDirectory {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if ((Test-Path -LiteralPath $Path -PathType Container) -and
+        @(Get-ChildItem -LiteralPath $Path -Force).Count -eq 0) {
+        Remove-Item -LiteralPath $Path -Force
+    }
+}
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [AllowNull()][AllowEmptyCollection()][AllowEmptyString()][string[]]$Lines = @()
+    )
+
+    $normalizedLines = @(
+        foreach ($line in $Lines) {
+            if ($null -eq $line) { "" } else { [string]$line }
+        }
+    )
+
+    [System.IO.File]::WriteAllLines($Path, $normalizedLines, $Utf8NoBom)
+}
+
 function Write-ArchiveList {
     param(
         [Parameter(Mandatory = $true)][string]$ArchiveDir,
@@ -51,35 +89,78 @@ function Write-ArchiveList {
 }
 
 $root = $PSScriptRoot
-$buildDir = Join-Path $root ".build"
 $sourceDir = Join-Path $root ".source"
-$tempDir = Join-Path $buildDir (".temp\source-archive-" + [Guid]::NewGuid().ToString("N"))
+$tempProjectDir = Join-Path $env:TEMP "SquareResizer"
+$tempDir = Join-Path $tempProjectDir "SourceArchive"
+$gitErrorPath = Join-Path $tempDir "git-errors.log"
+$logPath = Join-Path $root "_make_source_zip.log"
+
+function Invoke-Cleanup {
+    $cleanupErrors = @()
+
+    try {
+        Remove-DirectoryStrict -Path $tempDir
+    }
+    catch {
+        $cleanupErrors += $_.Exception.Message
+    }
+
+    try {
+        Remove-EmptyDirectory -Path $tempProjectDir
+    }
+    catch {
+        $cleanupErrors += $_.Exception.Message
+    }
+
+    if ($cleanupErrors.Count -gt 0) {
+        throw ($cleanupErrors -join [Environment]::NewLine)
+    }
+}
+
+$errorLines = @()
+$warningLines = @()
+$exitCode = 0
 $tempZip = $null
 
 try {
+    if (Test-Path -LiteralPath $logPath) {
+        Remove-Item -LiteralPath $logPath -Force
+    }
+
+    Invoke-Cleanup
+    New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $sourceDir -Force | Out-Null
+
     Set-Location $root
 
     $versionPath = Join-Path $root "version.txt"
+
     if (-not (Test-Path -LiteralPath $versionPath -PathType Leaf)) {
-        throw (Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gdmVyc2lvbi50eHQ=")
+        throw ((Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gdmVyc2lvbi50eHQ6IHswfQ==") -f $versionPath)
     }
 
     $version = [System.IO.File]::ReadAllText($versionPath, [System.Text.Encoding]::UTF8).Trim()
+
     if ($version -notmatch '^\d+\.\d+[a-zA-Z]?$') {
-        throw ((Get-Utf8Text "0J3QtdC60L7RgNGA0LXQutGC0L3QsNGPINCy0LXRgNGB0LjRjzogezB9") -f $version)
+        throw ((Get-Utf8Text "0J3QtdC60L7RgNGA0LXQutGC0L3QsNGPINCy0LXRgNGB0LjRjyDQsiB2ZXJzaW9uLnR4dDogezB9") -f $version)
     }
 
-    $versionSlug = $version.Replace(".", "")
-    $archiveName = "SquareResizer$versionSlug.zip"
+    $archiveName = "SquareResizer" + $version.Replace(".", "") + ".zip"
     $archivePath = Join-Path $sourceDir $archiveName
-
-    New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-    New-Item -ItemType Directory -Path $sourceDir -Force | Out-Null
     $tempZip = Join-Path $tempDir $archiveName
 
-    $files = @(git ls-files --cached --others --exclude-standard)
-    if ($LASTEXITCODE -ne 0) {
-        throw "git ls-files failed"
+    $files = @(& git ls-files --cached --others --exclude-standard 2> $gitErrorPath)
+    $gitExitCode = $LASTEXITCODE
+
+    if (Test-Path -LiteralPath $gitErrorPath -PathType Leaf) {
+        $warningLines = @(
+            Get-Content -LiteralPath $gitErrorPath |
+                Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        )
+    }
+
+    if ($gitExitCode -ne 0) {
+        throw ((Get-Utf8Text "Z2l0IGxzLWZpbGVzINC30LDQstC10YDRiNC40LvRgdGPINGBINC60L7QtNC+0LwgezB9") -f $gitExitCode)
     }
 
     $files = @(
@@ -96,55 +177,46 @@ try {
                 ($_ -notmatch '(^|[\\/])Docs[\\/]Screenshots([\\/]|$)') -and
                 ($_ -notmatch '(^|[\\/])Runtime([\\/]|$)') -and
                 ($_ -notmatch '(^|[\\/])(bin|obj|__pycache__)([\\/]|$)') -and
-                ($_ -notmatch '(^|[\\/])ThirdParty[\\/]Audfprint[\\/]tests([\\/]|$)') -and
                 ($_ -notmatch '\.(zip|7z|log|pklz|pyc)$') -and
                 ($_ -notmatch '\.manifest\.json$')
             } |
             Sort-Object -Unique
     )
 
-    foreach ($localArchiveFile in @("CHANGELOG.md", "CHANGELOG_SHORT.md", "ARCHITECTURE.md")) {
-        $localArchivePath = Join-Path $root $localArchiveFile
-        if (Test-Path -LiteralPath $localArchivePath -PathType Leaf) {
-            $files += $localArchiveFile
+    foreach ($localFile in @("CHANGELOG.md", "CHANGELOG_SHORT.md", "ARCHITECTURE.md")) {
+        if (Test-Path -LiteralPath (Join-Path $root $localFile) -PathType Leaf) {
+            $files += $localFile
         }
     }
+
     $files = @($files | Sort-Object -Unique)
 
-    if (-not ($files -contains "SquareResizer.csproj")) {
-        throw (Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gU3F1YXJlUmVzaXplci5jc3Byb2o=")
-    }
-    if (-not ($files -contains "MainWindow.xaml")) {
-        throw (Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gTWFpbldpbmRvdy54YW1s")
-    }
-    if (-not ($files -contains "Services/ImageProcessor.cs")) {
-        throw (Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0gU2VydmljZXMvSW1hZ2VQcm9jZXNzb3IuY3M=")
+    foreach ($requiredFile in @("SquareResizer.csproj", "MainWindow.xaml", "Services/ImageProcessor.cs")) {
+        if (-not ($files -contains $requiredFile)) {
+            throw ((Get-Utf8Text "0J7QsdGP0LfQsNGC0LXQu9GM0L3Ri9C5INGE0LDQudC7INC90LUg0LLRi9Cx0YDQsNC9INC00LvRjyDQsNGA0YXQuNCy0LA6IHswfQ==") -f $requiredFile)
+        }
     }
 
     if ($files.Count -eq 0) {
-        throw "No files to archive"
+        throw (Get-Utf8Text "0JTQu9GPINCw0YDRhdC40LLQsCDQvdC1INCy0YvQsdGA0LDQvdC+INC90Lgg0L7QtNC90L7Qs9C+INGE0LDQudC70LA=")
     }
 
     Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
     $zip = $null
+
     try {
         $zip = [System.IO.Compression.ZipFile]::Open(
             $tempZip,
-            [System.IO.Compression.ZipArchiveMode]::Create
-        )
+            [System.IO.Compression.ZipArchiveMode]::Create)
 
         foreach ($file in $files) {
-            $fullPath = Join-Path $root $file
-            $entryName = $file -replace '\\', '/'
-
             [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
                 $zip,
-                $fullPath,
-                $entryName,
-                [System.IO.Compression.CompressionLevel]::Optimal
-            ) | Out-Null
+                (Join-Path $root $file),
+                ($file -replace '\\', '/'),
+                [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
         }
     }
     finally {
@@ -153,33 +225,49 @@ try {
         }
     }
 
-    if (-not (Test-Path -LiteralPath $tempZip -PathType Leaf)) {
-        throw "Archive file was not created: $tempZip"
-    }
-
-    if ((Get-Item -LiteralPath $tempZip).Length -le 0) {
-        throw (Get-Utf8Text "0KHQvtC30LTQsNC9INC/0YPRgdGC0L7QuSDQsNGA0YXQuNCy")
+    if (-not (Test-Path -LiteralPath $tempZip -PathType Leaf) -or
+        (Get-Item -LiteralPath $tempZip).Length -le 0) {
+        throw ((Get-Utf8Text "0JDRgNGF0LjQsiDQuNGB0YXQvtC00L3QuNC60L7QsiDRgdC+0LfQtNCw0L0g0L3QtdC60L7RgNGA0LXQutGC0L3QvjogezB9") -f $tempZip)
     }
 
     Move-Item -LiteralPath $tempZip -Destination $archivePath -Force
     $createdArchive = Get-Item -LiteralPath $archivePath
 
     Write-ArchiveList -ArchiveDir $sourceDir -CreatedArchive $createdArchive
-
     Write-Host ""
-    Write-Host (Get-Utf8Text "0JDRgNGF0LjQsiDRgdC+0LfQtNCw0L0g0YPRgdC/0LXRiNC90L4=") -ForegroundColor Green
+
+    if ($warningLines.Count -gt 0) {
+        Write-Log -Path $logPath -Lines $warningLines
+        Write-Host (Get-Utf8Text "0JDRgNGF0LjQsiDRgdC+0LfQtNCw0L0g0YEg0L/RgNC10LTRg9C/0YDQtdC20LTQtdC90LjRj9C80Lg=") -ForegroundColor Yellow
+    }
+    else {
+        Write-Host (Get-Utf8Text "0JDRgNGF0LjQsiDRgdC+0LfQtNCw0L0g0YPRgdC/0LXRiNC90L4=") -ForegroundColor Green
+    }
+
     Write-Host ((Get-Utf8Text "0KTQsNC50LvQvtCyINCyINCw0YDRhdC40LLQtTogezB9") -f $files.Count)
 }
 catch {
-    Write-Host ""
-    Write-Host "Ошибка создания архива" -ForegroundColor Red
-    Write-Host $_.Exception.Message -ForegroundColor Red
+    $exitCode = 1
+    $errorLines += $_.Exception.Message
 }
 finally {
-    if (Test-Path -LiteralPath $tempDir) {
-        Remove-Item -LiteralPath $tempDir -Recurse -Force
+    try {
+        Invoke-Cleanup
+    }
+    catch {
+        $exitCode = 1
+        $errorLines += $_.Exception.Message
+    }
+
+    if ($exitCode -ne 0) {
+        Write-Log -Path $logPath -Lines $errorLines
+        Write-Host ""
+        Write-Host (Get-Utf8Text "0J7RiNC40LHQutCwINGB0L7Qt9C00LDQvdC40Y8g0LDRgNGF0LjQstCw") -ForegroundColor Red
+        $errorLines | ForEach-Object { Write-Host $_ -ForegroundColor Red }
     }
 
     Write-Host ""
     [void](Read-Host (Get-Utf8Text "0J3QsNC20LzQuNGC0LUgRW50ZXIg0LTQu9GPINCy0YvRhdC+0LTQsA=="))
 }
+
+exit $exitCode

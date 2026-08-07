@@ -18,17 +18,6 @@
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         Icon="Assets/app.ico">
-    <Window.Resources>
-        <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#202020" />
-        <SolidColorBrush x:Key="MainTextBrush" Color="#D4D4D4" />
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#AAAAAA" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#007ACC" />
-        <SolidColorBrush x:Key="WindowBorderBrush" Color="#292929" />
-        <SolidColorBrush x:Key="TitleButtonForegroundBrush" Color="#D4D4D4" />
-        <SolidColorBrush x:Key="SoftButtonHoverBackgroundBrush" Color="#333333" />
-        <SolidColorBrush x:Key="SoftButtonPressedBackgroundBrush" Color="#3E3E42" />
-    </Window.Resources>
-
     <Grid x:Name="AboutContentRoot"
           Margin="14"
           MouseLeftButtonDown="RootGrid_OnMouseLeftButtonDown">

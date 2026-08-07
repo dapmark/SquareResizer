@@ -17,19 +17,6 @@
         Icon="Assets/app.ico"
         PreviewKeyDown="Window_OnPreviewKeyDown">
     <Window.Resources>
-        <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#202020" />
-        <SolidColorBrush x:Key="InputBackgroundBrush" Color="#252526" />
-        <SolidColorBrush x:Key="MainTextBrush" Color="#D4D4D4" />
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#AAAAAA" />
-        <SolidColorBrush x:Key="WindowBorderBrush" Color="#292929" />
-        <SolidColorBrush x:Key="ButtonBorderBrush" Color="#303030" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#007ACC" />
-        <SolidColorBrush x:Key="TitleButtonForegroundBrush" Color="#D4D4D4" />
-        <SolidColorBrush x:Key="SoftButtonHoverBackgroundBrush" Color="#333333" />
-        <SolidColorBrush x:Key="SoftButtonPressedBackgroundBrush" Color="#3E3E42" />
-        <SolidColorBrush x:Key="ScrollThumbBrush" Color="#686868" />
-        <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#858585" />
-        <SolidColorBrush x:Key="ScrollThumbPressedBrush" Color="#A0A0A0" />
 
         <Style x:Key="LicenseScrollThumbStyle" TargetType="{x:Type primitives:Thumb}">
             <Setter Property="MinHeight" Value="6" />
