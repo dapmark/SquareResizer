@@ -12,7 +12,7 @@ namespace ImageSquareResizer;
 
 internal static class HoverTip
 {
-    private const int InitialShowDelayMilliseconds = 500;
+    private const int InitialShowDelayMilliseconds = 1000;
     private const int InteractiveCloseDelayMilliseconds = 100;
     private const int CursorPollIntervalMilliseconds = 30;
     private const int FadeInDurationMilliseconds = 80;
@@ -48,6 +48,12 @@ internal static class HoverTip
 
     private static readonly DependencyProperty ScrollViewerHookedProperty = DependencyProperty.RegisterAttached(
         "ScrollViewerHooked",
+        typeof(bool),
+        typeof(HoverTip),
+        new PropertyMetadata(false));
+
+    private static readonly DependencyProperty SuppressUntilMouseLeaveProperty = DependencyProperty.RegisterAttached(
+        "SuppressUntilMouseLeave",
         typeof(bool),
         typeof(HoverTip),
         new PropertyMetadata(false));
@@ -119,6 +125,12 @@ internal static class HoverTip
     public static void CloseImmediately()
     {
         CloseImmediatelyCore(clearScrollBlock: true);
+    }
+
+    public static void DismissUntilMouseLeave(FrameworkElement owner)
+    {
+        owner.SetValue(SuppressUntilMouseLeaveProperty, true);
+        CloseImmediatelyCore(clearScrollBlock: false);
     }
 
     private static void OnTextChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs eventArgs)
@@ -275,6 +287,8 @@ internal static class HoverTip
         {
             return;
         }
+
+        owner.ClearValue(SuppressUntilMouseLeaveProperty);
 
         if (ReferenceEquals(owner, pendingOwner))
         {
@@ -694,7 +708,8 @@ internal static class HoverTip
 
     private static bool CanShowForOwner(FrameworkElement owner)
     {
-        if (!owner.IsLoaded || !owner.IsVisible || !owner.IsEnabled || string.IsNullOrWhiteSpace(GetText(owner)))
+        if ((bool)owner.GetValue(SuppressUntilMouseLeaveProperty) ||
+            !owner.IsLoaded || !owner.IsVisible || !owner.IsEnabled || string.IsNullOrWhiteSpace(GetText(owner)))
         {
             return false;
         }

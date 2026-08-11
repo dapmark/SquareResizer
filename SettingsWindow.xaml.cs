@@ -1,18 +1,51 @@
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Effects;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace ImageSquareResizer;
 
 internal partial class SettingsWindow : Window
 {
+    private enum SettingsPage
+    {
+        Settings,
+        About,
+        Licenses,
+    }
+
+    private const string CloseIconSource = "/Assets/Icons/close.svg";
+    private const string BackIconSource = "/Assets/Icons/back.svg";
+    private const double LicenseSeparatorSafetyMargin = 1.5;
+    private const int PhysicalAKeyScanCode = 0x1E;
+    private const int WmKeyDown = 0x0100;
+
+    private static readonly string[] LicenseResourcePaths =
+    {
+        "Licenses/Magick.NET-Apache-2.0.txt",
+        "Licenses/ImageMagick-License.txt",
+        "Licenses/SharpVectors-BSD-3-Clause.txt",
+        "Licenses/SVG-Icons-Licenses.txt",
+    };
+
     private AppSettings settingsDraft;
     private Localization text;
     private bool isApplyingUi;
+    private bool isWindowSizeLocked;
+    private bool licenseTextRefreshQueued;
+    private SettingsPage currentPage = SettingsPage.Settings;
+    private HwndSource? hwndSource;
+    private double licenseSeparatorLayoutWidth = double.NaN;
+    private int licenseSeparatorLength;
+    private bool isLicenseScrollBarSyncing;
 
 
     public AppSettings Settings { get; private set; }
@@ -24,6 +57,7 @@ internal partial class SettingsWindow : Window
         text = Localization.For(settingsDraft.Language);
 
         InitializeComponent();
+        LicenseTextViewer.ScrollOffsetChanged += LicenseTextViewer_OnScrollOffsetChanged;
 
         DataObject.AddPastingHandler(SmartPaddingMaxPxTextBox, OnIntegerPaste);
         DataObject.AddPastingHandler(SmartPaddingPercentTextBox, OnDecimalPaste);
@@ -58,10 +92,6 @@ internal partial class SettingsWindow : Window
 
     private void ApplyLocalizedText()
     {
-        var title = text.IsRussian ? "Дополнительно" : "Advanced";
-        Title = title;
-        TitleTextBlock.Text = title;
-
         InterfaceSectionTextBlock.Text = text.IsRussian ? "Интерфейс" : "Interface";
         LanguageLabel.Text = text.IsRussian ? "Язык" : "Language";
         ThemeLabel.Text = text.IsRussian ? "Тема" : "Theme";
@@ -85,10 +115,27 @@ internal partial class SettingsWindow : Window
         HoverTip.SetText(SmartPaddingPercentLabel, smartPaddingPercentToolTip);
         HoverTip.SetText(SmartPaddingMaxPxLabel, smartPaddingMaxPxToolTip);
 
-        HoverTip.SetText(CloseButton, text.IsRussian ? "Отменить и закрыть" : "Cancel and close");
-        AboutButton.Content = text.IsRussian ? "О программе" : "About";
-        ResetButton.Content = text.IsRussian ? "Сброс" : "Reset";
-        SaveButton.Content = text.IsRussian ? "Применить" : "Apply";
+        AboutButtonText.Text = text.IsRussian ? "О программе" : "About";
+        ResetButtonText.Text = text.IsRussian ? "Сброс" : "Reset";
+        ApplyButtonText.Text = text.IsRussian ? "Применить" : "Apply";
+        LicenseButton.Content = text.IsRussian
+            ? "Лицензия и сторонние компоненты"
+            : "License and third-party components";
+        LicenseCopyMenuItem.Header = text.IsRussian ? "Копировать" : "Copy";
+        LicenseSelectAllMenuItem.Header = text.IsRussian ? "Выделить всё" : "Select all";
+        licenseSeparatorLayoutWidth = double.NaN;
+        licenseSeparatorLength = 0;
+        LicenseTextViewer.Clear();
+        SyncLicenseScrollBar();
+
+        var buildDate = GetBuildDate();
+        AboutVersionTextBlock.Text = text.IsRussian
+            ? string.IsNullOrWhiteSpace(buildDate)
+                ? $"Версия: {AppVersion.Current}"
+                : $"Версия: {AppVersion.Current} build {buildDate}"
+            : string.IsNullOrWhiteSpace(buildDate)
+                ? $"Version: {AppVersion.Current}"
+                : $"Version: {AppVersion.Current} build {buildDate}";
 
         SetComboBoxItemContent(LanguageComboBox, "en", "English");
         SetComboBoxItemContent(LanguageComboBox, "ru", "Русский");
@@ -97,11 +144,193 @@ internal partial class SettingsWindow : Window
         SetComboBoxItemContent(JpegModeComboBox, "1", text.IsRussian ? "Компактный" : "Compact");
         SetComboBoxItemContent(JpegModeComboBox, "2", text.IsRussian ? "Сбалансированный" : "Balanced");
         SetComboBoxItemContent(JpegModeComboBox, "3", text.IsRussian ? "Максимальный" : "Maximum");
+
+        UpdatePageChrome();
     }
 
     private void ApplyTheme()
     {
         ThemeResources.ApplySettings(Resources, settingsDraft.IsDarkTheme);
+        SyncLicenseContextMenuThemeResources();
+    }
+
+    private void SyncLicenseContextMenuThemeResources()
+    {
+        string[] keys =
+        {
+            "WindowBackgroundBrush",
+            "ButtonBorderBrush",
+            "MainTextBrush",
+            "SecondaryTextBrush",
+            "SoftButtonHoverBackgroundBrush",
+        };
+
+        foreach (string key in keys)
+        {
+            if (Resources.Contains(key))
+            {
+                LicenseContextMenu.Resources[key] = Resources[key];
+            }
+        }
+    }
+
+    private void Window_OnSourceInitialized(object? sender, EventArgs e)
+    {
+        hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+        hwndSource?.AddHook(WindowMessageHook);
+    }
+
+    private void Window_OnClosed(object? sender, EventArgs e)
+    {
+        if (hwndSource is not null)
+        {
+            hwndSource.RemoveHook(WindowMessageHook);
+            hwndSource = null;
+        }
+    }
+
+    private IntPtr WindowMessageHook(
+        IntPtr hwnd,
+        int message,
+        IntPtr wParam,
+        IntPtr lParam,
+        ref bool handled)
+    {
+        if (message != WmKeyDown ||
+            currentPage != SettingsPage.Licenses ||
+            !Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ||
+            Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+        {
+            return IntPtr.Zero;
+        }
+
+        int virtualKey = unchecked((int)wParam.ToInt64());
+        int scanCode = unchecked((int)((lParam.ToInt64() >> 16) & 0xFF));
+        if (virtualKey == 'A' || scanCode == PhysicalAKeyScanCode)
+        {
+            LicenseTextViewer.SelectAll();
+            LicenseTextViewer.Focus();
+            handled = true;
+        }
+
+        return IntPtr.Zero;
+    }
+
+    private void SwitchPage(SettingsPage page)
+    {
+        bool leavingSettingsPage = currentPage == SettingsPage.Settings && page != SettingsPage.Settings;
+        bool returningToSettingsPage = currentPage != SettingsPage.Settings && page == SettingsPage.Settings;
+
+        if (leavingSettingsPage)
+        {
+            LockWindowToSettingsPageSize();
+        }
+
+        currentPage = page;
+        SettingsPageGrid.Visibility = page == SettingsPage.Settings
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        AboutPageGrid.Visibility = page == SettingsPage.About
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        LicensePageGrid.Visibility = page == SettingsPage.Licenses
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (returningToSettingsPage)
+        {
+            RestoreSettingsPageAutoSize();
+        }
+
+        if (page == SettingsPage.Licenses)
+        {
+            LicenseTextViewer.ClearSelection();
+            LicenseTextViewer.SetVerticalOffset(0.0);
+            QueueLicenseTextRefresh();
+            SyncLicenseScrollBar();
+        }
+
+        UpdatePageChrome();
+    }
+
+    private void LockWindowToSettingsPageSize()
+    {
+        if (isWindowSizeLocked)
+        {
+            return;
+        }
+
+        UpdateLayout();
+
+        double width = ActualWidth;
+        double height = ActualHeight;
+        SizeToContent = System.Windows.SizeToContent.Manual;
+        Width = width;
+        Height = height;
+        PageRowDefinition.Height = new GridLength(1.0, GridUnitType.Star);
+        isWindowSizeLocked = true;
+    }
+
+    private void RestoreSettingsPageAutoSize()
+    {
+        if (!isWindowSizeLocked)
+        {
+            return;
+        }
+
+        PageRowDefinition.Height = GridLength.Auto;
+        SizeToContent = System.Windows.SizeToContent.WidthAndHeight;
+        ClearValue(WidthProperty);
+        ClearValue(HeightProperty);
+        isWindowSizeLocked = false;
+    }
+
+    private void UpdatePageChrome()
+    {
+        string title = currentPage switch
+        {
+            SettingsPage.About => text.IsRussian ? "О программе" : "About",
+            SettingsPage.Licenses => text.IsRussian
+                ? "Лицензия и сторонние компоненты"
+                : "License and third-party components",
+            _ => text.IsRussian ? "Дополнительно" : "Advanced",
+        };
+
+        Title = title;
+        TitleTextBlock.Text = title;
+
+        if (currentPage == SettingsPage.Licenses)
+        {
+            TitleTextBlock.Visibility = Visibility.Visible;
+            TitleTextBlock.SetResourceReference(TextBlock.ForegroundProperty, "MainTextBrush");
+            TitleTextBlock.FontSize = 14.5;
+        }
+        else
+        {
+            TitleTextBlock.Visibility = currentPage == SettingsPage.Settings
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            TitleTextBlock.SetResourceReference(TextBlock.ForegroundProperty, "MainTextBrush");
+            TitleTextBlock.FontSize = 18;
+        }
+
+        bool isBackPage = currentPage != SettingsPage.Settings;
+        CloseButton.Tag = isBackPage ? BackIconSource : CloseIconSource;
+        CloseButton.HorizontalAlignment = isBackPage
+            ? HorizontalAlignment.Left
+            : HorizontalAlignment.Right;
+
+        TitleTextBlock.HorizontalAlignment = HorizontalAlignment.Left;
+        TitleTextBlock.TextAlignment = TextAlignment.Left;
+        TitleTextBlock.Margin = currentPage == SettingsPage.Licenses
+            ? new Thickness(CloseButton.Width + 10.0, 0.0, 0.0, 0.0)
+            : new Thickness(0.0);
+
+        HoverTip.SetText(
+            CloseButton,
+            isBackPage
+                ? (text.IsRussian ? "Назад" : "Back")
+                : (text.IsRussian ? "Отменить и закрыть" : "Cancel and close"));
     }
 
     private void TitleBar_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -122,6 +351,20 @@ internal partial class SettingsWindow : Window
 
     private void CloseButton_OnClick(object sender, RoutedEventArgs e)
     {
+        if (currentPage == SettingsPage.Licenses)
+        {
+            HoverTip.DismissUntilMouseLeave(CloseButton);
+            SwitchPage(SettingsPage.About);
+            return;
+        }
+
+        if (currentPage == SettingsPage.About)
+        {
+            HoverTip.DismissUntilMouseLeave(CloseButton);
+            SwitchPage(SettingsPage.Settings);
+            return;
+        }
+
         DialogResult = false;
     }
 
@@ -151,25 +394,12 @@ internal partial class SettingsWindow : Window
 
     private void OnAboutButtonClick(object sender, RoutedEventArgs e)
     {
-        SettingsContentRoot.Effect = new BlurEffect
-        {
-            Radius = 4,
-            RenderingBias = RenderingBias.Performance,
-        };
+        SwitchPage(SettingsPage.About);
+    }
 
-        try
-        {
-            var aboutWindow = new AboutWindow(settingsDraft)
-            {
-                Owner = this
-            };
-
-            aboutWindow.ShowDialog();
-        }
-        finally
-        {
-            SettingsContentRoot.Effect = null;
-        }
+    private void LicenseButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        SwitchPage(SettingsPage.Licenses);
     }
 
     private void OnResetButtonClick(object sender, RoutedEventArgs e)
@@ -442,4 +672,245 @@ internal partial class SettingsWindow : Window
 
         return candidate.All(ch => char.IsDigit(ch) || ch == '.');
     }
+    private void LicenseTextViewer_OnScrollOffsetChanged(object? sender, EventArgs e)
+    {
+        SyncLicenseScrollBar();
+    }
+
+    private void LicensePageGrid_OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (LicenseTextViewer.ScrollByMouseWheelDelta(e.Delta))
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void LicensePageGrid_OnPreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        LicenseContextMenu.PlacementTarget = LicensePageGrid;
+        LicenseContextMenu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    private void LicenseScrollBar_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (isLicenseScrollBarSyncing)
+        {
+            return;
+        }
+
+        LicenseTextViewer.SetVerticalOffset(e.NewValue);
+    }
+
+    private void SyncLicenseScrollBar()
+    {
+        double maximum = Math.Max(0.0, LicenseTextViewer.ScrollableHeight);
+        double value = Math.Clamp(LicenseTextViewer.VerticalOffset, 0.0, maximum);
+
+        isLicenseScrollBarSyncing = true;
+        try
+        {
+            LicenseScrollBar.Minimum = 0.0;
+            LicenseScrollBar.Maximum = maximum;
+            LicenseScrollBar.ViewportSize = Math.Max(0.0, LicenseTextViewer.ViewportHeight);
+            LicenseScrollBar.SmallChange = 34.0;
+            LicenseScrollBar.LargeChange = Math.Max(24.0, LicenseTextViewer.ViewportHeight * 0.82);
+            LicenseScrollBar.Value = value;
+            LicenseScrollBar.Visibility = maximum > 0.0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+        finally
+        {
+            isLicenseScrollBarSyncing = false;
+        }
+    }
+
+    private void LicenseContextMenu_OnOpened(object sender, RoutedEventArgs e)
+    {
+        LicenseCopyMenuItem.IsEnabled = LicenseTextViewer.SelectionLength > 0;
+    }
+
+    private void LicenseCopyMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        LicenseTextViewer.Copy();
+    }
+
+    private void LicenseSelectAllMenuItem_OnClick(object sender, RoutedEventArgs e)
+    {
+        LicenseTextViewer.SelectAll();
+        LicenseTextViewer.Focus();
+    }
+
+    private void LicenseTextViewer_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (currentPage == SettingsPage.Licenses)
+        {
+            QueueLicenseTextRefresh();
+            SyncLicenseScrollBar();
+        }
+    }
+
+    private void QueueLicenseTextRefresh()
+    {
+        if (licenseTextRefreshQueued)
+        {
+            return;
+        }
+
+        licenseTextRefreshQueued = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            licenseTextRefreshQueued = false;
+            RefreshLicenseTextForViewport();
+        }));
+    }
+
+    private void RefreshLicenseTextForViewport()
+    {
+        if (currentPage != SettingsPage.Licenses || !LicenseTextViewer.IsLoaded)
+        {
+            return;
+        }
+
+        double viewportWidth = LicenseTextViewer.ActualWidth;
+        if (viewportWidth <= 0.0 ||
+            (!double.IsNaN(licenseSeparatorLayoutWidth) &&
+             Math.Abs(viewportWidth - licenseSeparatorLayoutWidth) < 0.1 &&
+             LicenseTextViewer.ExtentHeight > 0.0))
+        {
+            SyncLicenseScrollBar();
+            return;
+        }
+
+        int separatorLength = CalculateLicenseSeparatorLength(viewportWidth);
+        licenseSeparatorLayoutWidth = viewportWidth;
+        if (licenseSeparatorLength == separatorLength && LicenseTextViewer.ExtentHeight > 0.0)
+        {
+            SyncLicenseScrollBar();
+            return;
+        }
+
+        licenseSeparatorLength = separatorLength;
+        LicenseTextViewer.SetText(BuildLicenseText(separatorLength));
+        LicenseTextViewer.ClearSelection();
+        LicenseTextViewer.SetVerticalOffset(0.0);
+        SyncLicenseScrollBar();
+    }
+
+    private int CalculateLicenseSeparatorLength(double viewportWidth)
+    {
+        double availableWidth = Math.Max(1.0, viewportWidth - LicenseSeparatorSafetyMargin);
+        var typeface = new Typeface(
+            LicenseTextViewer.FontFamily,
+            LicenseTextViewer.FontStyle,
+            LicenseTextViewer.FontWeight,
+            LicenseTextViewer.FontStretch);
+        double pixelsPerDip = VisualTreeHelper.GetDpi(LicenseTextViewer).PixelsPerDip;
+
+        bool Fits(int count)
+        {
+            var formattedText = new FormattedText(
+                new string('═', Math.Max(1, count)),
+                CultureInfo.CurrentUICulture,
+                FlowDirection.LeftToRight,
+                typeface,
+                LicenseTextViewer.FontSize,
+                Brushes.Black,
+                null,
+                TextFormattingMode.Display,
+                pixelsPerDip);
+            return formattedText.WidthIncludingTrailingWhitespace <= availableWidth;
+        }
+
+        int low = 1;
+        int high = 256;
+        int best = 1;
+        while (low <= high)
+        {
+            int mid = low + (high - low) / 2;
+            if (Fits(mid))
+            {
+                best = mid;
+                low = mid + 1;
+            }
+            else
+            {
+                high = mid - 1;
+            }
+        }
+
+        return best;
+    }
+
+    private string BuildLicenseText(int separatorLength)
+    {
+        var builder = new StringBuilder();
+        AppendLicenseSection(builder, "LICENSE", ReadResourceText("LICENSE"), separatorLength);
+
+        string noticesPath = text.IsRussian
+            ? "Licenses/THIRD_PARTY_NOTICES-RU.md"
+            : "Licenses/THIRD_PARTY_NOTICES-EN.md";
+        AppendLicenseSection(builder, noticesPath, ReadResourceText(noticesPath), separatorLength);
+
+        foreach (string resourcePath in LicenseResourcePaths)
+        {
+            AppendLicenseSection(builder, resourcePath, ReadResourceText(resourcePath), separatorLength);
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendLicenseSection(
+        StringBuilder builder,
+        string title,
+        string content,
+        int separatorLength)
+    {
+        if (builder.Length > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine();
+        }
+
+        string separator = new('═', Math.Max(1, separatorLength));
+        builder.AppendLine(separator);
+        builder.AppendLine(title);
+        builder.AppendLine(separator);
+        builder.AppendLine();
+        builder.Append(content.TrimEnd());
+    }
+
+    private string ReadResourceText(string resourcePath)
+    {
+        var resource = Application.GetResourceStream(new Uri(resourcePath, UriKind.Relative));
+        if (resource?.Stream is null)
+        {
+            return text.IsRussian
+                ? $"Не удалось прочитать встроенный ресурс: {resourcePath}"
+                : $"Failed to read embedded resource: {resourcePath}";
+        }
+
+        using var reader = new StreamReader(
+            resource.Stream,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: true,
+            bufferSize: 4096,
+            leaveOpen: false);
+        return reader.ReadToEnd();
+    }
+
+    private static string? GetBuildDate()
+    {
+        foreach (var attribute in Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyMetadataAttribute>())
+        {
+            if (attribute.Key == "BuildDate")
+            {
+                return attribute.Value;
+            }
+        }
+
+        return null;
+    }
+
 }

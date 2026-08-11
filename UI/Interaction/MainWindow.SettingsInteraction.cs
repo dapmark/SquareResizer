@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 
 namespace ImageSquareResizer;
@@ -268,7 +269,18 @@ public partial class MainWindow
             return;
         }
 
-        currentSettings.ResizeMode = AppSettings.NormalizeResizeMode(element.Tag as string);
+        string newResizeMode = AppSettings.NormalizeResizeMode(element.Tag as string);
+        bool modeChanged = !string.Equals(
+            AppSettings.NormalizeResizeMode(currentSettings.ResizeMode),
+            newResizeMode,
+            StringComparison.OrdinalIgnoreCase);
+
+        if (modeChanged)
+        {
+            HoverTip.DismissUntilMouseLeave(element);
+        }
+
+        currentSettings.ResizeMode = newResizeMode;
         currentSettings.Save();
         SelectResizeMode(currentSettings.ResizeMode);
         UpdateManualActionButtons();
@@ -320,9 +332,57 @@ public partial class MainWindow
     private void SelectResizeMode(string resizeMode)
     {
         string normalizedResizeMode = AppSettings.NormalizeResizeMode(resizeMode);
+        bool isAuto = string.Equals(normalizedResizeMode, "auto", StringComparison.OrdinalIgnoreCase);
 
-        ResizeAutoButton.IsChecked = string.Equals(normalizedResizeMode, "auto", StringComparison.OrdinalIgnoreCase);
-        ResizeCoverButton.IsChecked = string.Equals(normalizedResizeMode, "music_cover", StringComparison.OrdinalIgnoreCase);
+        ResizeAutoButton.IsChecked = isAuto;
+        ResizeCoverButton.IsChecked = !isAuto;
+        UpdateResizeModeIndicator(isAuto ? 0d : 138d, animate: IsLoaded && !isApplyingSettingsToUi);
+    }
+
+    private void UpdateResizeModeIndicator(double targetX, bool animate)
+    {
+        const double overshoot = 3d;
+        const double movementMilliseconds = 285d;
+        const double overshootMilliseconds = movementMilliseconds * 0.82d;
+
+        double currentX = ResizeModeIndicatorTransform.X;
+        ResizeModeIndicatorTransform.BeginAnimation(TranslateTransform.XProperty, null);
+        ResizeModeIndicatorTransform.X = currentX;
+
+        if (!animate || Math.Abs(currentX - targetX) < 0.1d)
+        {
+            ResizeModeIndicatorTransform.X = targetX;
+            return;
+        }
+
+        double direction = Math.Sign(targetX - currentX);
+        var animation = new DoubleAnimationUsingKeyFrames
+        {
+            FillBehavior = FillBehavior.Stop,
+        };
+
+        animation.KeyFrames.Add(new EasingDoubleKeyFrame(
+            currentX,
+            KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        animation.KeyFrames.Add(new EasingDoubleKeyFrame(
+            targetX + (direction * overshoot),
+            KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(overshootMilliseconds)),
+            new CubicEase { EasingMode = EasingMode.EaseOut }));
+        animation.KeyFrames.Add(new EasingDoubleKeyFrame(
+            targetX,
+            KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(movementMilliseconds)),
+            new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+
+        animation.Completed += (_, _) =>
+        {
+            ResizeModeIndicatorTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            ResizeModeIndicatorTransform.X = targetX;
+        };
+
+        ResizeModeIndicatorTransform.BeginAnimation(
+            TranslateTransform.XProperty,
+            animation,
+            HandoffBehavior.SnapshotAndReplace);
     }
 
     private void SelectSharpMode(string sharpMode)

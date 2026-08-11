@@ -77,6 +77,9 @@ internal static class ThemeResources
             SetBrush(resources, "TitleButtonForegroundBrush", Color.FromRgb(212, 212, 212));
             SetBrush(resources, "SoftButtonHoverBackgroundBrush", Color.FromRgb(51, 51, 51));
             SetBrush(resources, "SoftButtonPressedBackgroundBrush", Color.FromRgb(62, 62, 66));
+            SetBrush(resources, "ScrollThumbBrush", Color.FromRgb(104, 104, 104));
+            SetBrush(resources, "ScrollThumbHoverBrush", Color.FromRgb(133, 133, 133));
+            SetBrush(resources, "ScrollThumbPressedBrush", Color.FromRgb(160, 160, 160));
             SetBrush(resources, "StatusErrorTextBrush", Color.FromRgb(241, 112, 123));
             return;
         }
@@ -100,6 +103,9 @@ internal static class ThemeResources
         SetBrush(resources, "TitleButtonForegroundBrush", Color.FromRgb(75, 85, 99));
         SetBrush(resources, "SoftButtonHoverBackgroundBrush", Color.FromRgb(226, 240, 255));
         SetBrush(resources, "SoftButtonPressedBackgroundBrush", Color.FromRgb(203, 227, 255));
+        SetBrush(resources, "ScrollThumbBrush", Color.FromRgb(176, 181, 188));
+        SetBrush(resources, "ScrollThumbHoverBrush", Color.FromRgb(139, 146, 156));
+        SetBrush(resources, "ScrollThumbPressedBrush", Color.FromRgb(107, 114, 128));
         SetBrush(resources, "StatusErrorTextBrush", Color.FromRgb(196, 43, 28));
     }
 

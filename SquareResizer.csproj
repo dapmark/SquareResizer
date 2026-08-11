@@ -7,6 +7,7 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildProjectDirectory)\bin\**;$(MSBuildProjectDirectory)\obj\**</DefaultItemExcludes>
 	  <AssemblyName>SquareResizer</AssemblyName>
 	  <AssemblyTitle>SquareResizer</AssemblyTitle>
 	  <Product>SquareResizer</Product>
@@ -24,6 +25,7 @@
     <InformationalVersion Condition="'$(SquareResizerInformationalVersion)' != ''">$(SquareResizerInformationalVersion)</InformationalVersion>
     <AssemblyVersion Condition="'$(SquareResizerFileVersion)' != ''">$(SquareResizerFileVersion)</AssemblyVersion>
     <FileVersion Condition="'$(SquareResizerFileVersion)' != ''">$(SquareResizerFileVersion)</FileVersion>
+    <SquareResizerBuildDate>$([System.DateTime]::Now.ToString('yyyyMMdd'))</SquareResizerBuildDate>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
@@ -31,6 +33,13 @@
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q8-x64" Version="14.15.0" />
     <PackageReference Include="SharpVectors.Wpf" Version="1.8.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildDate</_Parameter1>
+      <_Parameter2>$(SquareResizerBuildDate)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
@@ -58,6 +67,7 @@
     <Resource Include="Assets\Icons\centered.svg" />
     <Resource Include="Assets\Icons\close.svg" />
     <Resource Include="Assets\Icons\plus-outline.svg" />
+    <Resource Include="Assets\Icons\back.svg" />
     <Resource Include="Assets\Icons\save.svg" />
     <Resource Include="Assets\Icons\settings.svg" />
   </ItemGroup>

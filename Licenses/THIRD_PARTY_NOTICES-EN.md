@@ -1,6 +1,6 @@
 # Third-party components
 
-SquareResizer uses third-party components for image processing and SVG rendering. Their copyrights belong to the respective owners. Full license texts are stored in this directory and are available from the About window.
+SquareResizer uses third-party components for image processing and SVG rendering. Their copyrights belong to the respective owners. Full license texts are embedded in the application and are available from the About page.
 
 ## Magick.NET-Q8-x64 14.15.0
 
@@ -23,8 +23,7 @@ SquareResizer uses third-party components for image processing and SVG rendering
 - Source project: https://github.com/ElinamLLC/SharpVectors
 - Full text: `Licenses/SharpVectors-BSD-3-Clause.txt`
 
-## Lucide Icons
+## SVG icons
 
-- License: ISC; MIT also applies to icons derived from Feather Icons
-- Source project: https://lucide.dev
-- Full text: `Licenses/Lucide-ISC-and-Feather-MIT.txt`
+- Tabler Icons – MIT – https://tabler.io/icons
+- Full text: `Licenses/SVG-Icons-Licenses.txt`

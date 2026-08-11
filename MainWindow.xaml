@@ -133,11 +133,11 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ResizeModeToggleButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+        <Style x:Key="ResizeModeSegmentButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource StatusTextBrush}" />
+            <Setter Property="Opacity" Value="0.65" />
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -146,11 +146,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="RootBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
+                        <Border Background="{TemplateBinding Background}"
+                                BorderThickness="0"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
@@ -158,15 +155,20 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonHoverBackgroundBrush}" />
-                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{DynamicResource ButtonPressedBackgroundBrush}" />
-                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+                                <Setter Property="Opacity" Value="1" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource AccentBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+                                <Setter Property="Opacity" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource MainTextBrush}" />
+                                <Setter Property="Opacity" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                                <Setter Property="Cursor" Value="Arrow" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -450,22 +452,49 @@
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                FontFamily="Segoe UI"
                                FontSize="12" />
-                    <ToggleButton x:Name="ResizeAutoButton"
-                                  Grid.Row="0"
-                                  Grid.Column="2"
-                                  Height="26"
-                                  Content="Auto"
-                                  Tag="auto"
-                                  Style="{StaticResource ResizeModeToggleButtonStyle}"
-                                  Click="OnResizeModeButtonClick" />
-                    <ToggleButton x:Name="ResizeCoverButton"
-                                  Grid.Row="0"
-                                  Grid.Column="4"
-                                  Height="26"
-                                  Content="Cover"
-                                  Tag="music_cover"
-                                  Style="{StaticResource ResizeModeToggleButtonStyle}"
-                                  Click="OnResizeModeButtonClick" />
+                    <Grid Grid.Row="0"
+                          Grid.Column="2"
+                          Grid.ColumnSpan="3"
+                          Height="26"
+                          SnapsToDevicePixels="True">
+                        <Border Height="22"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource ButtonHoverBackgroundBrush}"
+                                CornerRadius="6"
+                                IsHitTestVisible="False" />
+                        <Border x:Name="ResizeModeIndicator"
+                                Width="138"
+                                Height="26"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource ButtonPressedBackgroundBrush}"
+                                CornerRadius="6"
+                                IsHitTestVisible="False"
+                                SnapsToDevicePixels="True">
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="ResizeModeIndicatorTransform" />
+                            </Border.RenderTransform>
+                        </Border>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ToggleButton x:Name="ResizeAutoButton"
+                                          Grid.Column="0"
+                                          Height="26"
+                                          Content="Auto"
+                                          Tag="auto"
+                                          Style="{StaticResource ResizeModeSegmentButtonStyle}"
+                                          Click="OnResizeModeButtonClick" />
+                            <ToggleButton x:Name="ResizeCoverButton"
+                                          Grid.Column="1"
+                                          Height="26"
+                                          Content="Cover"
+                                          Tag="music_cover"
+                                          Style="{StaticResource ResizeModeSegmentButtonStyle}"
+                                          Click="OnResizeModeButtonClick" />
+                        </Grid>
+                    </Grid>
 
                     <TextBlock x:Name="QualityLabel"
                                Grid.Row="2"

@@ -1,23 +1,29 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" width="100%" height="100%" viewBox="0 0 100 100" fill-rule="evenodd" clip-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
   <metadata>
     <rdf:RDF>
       <cc:Work rdf:about="">
-        <dc:title>save</dc:title>
+        <dc:title>save-3</dc:title>
         <dc:creator>
           <cc:Agent>
-            <dc:title>Lucide Contributors</dc:title>
+            <dc:title>Tabler Icons Contributors</dc:title>
           </cc:Agent>
         </dc:creator>
-        <dc:source>save — https://lucide.dev/icons/save</dc:source>
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>DapMark</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+        <dc:source>device-floppy — https://tabler.io/icons/icon/device-floppy</dc:source>
         <dc:format>image/svg+xml</dc:format>
-        <dc:rights>ISC License</dc:rights>
-        <cc:license rdf:resource="https://opensource.org/license/isc-license-txt/"/>
-        <dc:description>Original icon name: save.</dc:description>
+        <dc:rights>MIT License</dc:rights>
+        <cc:license rdf:resource="https://opensource.org/license/mit/"/>
+        <dc:description>Modified derivative by DapMark based on save-2.svg, derived from the Tabler icon “device-floppy”; circular element removed, rectangular element added, scale and proportions adjusted.</dc:description>
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
-  <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/>
-  <path d="M7 3v4a1 1 0 0 0 1 1h7"/>
+  <rect x="-4.5604" y="-4.5604" width="109.1208" height="109.1208" fill="none" fill-rule="nonzero"/>
+  <path d="M23.4375,14.5833L67.7083,14.5833L85.4167,32.2917L85.4167,76.5625C85.4167,81.4198 81.4198,85.4167 76.5625,85.4167L23.4375,85.4167C18.5802,85.4167 14.5833,81.4198 14.5833,76.5625L14.5833,23.4375C14.5833,18.5802 18.5802,14.5833 23.4375,14.5833" fill="none" fill-rule="nonzero" stroke="#000" stroke-width="8.33px"/>
+  <path d="M31.25,85.307L31.25,56.25L68.75,56.25L68.75,85.307" fill="none" stroke="#000" stroke-width="8.33px" stroke-miterlimit="1.5"/>
+  <path d="M58.5302,14.5833L58.5302,33.3333L31.25,33.3333L31.25,14.5833" fill="none" fill-rule="nonzero" stroke="#000" stroke-width="8.33px"/>
 </svg>

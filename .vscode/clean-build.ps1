@@ -41,6 +41,44 @@ function Remove-EmptyDirectory {
     }
 }
 
+function Wait-ForRootBuildArtifactsToStayClean {
+    param(
+        [int]$QuietMilliseconds = 300,
+        [int]$TimeoutMilliseconds = 1500
+    )
+
+    $paths = @(
+        (Join-Path $root "bin"),
+        (Join-Path $root "obj")
+    )
+    $watch = [System.Diagnostics.Stopwatch]::StartNew()
+    $quietSince = $watch.ElapsedMilliseconds
+
+    while ($watch.ElapsedMilliseconds -lt $TimeoutMilliseconds) {
+        $removedSomething = $false
+
+        foreach ($path in $paths) {
+            if (Test-Path -LiteralPath $path) {
+                Remove-DirectoryStrict -Path $path
+                $removedSomething = $true
+            }
+        }
+
+        if ($removedSomething) {
+            $quietSince = $watch.ElapsedMilliseconds
+        }
+        elseif (($watch.ElapsedMilliseconds - $quietSince) -ge $QuietMilliseconds) {
+            return
+        }
+
+        Start-Sleep -Milliseconds 50
+    }
+
+    foreach ($path in $paths) {
+        Remove-DirectoryStrict -Path $path
+    }
+}
+
 function Write-Log {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -97,6 +135,7 @@ function Invoke-Cleanup {
 if ($CleanupOnly) {
     try {
         Invoke-Cleanup
+        Wait-ForRootBuildArtifactsToStayClean
         Write-Host (Get-Utf8Text "0JLRgNC10LzQtdC90L3Ri9C1INGE0LDQudC70YsgRjUg0YPQtNCw0LvQtdC90Ys=") -ForegroundColor Green
         exit 0
     }
@@ -142,8 +181,7 @@ try {
     $buildExitCode = $LASTEXITCODE
     Write-Log -Path $tempLog -Lines $buildOutput
 
-    Remove-DirectoryStrict -Path (Join-Path $root "bin")
-    Remove-DirectoryStrict -Path (Join-Path $root "obj")
+    Wait-ForRootBuildArtifactsToStayClean
 
     if ($buildExitCode -ne 0) {
         throw ((Get-Utf8Text "ZG90bmV0IGJ1aWxkINC30LDQstC10YDRiNC40LvRgdGPINGBINC60L7QtNC+0LwgezB9") -f $buildExitCode)
@@ -175,6 +213,7 @@ catch {
 
     try {
         Invoke-Cleanup
+        Wait-ForRootBuildArtifactsToStayClean
     }
     catch {
         $errorLines += $_.Exception.Message
