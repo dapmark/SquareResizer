@@ -58,14 +58,18 @@ SquareResizer – компактная portable-утилита для Windows, �
 
 Скрипты находятся в каталоге `WindowsIntegration` рядом с `SquareResizer.exe`:
 
-- `CreateSendToShortcut.ps1` – ярлык в меню «Отправить»
-- `InstallContextMenu-RU.ps1` и `InstallContextMenu-EN.ps1` – обычная обработка
-- `InstallManualContextMenu-RU.ps1` и `InstallManualContextMenu-EN.ps1` – открытие сразу в ручном режиме
+- `ContextMenuInstall.ps1` / `ContextMenuRemove.ps1` – добавить или удалить обычную обработку из контекстного меню
+- `ManualContextMenuInstall.ps1` / `ManualContextMenuRemove.ps1` – добавить или удалить открытие сразу в ручном режиме
+- `SendToShortcutCreate.ps1` / `SendToShortcutRemove.ps1` – создать или удалить ярлык в меню «Отправить»
+
+Установочные скрипты автоматически используют русский текст команд при русском языке интерфейса Windows. Для остальных языков используется английский вариант. Скрипты удаления работают по техническим именам и не зависят от языка ранее установленной команды
+
+После выполнения скрипты показывают 3-секундный отсчёт до закрытия. При предупреждении или ошибке рядом со скриптом создаётся одноимённый `.log`; следующий чистый запуск удаляет предыдущий лог
 
 Пример запуска при блокировке PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\WindowsIntegration\CreateSendToShortcut.ps1
+powershell -ExecutionPolicy Bypass -File .\WindowsIntegration\SendToShortcutCreate.ps1
 ```
 
 Скрипты работают для текущего пользователя и не требуют прав администратора

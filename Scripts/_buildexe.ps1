@@ -186,6 +186,12 @@ try {
         Copy-Item -LiteralPath $sourceDirectory -Destination $outputDir -Recurse -Force
     }
 
+    $windowsIntegrationOutput = Join-Path $outputDir "WindowsIntegration"
+    if (Test-Path -LiteralPath $windowsIntegrationOutput -PathType Container) {
+        Get-ChildItem -LiteralPath $windowsIntegrationOutput -Filter "*.log" -File |
+            Remove-Item -Force -ErrorAction Stop
+    }
+
     if (-not (Test-Path -LiteralPath (Join-Path $outputDir "SquareResizer.exe") -PathType Leaf)) {
         throw ((Get-Utf8Text "0JIg0LjRgtC+0LPQvtCy0L7QvCDQutCw0YLQsNC70L7Qs9C1INC90LUg0L3QsNC50LTQtdC9INC40YHQv9C+0LvQvdGP0LXQvNGL0Lkg0YTQsNC50Ls6IHswfQ==") -f $outputDir)
     }

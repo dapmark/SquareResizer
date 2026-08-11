@@ -13,6 +13,12 @@ public sealed class LicenseTextViewer : Control
 {
     private const double WidthTolerance = 0.1;
     private const double WheelStep = 34.0;
+    private const double SmoothScrollDecay = 12.5;
+    private const double SmoothScrollImpulsePerNotch = WheelStep * SmoothScrollDecay;
+    private const double SmoothScrollReverseRetention = 0.2;
+    private const double SmoothScrollStopVelocity = 6.0;
+    private const double SmoothScrollMaxVelocity = 2600.0;
+    private const double SmoothScrollMaxFrameSeconds = 0.05;
 
     public static readonly DependencyProperty SelectionBrushProperty =
         DependencyProperty.Register(
@@ -27,6 +33,9 @@ public sealed class LicenseTextViewer : Control
     private double layoutWidth = double.NaN;
     private double verticalOffset;
     private double lineHeight = 18.0;
+    private double smoothScrollVelocity;
+    private TimeSpan lastSmoothScrollRenderingTime;
+    private bool isSmoothScrolling;
     private int selectionAnchor;
     private int selectionCaret;
     private bool isSelecting;
@@ -39,6 +48,7 @@ public sealed class LicenseTextViewer : Control
         ClipToBounds = true;
         SnapsToDevicePixels = true;
         UseLayoutRounding = true;
+        Unloaded += LicenseTextViewer_OnUnloaded;
     }
 
     public event EventHandler? ScrollOffsetChanged;
@@ -78,6 +88,7 @@ public sealed class LicenseTextViewer : Control
 
     public void SetText(string value)
     {
+        StopSmoothScroll();
         text = value ?? string.Empty;
         selectionAnchor = 0;
         selectionCaret = 0;
@@ -129,6 +140,44 @@ public sealed class LicenseTextViewer : Control
 
     public void SetVerticalOffset(double offset)
     {
+        StopSmoothScroll();
+        ApplyVerticalOffset(offset);
+    }
+
+    public void ScrollBy(double delta)
+    {
+        StopSmoothScroll();
+        ApplyVerticalOffset(verticalOffset + delta);
+    }
+
+    public bool ScrollByMouseWheelDelta(int delta)
+    {
+        EnsureLayout();
+        if (delta == 0 || ScrollableHeight <= 0.0)
+        {
+            return false;
+        }
+
+        double notches = delta / 120.0;
+        double impulse = -notches * SmoothScrollImpulsePerNotch;
+
+        if (smoothScrollVelocity != 0.0 &&
+            Math.Sign(impulse) != Math.Sign(smoothScrollVelocity))
+        {
+            smoothScrollVelocity *= SmoothScrollReverseRetention;
+        }
+
+        smoothScrollVelocity = Math.Clamp(
+            smoothScrollVelocity + impulse,
+            -SmoothScrollMaxVelocity,
+            SmoothScrollMaxVelocity);
+
+        StartSmoothScroll();
+        return true;
+    }
+
+    private void ApplyVerticalOffset(double offset)
+    {
         EnsureLayout();
         double clamped = Math.Clamp(offset, 0.0, ScrollableHeight);
         if (Math.Abs(clamped - verticalOffset) < 0.01)
@@ -141,21 +190,82 @@ public sealed class LicenseTextViewer : Control
         ScrollOffsetChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void ScrollBy(double delta)
+    private void StartSmoothScroll()
     {
-        SetVerticalOffset(verticalOffset + delta);
-    }
-
-    public bool ScrollByMouseWheelDelta(int delta)
-    {
-        if (delta == 0 || ScrollableHeight <= 0.0)
+        if (isSmoothScrolling)
         {
-            return false;
+            return;
         }
 
-        double notches = delta / 120.0;
-        ScrollBy(-notches * WheelStep);
-        return true;
+        isSmoothScrolling = true;
+        lastSmoothScrollRenderingTime = TimeSpan.Zero;
+        CompositionTarget.Rendering += OnSmoothScrollRendering;
+    }
+
+    private void StopSmoothScroll()
+    {
+        if (isSmoothScrolling)
+        {
+            CompositionTarget.Rendering -= OnSmoothScrollRendering;
+            isSmoothScrolling = false;
+        }
+
+        smoothScrollVelocity = 0.0;
+        lastSmoothScrollRenderingTime = TimeSpan.Zero;
+    }
+
+    private void OnSmoothScrollRendering(object? sender, EventArgs e)
+    {
+        if (e is not RenderingEventArgs renderingEventArgs)
+        {
+            StopSmoothScroll();
+            return;
+        }
+
+        TimeSpan renderingTime = renderingEventArgs.RenderingTime;
+        if (lastSmoothScrollRenderingTime == TimeSpan.Zero)
+        {
+            lastSmoothScrollRenderingTime = renderingTime;
+            return;
+        }
+
+        double elapsedSeconds = (renderingTime - lastSmoothScrollRenderingTime).TotalSeconds;
+        lastSmoothScrollRenderingTime = renderingTime;
+        if (elapsedSeconds <= 0.0)
+        {
+            return;
+        }
+
+        elapsedSeconds = Math.Min(elapsedSeconds, SmoothScrollMaxFrameSeconds);
+
+        double maximum = ScrollableHeight;
+        if (maximum <= 0.0)
+        {
+            StopSmoothScroll();
+            return;
+        }
+
+        double nextOffset = verticalOffset + smoothScrollVelocity * elapsedSeconds;
+        ApplyVerticalOffset(nextOffset);
+
+        bool hitUpperBoundary = verticalOffset <= 0.0 && smoothScrollVelocity < 0.0;
+        bool hitLowerBoundary = verticalOffset >= maximum && smoothScrollVelocity > 0.0;
+        if (hitUpperBoundary || hitLowerBoundary)
+        {
+            StopSmoothScroll();
+            return;
+        }
+
+        smoothScrollVelocity *= Math.Exp(-SmoothScrollDecay * elapsedSeconds);
+        if (Math.Abs(smoothScrollVelocity) < SmoothScrollStopVelocity)
+        {
+            StopSmoothScroll();
+        }
+    }
+
+    private void LicenseTextViewer_OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        StopSmoothScroll();
     }
 
     protected override void OnRender(DrawingContext drawingContext)
@@ -232,6 +342,7 @@ public sealed class LicenseTextViewer : Control
     {
         base.OnMouseLeftButtonDown(e);
 
+        StopSmoothScroll();
         Focus();
         int hit = GetCharacterIndexFromPoint(e.GetPosition(this));
 
@@ -521,6 +632,7 @@ public sealed class LicenseTextViewer : Control
 
     private void InvalidateTextLayout()
     {
+        StopSmoothScroll();
         layoutWidth = double.NaN;
         lines.Clear();
         InvalidateVisual();

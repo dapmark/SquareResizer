@@ -58,14 +58,18 @@ Transparent areas are replaced with a white background
 
 Scripts are located in the `WindowsIntegration` directory next to `SquareResizer.exe`:
 
-- `CreateSendToShortcut.ps1` – shortcut in the SendTo menu
-- `InstallContextMenu-RU.ps1` and `InstallContextMenu-EN.ps1` – regular processing
-- `InstallManualContextMenu-RU.ps1` and `InstallManualContextMenu-EN.ps1` – open directly in manual mode
+- `ContextMenuInstall.ps1` / `ContextMenuRemove.ps1` – add or remove regular processing from the context menu
+- `ManualContextMenuInstall.ps1` / `ManualContextMenuRemove.ps1` – add or remove opening directly in manual mode
+- `SendToShortcutCreate.ps1` / `SendToShortcutRemove.ps1` – create or remove the SendTo shortcut
+
+Installer scripts automatically use Russian command text when the Windows UI language is Russian. English is used as the fallback for all other languages. Removal scripts use technical names and do not depend on the language of the previously installed command
+
+The scripts show a 3-second closing countdown. On warnings or errors, a same-named `.log` file is written next to the script; a later clean run removes the previous log
 
 Example when PowerShell blocks script execution:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\WindowsIntegration\CreateSendToShortcut.ps1
+powershell -ExecutionPolicy Bypass -File .\WindowsIntegration\SendToShortcutCreate.ps1
 ```
 
 The scripts work for the current user and do not require administrator rights

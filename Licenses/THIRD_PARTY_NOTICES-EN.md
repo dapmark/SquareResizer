@@ -2,7 +2,7 @@
 
 SquareResizer uses third-party components for image processing and SVG rendering. Their copyrights belong to the respective owners. Full license texts are embedded in the application and are available from the About page.
 
-## Magick.NET-Q8-x64 14.15.0
+## Magick.NET-Q8-x64 14.16.0
 
 - Purpose: managed .NET interface for image processing and encoding
 - License: Apache License 2.0
