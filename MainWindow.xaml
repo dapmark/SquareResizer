@@ -15,6 +15,10 @@
         PreviewKeyDown="OnWindowPreviewKeyDown">
 
     <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
+        </Style>
+
         <Style TargetType="{x:Type ContextMenu}">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
@@ -69,10 +73,11 @@
                                                   ContentSource="Icon"
                                                   HorizontalAlignment="Center"
                                                   VerticalAlignment="Center" />
-                                <ContentPresenter Grid.Column="2"
-                                                  ContentSource="Header"
-                                                  RecognizesAccessKey="True"
-                                                  VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2"
+                                           VerticalAlignment="Center"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           Text="{TemplateBinding Header}"
+                                           RenderOptions.ClearTypeHint="Enabled" />
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -98,6 +103,7 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -109,7 +115,8 @@
                                 SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
-                                              RecognizesAccessKey="True" />
+                                              RecognizesAccessKey="True"
+                                              RenderOptions.ClearTypeHint="Enabled" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -143,6 +150,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
@@ -151,7 +159,8 @@
                                 SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center"
                                               VerticalAlignment="Center"
-                                              RecognizesAccessKey="True" />
+                                              RecognizesAccessKey="True"
+                                              RenderOptions.ClearTypeHint="Enabled" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -180,6 +189,7 @@
 
     <Grid x:Name="MainContentRoot"
           Background="{DynamicResource WindowBackgroundBrush}"
+          RenderOptions.ClearTypeHint="Enabled"
           AllowDrop="True"
           DragEnter="OnDragEnter"
           DragOver="OnDragOver"

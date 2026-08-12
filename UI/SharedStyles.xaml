@@ -58,6 +58,7 @@
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -69,7 +70,8 @@
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
-                                          RecognizesAccessKey="True" />
+                                          RecognizesAccessKey="True"
+                                          RenderOptions.ClearTypeHint="Enabled" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -99,6 +101,7 @@
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -110,7 +113,8 @@
                             SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
-                                          RecognizesAccessKey="True" />
+                                          RecognizesAccessKey="True"
+                                          RenderOptions.ClearTypeHint="Enabled" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -142,6 +146,7 @@
         <Setter Property="TextAlignment" Value="Center" />
         <Setter Property="Padding" Value="4,1" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -153,7 +158,8 @@
                             SnapsToDevicePixels="True">
                         <ScrollViewer x:Name="PART_ContentHost"
                                       Margin="{TemplateBinding Padding}"
-                                      VerticalAlignment="Center" />
+                                      VerticalAlignment="Center"
+                                      RenderOptions.ClearTypeHint="Enabled" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
@@ -176,6 +182,7 @@
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="Margin" Value="1" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
@@ -184,7 +191,9 @@
                             Padding="{TemplateBinding Padding}"
                             CornerRadius="4"
                             SnapsToDevicePixels="True">
-                        <ContentPresenter TextElement.Foreground="{DynamicResource MainTextBrush}" />
+                        <TextBlock Foreground="{DynamicResource MainTextBrush}"
+                                   Text="{TemplateBinding Content}"
+                                   RenderOptions.ClearTypeHint="Enabled" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
@@ -208,6 +217,7 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
@@ -243,7 +253,8 @@
                                    HorizontalAlignment="Left"
                                    IsHitTestVisible="False"
                                    Foreground="{DynamicResource MainTextBrush}"
-                                   Text="{TemplateBinding SelectionBoxItem}" />
+                                   Text="{TemplateBinding SelectionBoxItem}"
+                                   RenderOptions.ClearTypeHint="Enabled" />
     
                         <Path Width="8"
                               Height="4"
@@ -292,6 +303,7 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="RenderOptions.ClearTypeHint" Value="Enabled" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
@@ -331,7 +343,8 @@
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                           Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
-                                          RecognizesAccessKey="True" />
+                                          RecognizesAccessKey="True"
+                                          RenderOptions.ClearTypeHint="Enabled" />
                     </Grid>
     
                     <ControlTemplate.Triggers>
