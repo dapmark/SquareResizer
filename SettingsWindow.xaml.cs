@@ -464,6 +464,7 @@ internal partial class SettingsWindow : Window
     private void ShowValidationError(TextBox input, string message)
     {
         ValidationStatusTextBlock.Text = message;
+        ValidationStatusTextBlock.Visibility = Visibility.Visible;
         input.Focus();
         input.SelectAll();
     }
@@ -473,6 +474,7 @@ internal partial class SettingsWindow : Window
         if (ValidationStatusTextBlock is not null)
         {
             ValidationStatusTextBlock.Text = string.Empty;
+            ValidationStatusTextBlock.Visibility = Visibility.Collapsed;
         }
     }
 

@@ -452,11 +452,14 @@ internal static class HoverTip
         {
             FontFamily = new FontFamily("Segoe UI"),
             FontSize = 12,
-            FontWeight = FontWeights.Normal,
+            FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap,
             MaxWidth = TooltipMaxWidth,
             SnapsToDevicePixels = true
         };
+
+        TextOptions.SetTextFormattingMode(popupText, TextFormattingMode.Display);
+        TextOptions.SetTextRenderingMode(popupText, TextRenderingMode.Grayscale);
 
         popupBorder = new Border
         {

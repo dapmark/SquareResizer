@@ -6,7 +6,7 @@ SquareResizer is a compact portable Windows utility that converts images to squa
 
 ### Main window (manual mode)
 
-<img src="Docs/Screenshots/main-window-manual-mode.png" alt="SquareResizer – manual mode" width="395">
+<img src="Docs/Screenshots/main-window-manual-mode.png?v=024" alt="SquareResizer – manual mode" width="395">
 
 ### Advanced window
 
