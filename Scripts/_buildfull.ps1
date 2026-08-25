@@ -54,12 +54,12 @@ $project = Join-Path $root "SquareResizer.csproj"
 $versionPath = Join-Path $root "version.txt"
 $buildDir = Join-Path $root ".build"
 $tempProjectDir = Join-Path $env:TEMP "SquareResizer"
-$tempDir = Join-Path $tempProjectDir "BuildExe"
+$tempDir = Join-Path $tempProjectDir "BuildFull"
 $publishDir = Join-Path $tempDir "publish"
 $baseOutputPath = (Join-Path $tempDir "bin") + [System.IO.Path]::DirectorySeparatorChar
 $baseIntermediatePath = (Join-Path $tempDir "obj") + [System.IO.Path]::DirectorySeparatorChar
 $tempLog = Join-Path $tempDir "publish.log"
-$logPath = Join-Path $root "_buildexe.log"
+$logPath = Join-Path $root "_buildfull.log"
 
 function Invoke-Cleanup {
     param([Parameter(Mandatory = $true)][string]$ScenarioPath)
@@ -123,7 +123,10 @@ try {
     New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 
     Write-Host ""
-    Write-Host ((Get-Utf8Text "0KHQsdC+0YDQutCwIFNxdWFyZVJlc2l6ZXI=") + " " + $version)
+    Write-Host "============================================================"
+    Write-Host ((Get-Utf8Text "0KHQsdC+0YDQutCw") + ": SquareResizer " + $version)
+    Write-Host "============================================================"
+    Write-Host ""
 
     $arguments = @(
         "publish",
@@ -175,22 +178,12 @@ try {
         Copy-Item -LiteralPath $sourcePath -Destination $outputDir -Force
     }
 
-    foreach ($sourceDirectory in @(
-        (Join-Path $root "Licenses"),
-        (Join-Path $root "Scripts\WindowsIntegration")
-    )) {
-        if (-not (Test-Path -LiteralPath $sourceDirectory -PathType Container)) {
-            throw ((Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0g0L7QsdGP0LfQsNGC0LXQu9GM0L3Ri9C5INC60LDRgtCw0LvQvtCzINGB0LHQvtGA0LrQuDogezB9") -f $sourceDirectory)
-        }
-
-        Copy-Item -LiteralPath $sourceDirectory -Destination $outputDir -Recurse -Force
+    $licensesDirectory = Join-Path $root "Licenses"
+    if (-not (Test-Path -LiteralPath $licensesDirectory -PathType Container)) {
+        throw ((Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0g0L7QsdGP0LfQsNGC0LXQu9GM0L3Ri9C5INC60LDRgtCw0LvQvtCzINGB0LHQvtGA0LrQuDogezB9") -f $licensesDirectory)
     }
 
-    $windowsIntegrationOutput = Join-Path $outputDir "WindowsIntegration"
-    if (Test-Path -LiteralPath $windowsIntegrationOutput -PathType Container) {
-        Get-ChildItem -LiteralPath $windowsIntegrationOutput -Filter "*.log" -File |
-            Remove-Item -Force -ErrorAction Stop
-    }
+    Copy-Item -LiteralPath $licensesDirectory -Destination $outputDir -Recurse -Force
 
     if (-not (Test-Path -LiteralPath (Join-Path $outputDir "SquareResizer.exe") -PathType Leaf)) {
         throw ((Get-Utf8Text "0JIg0LjRgtC+0LPQvtCy0L7QvCDQutCw0YLQsNC70L7Qs9C1INC90LUg0L3QsNC50LTQtdC9INC40YHQv9C+0LvQvdGP0LXQvNGL0Lkg0YTQsNC50Ls6IHswfQ==") -f $outputDir)
@@ -220,23 +213,23 @@ finally {
     if ($exitCode -ne 0) {
         Write-Log -Path $logPath -Lines $errorLines
         Write-Host ""
-        Write-Host (Get-Utf8Text "0J7RiNC40LHQutCwINGB0L7Qt9C00LDQvdC40Y8g0YHQsdC+0YDQutC4") -ForegroundColor Red
+        Write-Host (Get-Utf8Text "0J7RiNC40LHQutCwINGB0LHQvtGA0LrQuA==") -ForegroundColor Red
         $errorLines | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+        Write-Host ((Get-Utf8Text "0JvQvtCz") + ": " + $logPath)
     }
     elseif ($hasWarnings) {
         Write-Log -Path $logPath -Lines $buildOutput
         Write-Host ""
-        Write-Host (Get-Utf8Text "0KHQsdC+0YDQutCwINGB0L7Qt9C00LDQvdCwINGBINC/0YDQtdC00YPQv9GA0LXQttC00LXQvdC40Y/QvNC4") -ForegroundColor Yellow
+        Write-Host (Get-Utf8Text "0KHQsdC+0YDQutCwINC30LDQstC10YDRiNC10L3QsCDRgSDQv9GA0LXQtNGD0L/RgNC10LbQtNC10L3QuNGP0LzQuA==") -ForegroundColor Yellow
         Write-Host ((Get-Utf8Text "0KDQtdC30YPQu9GM0YLQsNGC") + ": " + $outputDir)
+        Write-Host ((Get-Utf8Text "0JvQvtCz") + ": " + $logPath)
     }
     else {
         Write-Host ""
-        Write-Host (Get-Utf8Text "0KHQsdC+0YDQutCwINGB0L7Qt9C00LDQvdCwINGD0YHQv9C10YjQvdC+") -ForegroundColor Green
+        Write-Host (Get-Utf8Text "0KHQsdC+0YDQutCwINC30LDQstC10YDRiNC10L3QsCDRg9GB0L/QtdGI0L3Qvg==") -ForegroundColor Green
         Write-Host ((Get-Utf8Text "0KDQtdC30YPQu9GM0YLQsNGC") + ": " + $outputDir)
     }
 
-    Write-Host ""
-    [void](Read-Host (Get-Utf8Text "0J3QsNC20LzQuNGC0LUgRW50ZXIg0LTQu9GPINCy0YvRhdC+0LTQsA=="))
 }
 
 exit $exitCode

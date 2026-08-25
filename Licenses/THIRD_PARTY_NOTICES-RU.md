@@ -26,4 +26,6 @@ SquareResizer использует сторонние компоненты дл�
 ## SVG-иконки
 
 - Tabler Icons – MIT – https://tabler.io/icons
+- Feather Icons – MIT – https://github.com/feathericons/feather
+- Lucide Icons – ISC – https://lucide.dev
 - Полный текст: `Licenses/SVG-Icons-Licenses.txt`

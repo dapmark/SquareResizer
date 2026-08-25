@@ -151,7 +151,8 @@ public partial class MainWindow
             currentSettings.Language,
             currentSettings.SmartPaddingPercent,
             currentSettings.SmartPaddingMaxPx,
-            currentSettings.AutoSizeStep);
+            currentSettings.AutoSizeStep,
+            currentSettings.OnlineServiceCompatibility);
 
         foreach (ProcessResult result in results.Where(r => !r.Success && !r.AlreadyCorrectSize))
         {

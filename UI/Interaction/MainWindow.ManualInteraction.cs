@@ -193,7 +193,7 @@ public partial class MainWindow
 
     private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (!manualState.IsLoaded)
+        if (AdditionalPages.Visibility == Visibility.Visible || !manualState.IsLoaded)
         {
             return;
         }

@@ -40,7 +40,8 @@ public partial class App : Application
                     settings.Language,
                     settings.SmartPaddingPercent,
                     settings.SmartPaddingMaxPx,
-                    settings.AutoSizeStep);
+                    settings.AutoSizeStep,
+                    settings.OnlineServiceCompatibility);
 
                 Shutdown();
                 return;

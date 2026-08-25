@@ -149,6 +149,12 @@ try {
     $archivePath = Join-Path $sourceDir $archiveName
     $tempZip = Join-Path $tempDir $archiveName
 
+    Write-Host ""
+    Write-Host "============================================================"
+    Write-Host ((Get-Utf8Text "0KHQvtC30LTQsNC90LjQtSDQuNGB0YXQvtC00L3QvtCz0L4g0LDRgNGF0LjQstCw") + ": SquareResizer " + $version)
+    Write-Host "============================================================"
+    Write-Host ""
+
     $files = @(& git ls-files --cached --others --exclude-standard 2> $gitErrorPath)
     $gitExitCode = $LASTEXITCODE
 
@@ -238,13 +244,15 @@ try {
 
     if ($warningLines.Count -gt 0) {
         Write-Log -Path $logPath -Lines $warningLines
-        Write-Host (Get-Utf8Text "0JDRgNGF0LjQsiDRgdC+0LfQtNCw0L0g0YEg0L/RgNC10LTRg9C/0YDQtdC20LTQtdC90LjRj9C80Lg=") -ForegroundColor Yellow
+        Write-Host (Get-Utf8Text "0JDRgNGF0LjQsiDQuNGB0YXQvtC00L3QuNC60L7QsiDRgdC+0LfQtNCw0L0g0YEg0L/RgNC10LTRg9C/0YDQtdC20LTQtdC90LjRj9C80Lg=") -ForegroundColor Yellow
+        Write-Host ((Get-Utf8Text "0JvQvtCz") + ": " + $logPath)
     }
     else {
-        Write-Host (Get-Utf8Text "0JDRgNGF0LjQsiDRgdC+0LfQtNCw0L0g0YPRgdC/0LXRiNC90L4=") -ForegroundColor Green
+        Write-Host (Get-Utf8Text "0JDRgNGF0LjQsiDQuNGB0YXQvtC00L3QuNC60L7QsiDRgdC+0LfQtNCw0L0g0YPRgdC/0LXRiNC90L4=") -ForegroundColor Green
     }
 
-    Write-Host ((Get-Utf8Text "0KTQsNC50LvQvtCyINCyINCw0YDRhdC40LLQtTogezB9") -f $files.Count)
+    Write-Host ((Get-Utf8Text "0KDQtdC30YPQu9GM0YLQsNGC") + ": " + $archivePath)
+    Write-Host ((Get-Utf8Text "0KTQsNC50LvQvtCyINCyINCw0YDRhdC40LLQtQ==") + ": " + $files.Count)
 }
 catch {
     $exitCode = 1
@@ -264,10 +272,20 @@ finally {
         Write-Host ""
         Write-Host (Get-Utf8Text "0J7RiNC40LHQutCwINGB0L7Qt9C00LDQvdC40Y8g0LDRgNGF0LjQstCw") -ForegroundColor Red
         $errorLines | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+        Write-Host ((Get-Utf8Text "0JvQvtCz") + ": " + $logPath)
     }
 
     Write-Host ""
-    [void](Read-Host (Get-Utf8Text "0J3QsNC20LzQuNGC0LUgRW50ZXIg0LTQu9GPINCy0YvRhdC+0LTQsA=="))
+}
+
+if ($exitCode -eq 0) {
+    for ($seconds = 3; $seconds -ge 1; $seconds--) {
+        Write-Host ((Get-Utf8Text "0JfQsNC60YDRi9GC0LjQtSDRh9C10YDQtdC3IHswfS4uLg==") -f $seconds)
+        Start-Sleep -Seconds 1
+    }
+}
+else {
+    try { [void](Read-Host (Get-Utf8Text "0J3QsNC20LzQuNGC0LUgRW50ZXIg0LTQu9GPINCy0YvRhdC+0LTQsA==")) } catch {}
 }
 
 exit $exitCode

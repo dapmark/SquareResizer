@@ -13,7 +13,7 @@ using System.Windows.Threading;
 
 namespace ImageSquareResizer;
 
-internal partial class SettingsWindow : Window
+public partial class AdditionalPagesControl : UserControl
 {
     private enum SettingsPage
     {
@@ -22,8 +22,6 @@ internal partial class SettingsWindow : Window
         Licenses,
     }
 
-    private const string CloseIconSource = "/Assets/Icons/close.svg";
-    private const string BackIconSource = "/Assets/Icons/back.svg";
     private const double LicenseSeparatorSafetyMargin = 1.5;
     private const int PhysicalAKeyScanCode = 0x1E;
     private const int WmKeyDown = 0x0100;
@@ -36,34 +34,62 @@ internal partial class SettingsWindow : Window
         "Licenses/SVG-Icons-Licenses.txt",
     };
 
-    private AppSettings settingsDraft;
-    private Localization text;
+    private AppSettings settingsDraft = new();
+    private Localization text = Localization.For(AppSettings.DefaultLanguage);
     private bool isApplyingUi;
-    private bool isWindowSizeLocked;
     private bool licenseTextRefreshQueued;
     private SettingsPage currentPage = SettingsPage.Settings;
     private HwndSource? hwndSource;
     private double licenseSeparatorLayoutWidth = double.NaN;
     private int licenseSeparatorLength;
     private bool isLicenseScrollBarSyncing;
+    private WindowsIntegrationSnapshot windowsIntegrationSnapshot;
+    private bool hasWindowsIntegrationState;
+    internal event Action? BackRequested;
+    internal event Action<string, string>? PageChromeChanged;
+    internal event Action<bool>? ThemePreviewChanged;
+    internal event Action<AppSettings>? SettingsApplied;
 
-
-    public AppSettings Settings { get; private set; }
-
-    public SettingsWindow(AppSettings settings)
+    public AdditionalPagesControl()
     {
-        Settings = settings.Clone();
-        settingsDraft = settings.Clone();
-        text = Localization.For(settingsDraft.Language);
-
         InitializeComponent();
         LicenseTextViewer.ScrollOffsetChanged += LicenseTextViewer_OnScrollOffsetChanged;
+        Loaded += AdditionalPagesControl_OnLoaded;
+        Unloaded += AdditionalPagesControl_OnUnloaded;
 
         DataObject.AddPastingHandler(SmartPaddingMaxPxTextBox, OnIntegerPaste);
         DataObject.AddPastingHandler(SmartPaddingPercentTextBox, OnDecimalPaste);
 
         ApplyDraftToUi();
         ApplyTheme();
+    }
+
+    internal void Open(AppSettings settings)
+    {
+        settingsDraft = settings.Clone();
+        currentPage = SettingsPage.Settings;
+        ApplyDraftToUi();
+        ApplyTheme();
+        ClearValidationStatus();
+        LoadWindowsIntegrationState();
+        SwitchPage(SettingsPage.Settings);
+    }
+
+    internal void NavigateBack()
+    {
+        if (currentPage == SettingsPage.Licenses)
+        {
+            SwitchPage(SettingsPage.About);
+            return;
+        }
+
+        if (currentPage == SettingsPage.About)
+        {
+            SwitchPage(SettingsPage.Settings);
+            return;
+        }
+
+        BackRequested?.Invoke();
     }
 
     private void ApplyDraftToUi()
@@ -79,7 +105,7 @@ internal partial class SettingsWindow : Window
             SelectComboBoxItem(ThemeComboBox, settingsDraft.Theme);
             SelectComboBoxItem(JpegModeComboBox, settingsDraft.JpegMode.ToString(CultureInfo.InvariantCulture));
             SelectComboBoxItem(AutoSizeStepComboBox, settingsDraft.AutoSizeStep.ToString(CultureInfo.InvariantCulture));
-            ShowManualResultEstimateCheckBox.IsChecked = settingsDraft.ShowManualResultEstimate;
+            OnlineServiceCompatibilityCheckBox.IsChecked = settingsDraft.OnlineServiceCompatibility;
 
             SmartPaddingPercentTextBox.Text = AppSettings.FormatDouble(settingsDraft.SmartPaddingPercent);
             SmartPaddingMaxPxTextBox.Text = settingsDraft.SmartPaddingMaxPx.ToString(CultureInfo.InvariantCulture);
@@ -95,25 +121,45 @@ internal partial class SettingsWindow : Window
         InterfaceSectionTextBlock.Text = text.IsRussian ? "Интерфейс" : "Interface";
         LanguageLabel.Text = text.IsRussian ? "Язык" : "Language";
         ThemeLabel.Text = text.IsRussian ? "Тема" : "Theme";
-        ShowManualResultEstimateCheckBox.Content = text.IsRussian
-            ? "Показывать размер и примерный вес результата"
-            : "Show result dimensions and estimated size";
         AdvancedSectionTextBlock.Text = text.IsRussian ? "Обработка" : "Processing";
         JpegModeLabel.Text = text.IsRussian ? "JPEG режим" : "JPEG mode";
         AutoSizeStepLabel.Text = text.IsRussian ? "Шаг авторазмера" : "Auto size step";
+        OnlineServiceCompatibilityCheckBox.Content = text.IsRussian
+            ? "Улучшать совместимость с онлайн-сервисами"
+            : "Improve compatibility with online services";
         SmartPaddingSectionTextBlock.Text = text.IsRussian ? "Умный режим" : "Smart mode";
-        SmartPaddingPercentLabel.Text = text.IsRussian ? "Макс. разница" : "Max difference";
-        SmartPaddingMaxPxLabel.Text = text.IsRussian ? "Макс. дорисовка" : "Max fill";
+        SmartPaddingPercentLabel.Text = text.IsRussian ? "Макс. разница, %" : "Max difference, %";
+        SmartPaddingMaxPxLabel.Text = text.IsRussian ? "Макс. дорисовка, пкс" : "Max fill, px";
+        WindowsIntegrationSectionTextBlock.Text = text.IsRussian
+            ? "Интеграция с Windows"
+            : "Windows integration";
+        ContextMenuIntegrationCheckBox.Content = text.IsRussian
+            ? "Изменение размера в контекстном меню"
+            : "Resize command in context menu";
+        ManualContextMenuIntegrationCheckBox.Content = text.IsRussian
+            ? "Ручной режим в контекстном меню"
+            : "Manual mode in context menu";
+        SendToIntegrationCheckBox.Content = text.IsRussian
+            ? "Ярлык в меню «Отправить»"
+            : "Shortcut in the Send to menu";
 
         var jpegModeToolTip = text.IsRussian ? "Компактный режим уменьшает вес за счет некоторого снижения качества, максимальный режим сохраняет качество, но увеличивает вес" : "Compact mode reduces file size with some quality loss, maximum mode keeps quality but increases file size";
         var autoSizeStepToolTip = text.IsRussian ? "Задаёт шаг округления вниз для варианта «Авто»" : "Sets the downward rounding step for the Auto option";
-        var smartPaddingPercentToolTip = text.IsRussian ? "Проверяет разницу сторон относительно большей стороны" : "Checks the side difference relative to the larger side";
+        var onlineServiceCompatibilityToolTip = text.IsRussian
+            ? "Преобразует изображение в sRGB и удаляет EXIF, XMP, комментарии, цветовые профили и другие необязательные данные"
+            : "Converts the image to sRGB and removes EXIF, XMP, comments, color profiles, and other optional data";
+        var smartPaddingPercentToolTip = text.IsRussian
+            ? "Задаёт максимальную разницу между шириной и высотой в процентах от большей стороны, при которой изображение можно дополнить фоном до квадрата вместо обрезки"
+            : "Sets the maximum difference between width and height as a percentage of the larger side at which the image may be padded to a square instead of cropped";
         var smartPaddingMaxPxToolTip = text.IsRussian ? "Ограничивает кол-во пикселей, которое можно добавить фоном" : "Limits the number of pixels that can be added as background";
 
         HoverTip.SetText(JpegModeLabel, jpegModeToolTip);
         HoverTip.SetText(AutoSizeStepLabel, autoSizeStepToolTip);
+        HoverTip.SetText(OnlineServiceCompatibilityCheckBox, onlineServiceCompatibilityToolTip);
         HoverTip.SetText(SmartPaddingPercentLabel, smartPaddingPercentToolTip);
         HoverTip.SetText(SmartPaddingMaxPxLabel, smartPaddingMaxPxToolTip);
+        ApplyWindowsIntegrationToolTips();
+        UpdateWindowsIntegrationInfo();
 
         AboutButtonText.Text = text.IsRussian ? "О программе" : "About";
         ResetButtonText.Text = text.IsRussian ? "Сброс" : "Reset";
@@ -152,6 +198,7 @@ internal partial class SettingsWindow : Window
     {
         ThemeResources.ApplySettings(Resources, settingsDraft.IsDarkTheme);
         SyncLicenseContextMenuThemeResources();
+        ThemePreviewChanged?.Invoke(settingsDraft.IsDarkTheme);
     }
 
     private void SyncLicenseContextMenuThemeResources()
@@ -174,13 +221,198 @@ internal partial class SettingsWindow : Window
         }
     }
 
-    private void Window_OnSourceInitialized(object? sender, EventArgs e)
+    private void LoadWindowsIntegrationState()
     {
-        hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+        hasWindowsIntegrationState = false;
+        bool isAvailable = WindowsIntegrationService.IsManagementAvailable;
+        SetWindowsIntegrationControlsEnabled(isAvailable);
+
+        if (!isAvailable)
+        {
+            ContextMenuIntegrationCheckBox.IsChecked = false;
+            ManualContextMenuIntegrationCheckBox.IsChecked = false;
+            SendToIntegrationCheckBox.IsChecked = false;
+            ApplyWindowsIntegrationToolTips();
+            UpdateWindowsIntegrationInfo();
+            return;
+        }
+
+        try
+        {
+            windowsIntegrationSnapshot = WindowsIntegrationService.GetState();
+            hasWindowsIntegrationState = true;
+            ApplyWindowsIntegrationStateToUi();
+        }
+        catch (Exception ex)
+        {
+            SetWindowsIntegrationControlsEnabled(false);
+            ShowValidationMessage(
+                text.IsRussian
+                    ? $"Не удалось определить состояние интеграции с Windows: {ex.Message}"
+                    : $"Could not determine the Windows integration state: {ex.Message}");
+        }
+
+        ApplyWindowsIntegrationToolTips();
+        UpdateWindowsIntegrationInfo();
+    }
+
+    private bool TryApplyWindowsIntegrationSelection()
+    {
+        if (!WindowsIntegrationService.IsManagementAvailable)
+        {
+            return true;
+        }
+
+        var selection = new WindowsIntegrationSelection(
+            ContextMenuIntegrationCheckBox.IsChecked == true,
+            ManualContextMenuIntegrationCheckBox.IsChecked == true,
+            SendToIntegrationCheckBox.IsChecked == true);
+
+        try
+        {
+            windowsIntegrationSnapshot = WindowsIntegrationService.Apply(selection);
+            hasWindowsIntegrationState = true;
+            ApplyWindowsIntegrationStateToUi();
+            ApplyWindowsIntegrationToolTips();
+            UpdateWindowsIntegrationInfo();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            TryRefreshWindowsIntegrationStateAfterFailure();
+            ShowValidationMessage(
+                text.IsRussian
+                    ? $"Не удалось применить интеграцию с Windows: {ex.Message}"
+                    : $"Could not apply the Windows integration: {ex.Message}");
+            return false;
+        }
+    }
+
+    private void TryRefreshWindowsIntegrationStateAfterFailure()
+    {
+        try
+        {
+            windowsIntegrationSnapshot = WindowsIntegrationService.GetState();
+            hasWindowsIntegrationState = true;
+            ApplyWindowsIntegrationStateToUi();
+        }
+        catch
+        {
+            hasWindowsIntegrationState = false;
+            SetWindowsIntegrationControlsEnabled(false);
+        }
+
+        ApplyWindowsIntegrationToolTips();
+        UpdateWindowsIntegrationInfo();
+    }
+
+    private void ApplyWindowsIntegrationStateToUi()
+    {
+        ContextMenuIntegrationCheckBox.IsChecked =
+            windowsIntegrationSnapshot.ContextMenu != WindowsIntegrationStatus.Absent;
+        ManualContextMenuIntegrationCheckBox.IsChecked =
+            windowsIntegrationSnapshot.ManualContextMenu != WindowsIntegrationStatus.Absent;
+        SendToIntegrationCheckBox.IsChecked =
+            windowsIntegrationSnapshot.SendToShortcut != WindowsIntegrationStatus.Absent;
+        SetWindowsIntegrationControlsEnabled(true);
+    }
+
+    private void SetWindowsIntegrationControlsEnabled(bool isEnabled)
+    {
+        ContextMenuIntegrationCheckBox.IsEnabled = isEnabled;
+        ManualContextMenuIntegrationCheckBox.IsEnabled = isEnabled;
+        SendToIntegrationCheckBox.IsEnabled = isEnabled;
+    }
+
+    private void ApplyWindowsIntegrationToolTips()
+    {
+        string contextMenuToolTip = text.IsRussian
+            ? "Добавляет команду «Преобразовать с SquareResizer» для поддерживаемых изображений"
+            : "Adds the Convert with SquareResizer command for supported images";
+        string manualContextMenuToolTip = text.IsRussian
+            ? "Добавляет команду открытия изображения сразу в ручном режиме"
+            : "Adds a command that opens an image directly in manual mode";
+        string sendToToolTip = text.IsRussian
+            ? "Добавляет ярлык SquareResizer в меню Windows «Отправить»"
+            : "Adds a SquareResizer shortcut to the Windows Send to menu";
+
+        if (hasWindowsIntegrationState)
+        {
+            contextMenuToolTip = AddRepairHint(
+                contextMenuToolTip,
+                windowsIntegrationSnapshot.ContextMenu);
+            manualContextMenuToolTip = AddRepairHint(
+                manualContextMenuToolTip,
+                windowsIntegrationSnapshot.ManualContextMenu);
+            sendToToolTip = AddRepairHint(
+                sendToToolTip,
+                windowsIntegrationSnapshot.SendToShortcut);
+        }
+
+        HoverTip.SetText(ContextMenuIntegrationCheckBox, contextMenuToolTip);
+        HoverTip.SetText(ManualContextMenuIntegrationCheckBox, manualContextMenuToolTip);
+        HoverTip.SetText(SendToIntegrationCheckBox, sendToToolTip);
+    }
+
+    private string AddRepairHint(string toolTip, WindowsIntegrationStatus status)
+    {
+        if (status != WindowsIntegrationStatus.NeedsRepair)
+        {
+            return toolTip;
+        }
+
+        return text.IsRussian
+            ? $"{toolTip}. Текущая запись требует обновления"
+            : $"{toolTip}. The current registration needs to be updated";
+    }
+
+    private void UpdateWindowsIntegrationInfo()
+    {
+        if (!WindowsIntegrationService.IsManagementAvailable)
+        {
+            WindowsIntegrationInfoTextBlock.Text = text.IsRussian
+                ? "Только в готовой сборке"
+                : "Published build only";
+            WindowsIntegrationInfoTextBlock.Visibility = Visibility.Visible;
+            return;
+        }
+
+        bool hasSelectedRepair = hasWindowsIntegrationState &&
+            ((ContextMenuIntegrationCheckBox.IsChecked == true &&
+              windowsIntegrationSnapshot.ContextMenu == WindowsIntegrationStatus.NeedsRepair) ||
+             (ManualContextMenuIntegrationCheckBox.IsChecked == true &&
+              windowsIntegrationSnapshot.ManualContextMenu == WindowsIntegrationStatus.NeedsRepair) ||
+             (SendToIntegrationCheckBox.IsChecked == true &&
+              windowsIntegrationSnapshot.SendToShortcut == WindowsIntegrationStatus.NeedsRepair));
+
+        if (hasSelectedRepair)
+        {
+            WindowsIntegrationInfoTextBlock.Text = text.IsRussian
+                ? "Требуется обновление"
+                : "Update required";
+            WindowsIntegrationInfoTextBlock.Visibility = Visibility.Visible;
+            return;
+        }
+
+        WindowsIntegrationInfoTextBlock.Text = string.Empty;
+        WindowsIntegrationInfoTextBlock.Visibility = Visibility.Collapsed;
+    }
+
+    private void AdditionalPagesControl_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (hwndSource is not null)
+        {
+            return;
+        }
+
+        Window? ownerWindow = Window.GetWindow(this);
+        hwndSource = ownerWindow is null
+            ? null
+            : PresentationSource.FromVisual(ownerWindow) as HwndSource;
         hwndSource?.AddHook(WindowMessageHook);
     }
 
-    private void Window_OnClosed(object? sender, EventArgs e)
+    private void AdditionalPagesControl_OnUnloaded(object sender, RoutedEventArgs e)
     {
         if (hwndSource is not null)
         {
@@ -218,14 +450,6 @@ internal partial class SettingsWindow : Window
 
     private void SwitchPage(SettingsPage page)
     {
-        bool leavingSettingsPage = currentPage == SettingsPage.Settings && page != SettingsPage.Settings;
-        bool returningToSettingsPage = currentPage != SettingsPage.Settings && page == SettingsPage.Settings;
-
-        if (leavingSettingsPage)
-        {
-            LockWindowToSettingsPageSize();
-        }
-
         currentPage = page;
         SettingsPageGrid.Visibility = page == SettingsPage.Settings
             ? Visibility.Visible
@@ -236,11 +460,6 @@ internal partial class SettingsWindow : Window
         LicensePageGrid.Visibility = page == SettingsPage.Licenses
             ? Visibility.Visible
             : Visibility.Collapsed;
-
-        if (returningToSettingsPage)
-        {
-            RestoreSettingsPageAutoSize();
-        }
 
         if (page == SettingsPage.Licenses)
         {
@@ -253,119 +472,16 @@ internal partial class SettingsWindow : Window
         UpdatePageChrome();
     }
 
-    private void LockWindowToSettingsPageSize()
-    {
-        if (isWindowSizeLocked)
-        {
-            return;
-        }
-
-        UpdateLayout();
-
-        double width = ActualWidth;
-        double height = ActualHeight;
-        SizeToContent = System.Windows.SizeToContent.Manual;
-        Width = width;
-        Height = height;
-        PageRowDefinition.Height = new GridLength(1.0, GridUnitType.Star);
-        isWindowSizeLocked = true;
-    }
-
-    private void RestoreSettingsPageAutoSize()
-    {
-        if (!isWindowSizeLocked)
-        {
-            return;
-        }
-
-        PageRowDefinition.Height = GridLength.Auto;
-        SizeToContent = System.Windows.SizeToContent.WidthAndHeight;
-        ClearValue(WidthProperty);
-        ClearValue(HeightProperty);
-        isWindowSizeLocked = false;
-    }
-
     private void UpdatePageChrome()
     {
         string title = currentPage switch
         {
             SettingsPage.About => text.IsRussian ? "О программе" : "About",
-            SettingsPage.Licenses => text.IsRussian
-                ? "Лицензия и сторонние компоненты"
-                : "License and third-party components",
+            SettingsPage.Licenses => text.IsRussian ? "Лицензии" : "Licenses",
             _ => text.IsRussian ? "Дополнительно" : "Advanced",
         };
 
-        Title = title;
-        TitleTextBlock.Text = title;
-
-        if (currentPage == SettingsPage.Licenses)
-        {
-            TitleTextBlock.Visibility = Visibility.Visible;
-            TitleTextBlock.SetResourceReference(TextBlock.ForegroundProperty, "MainTextBrush");
-            TitleTextBlock.FontSize = 14.5;
-        }
-        else
-        {
-            TitleTextBlock.Visibility = currentPage == SettingsPage.Settings
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            TitleTextBlock.SetResourceReference(TextBlock.ForegroundProperty, "MainTextBrush");
-            TitleTextBlock.FontSize = 18;
-        }
-
-        bool isBackPage = currentPage != SettingsPage.Settings;
-        CloseButton.Tag = isBackPage ? BackIconSource : CloseIconSource;
-        CloseButton.HorizontalAlignment = isBackPage
-            ? HorizontalAlignment.Left
-            : HorizontalAlignment.Right;
-
-        TitleTextBlock.HorizontalAlignment = HorizontalAlignment.Left;
-        TitleTextBlock.TextAlignment = TextAlignment.Left;
-        TitleTextBlock.Margin = currentPage == SettingsPage.Licenses
-            ? new Thickness(CloseButton.Width + 10.0, 0.0, 0.0, 0.0)
-            : new Thickness(0.0);
-
-        HoverTip.SetText(
-            CloseButton,
-            isBackPage
-                ? (text.IsRussian ? "Назад" : "Back")
-                : (text.IsRussian ? "Отменить и закрыть" : "Cancel and close"));
-    }
-
-    private void TitleBar_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton != MouseButton.Left)
-        {
-            return;
-        }
-
-        try
-        {
-            DragMove();
-        }
-        catch (InvalidOperationException)
-        {
-        }
-    }
-
-    private void CloseButton_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (currentPage == SettingsPage.Licenses)
-        {
-            HoverTip.DismissUntilMouseLeave(CloseButton);
-            SwitchPage(SettingsPage.About);
-            return;
-        }
-
-        if (currentPage == SettingsPage.About)
-        {
-            HoverTip.DismissUntilMouseLeave(CloseButton);
-            SwitchPage(SettingsPage.Settings);
-            return;
-        }
-
-        DialogResult = false;
+        PageChromeChanged?.Invoke(title, text.IsRussian ? "Назад" : "Back");
     }
 
     private void OnLanguageSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -392,6 +508,12 @@ internal partial class SettingsWindow : Window
         ApplyTheme();
     }
 
+    private void OnWindowsIntegrationCheckBoxClick(object sender, RoutedEventArgs e)
+    {
+        ClearValidationStatus();
+        UpdateWindowsIntegrationInfo();
+    }
+
     private void OnAboutButtonClick(object sender, RoutedEventArgs e)
     {
         SwitchPage(SettingsPage.About);
@@ -407,7 +529,7 @@ internal partial class SettingsWindow : Window
         settingsDraft.Language = AppSettings.DefaultLanguage;
         settingsDraft.Theme = AppSettings.DefaultTheme;
         settingsDraft.JpegMode = AppSettings.DefaultJpegMode;
-        settingsDraft.ShowManualResultEstimate = AppSettings.DefaultShowManualResultEstimate;
+        settingsDraft.OnlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility;
         settingsDraft.SmartPaddingPercent = AppSettings.DefaultSmartPaddingPercent;
         settingsDraft.SmartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx;
         settingsDraft.AutoSizeStep = AppSettings.DefaultAutoSizeStep;
@@ -424,9 +546,12 @@ internal partial class SettingsWindow : Window
             return;
         }
 
-        Settings = settingsDraft.Clone();
-        Settings.Save();
-        DialogResult = true;
+        if (!TryApplyWindowsIntegrationSelection())
+        {
+            return;
+        }
+
+        SettingsApplied?.Invoke(settingsDraft.Clone());
     }
 
     private bool TrySaveUiToDraft()
@@ -453,7 +578,7 @@ internal partial class SettingsWindow : Window
         settingsDraft.Theme = AppSettings.NormalizeTheme(GetSelectedTag(ThemeComboBox));
         settingsDraft.JpegMode = AppSettings.NormalizeJpegMode(ParseJpegMode(GetSelectedTag(JpegModeComboBox)));
         settingsDraft.AutoSizeStep = AppSettings.NormalizeAutoSizeStep(ParseAutoSizeStep(GetSelectedTag(AutoSizeStepComboBox)));
-        settingsDraft.ShowManualResultEstimate = ShowManualResultEstimateCheckBox.IsChecked == true;
+        settingsDraft.OnlineServiceCompatibility = OnlineServiceCompatibilityCheckBox.IsChecked == true;
         settingsDraft.SmartPaddingPercent = smartPaddingPercent;
         settingsDraft.SmartPaddingMaxPx = smartPaddingMaxPx;
 
@@ -463,10 +588,16 @@ internal partial class SettingsWindow : Window
 
     private void ShowValidationError(TextBox input, string message)
     {
-        ValidationStatusTextBlock.Text = message;
-        ValidationStatusTextBlock.Visibility = Visibility.Visible;
+        ShowValidationMessage(message);
         input.Focus();
         input.SelectAll();
+    }
+
+    private void ShowValidationMessage(string message)
+    {
+        ValidationStatusTextBlock.Text = message;
+        ValidationStatusTextBlock.Visibility = Visibility.Visible;
+        HoverTip.SetText(ValidationStatusTextBlock, message);
     }
 
     private void ClearValidationStatus()
