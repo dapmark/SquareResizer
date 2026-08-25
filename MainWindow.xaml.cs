@@ -22,6 +22,10 @@ public partial class MainWindow : Window
         text = Localization.For(settings.Language);
 
         InitializeComponent();
+        AdditionalPages.BackRequested += OnAdditionalBackRequested;
+        AdditionalPages.PageChromeChanged += OnAdditionalPageChromeChanged;
+        AdditionalPages.ThemePreviewChanged += OnAdditionalThemePreviewChanged;
+        AdditionalPages.SettingsApplied += OnAdditionalSettingsApplied;
 
         Title = AppVersion.WindowTitle;
         ApplySettingsToUi();

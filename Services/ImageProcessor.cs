@@ -110,7 +110,8 @@ internal static class ImageProcessor
         string language = AppSettings.DefaultLanguage,
         double smartPaddingPercent = AppSettings.DefaultSmartPaddingPercent,
         int smartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx,
-        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep,
+        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility)
     {
         var results = new List<ProcessResult>();
 
@@ -126,7 +127,8 @@ internal static class ImageProcessor
                 language,
                 smartPaddingPercent,
                 smartPaddingMaxPx,
-                autoSizeStep));
+                autoSizeStep,
+                onlineServiceCompatibility));
         }
 
         return results;
@@ -196,7 +198,8 @@ internal static class ImageProcessor
         string language = AppSettings.DefaultLanguage,
         double smartPaddingPercent = AppSettings.DefaultSmartPaddingPercent,
         int smartPaddingMaxPx = AppSettings.DefaultSmartPaddingMaxPx,
-        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep,
+        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility)
     {
         Localization text = Localization.For(language);
 
@@ -290,7 +293,7 @@ internal static class ImageProcessor
                 };
             }
 
-            ApplyJpegOutputSettings(image, quality, jpegMode);
+            ApplyJpegOutputSettings(image, quality, jpegMode, onlineServiceCompatibility);
 
             string outputPath = CreateUniqueOutputPath(sourcePath, targetSize);
             image.Write(outputPath);
@@ -358,7 +361,8 @@ internal static class ImageProcessor
         int cropY,
         int cropSize,
         string language = AppSettings.DefaultLanguage,
-        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep,
+        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility)
     {
         Localization text = Localization.For(language);
 
@@ -398,6 +402,7 @@ internal static class ImageProcessor
                 cropY,
                 cropSize,
                 autoSizeStep,
+                onlineServiceCompatibility,
                 text.InvalidImageSize);
 
             string outputPath = CreateUniqueOutputPath(sourcePath, targetSize);
@@ -426,7 +431,8 @@ internal static class ImageProcessor
         int cropX,
         int cropY,
         int cropSize,
-        int autoSizeStep = AppSettings.DefaultAutoSizeStep)
+        int autoSizeStep = AppSettings.DefaultAutoSizeStep,
+        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility)
     {
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
@@ -462,6 +468,7 @@ internal static class ImageProcessor
             cropY,
             cropSize,
             autoSizeStep,
+            onlineServiceCompatibility,
             "Invalid image size.");
 
         using var output = new MemoryStream();
@@ -479,6 +486,7 @@ internal static class ImageProcessor
         int cropY,
         int cropSize,
         int autoSizeStep,
+        bool onlineServiceCompatibility,
         string invalidImageSizeMessage)
     {
         image.AutoOrient();
@@ -509,7 +517,7 @@ internal static class ImageProcessor
         }
 
         ApplySharpnessIfNeeded(image, resized, sharpMode);
-        ApplyJpegOutputSettings(image, quality, jpegMode);
+        ApplyJpegOutputSettings(image, quality, jpegMode, onlineServiceCompatibility);
 
         return targetSize;
     }
@@ -778,15 +786,48 @@ internal static class ImageProcessor
         return bestSize;
     }
 
-    private static void ApplyJpegOutputSettings(MagickImage image, int quality, int jpegMode)
+    private static void ApplyJpegOutputSettings(
+        MagickImage image,
+        int quality,
+        int jpegMode,
+        bool onlineServiceCompatibility)
     {
         image.BackgroundColor = MagickColors.White;
         image.Alpha(AlphaOption.Remove);
+
+        if (onlineServiceCompatibility)
+        {
+            NormalizeForOnlineServices(image);
+        }
+
         image.Format = MagickFormat.Jpeg;
         image.Quality = (uint)quality;
 
         string samplingFactor = GetJpegSamplingFactor(jpegMode);
         image.Settings.SetDefine(MagickFormat.Jpeg, "sampling-factor", samplingFactor);
+    }
+
+    private static void NormalizeForOnlineServices(MagickImage image)
+    {
+        bool transformedByProfile = false;
+
+        try
+        {
+            transformedByProfile = image.TransformColorSpace(ColorProfiles.SRGB);
+        }
+        catch (MagickException)
+        {
+            image.Strip();
+        }
+
+        if (!transformedByProfile && image.ColorSpace != ColorSpace.sRGB)
+        {
+            image.ColorSpace = ColorSpace.sRGB;
+        }
+
+        image.Strip();
+        image.Depth = 8;
+        image.Settings.Interlace = Interlace.NoInterlace;
     }
 
     private static string GetJpegSamplingFactor(int jpegMode)

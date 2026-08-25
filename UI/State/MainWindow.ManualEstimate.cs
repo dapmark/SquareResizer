@@ -96,7 +96,8 @@ public partial class MainWindow
                         state.CropX,
                         state.CropY,
                         state.CropSize,
-                        state.AutoSizeStep),
+                        state.AutoSizeStep,
+                        state.OnlineServiceCompatibility),
                     token);
             }
             finally

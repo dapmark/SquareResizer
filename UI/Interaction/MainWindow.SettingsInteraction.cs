@@ -6,14 +6,24 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
 
 namespace ImageSquareResizer;
 
 public partial class MainWindow
 {
+    private const double MainPageTitleFontSize = 16;
+    private const double AdditionalPageTitleFontSize = 16;
     private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private const int DWMWA_BORDER_COLOR = 34;
+    private const int DWMWCP_ROUND = 2;
+    private const int GWL_STYLE = -16;
+    private const long WS_THICKFRAME = 0x00040000L;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOZORDER = 0x0004;
+    private const uint SWP_NOACTIVATE = 0x0010;
+    private const uint SWP_FRAMECHANGED = 0x0020;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(
@@ -21,6 +31,23 @@ public partial class MainWindow
         int dwAttribute,
         ref int pvAttribute,
         int cbAttribute);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hwnd, int index, IntPtr newLong);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(
+        IntPtr hwnd,
+        IntPtr insertAfter,
+        int x,
+        int y,
+        int width,
+        int height,
+        uint flags);
 
     private void OnMainSettingsPanelSizeChanged(object sender, SizeChangedEventArgs e)
     {
@@ -35,29 +62,43 @@ public partial class MainWindow
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        ApplyTitleBarTheme();
+        ApplyTitleBarTheme(currentSettings.IsDarkTheme);
     }
 
     private void ApplyTheme()
     {
-        ThemeResources.ApplyMain(Resources, currentSettings.IsDarkTheme);
+        ApplyTheme(currentSettings.IsDarkTheme);
+    }
+
+    private void ApplyTheme(bool isDarkTheme)
+    {
+        ThemeResources.ApplyMain(Resources, isDarkTheme);
 
         if (IsInitialized)
         {
-            ApplyTitleBarTheme();
+            ApplyTitleBarTheme(isDarkTheme);
         }
     }
 
-    private void ApplyTitleBarTheme()
+    private void ApplyTitleBarTheme(bool isDarkTheme)
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
         {
             return;
         }
 
-        int useDarkMode = currentSettings.IsDarkTheme ? 1 : 0;
+        int useDarkMode = isDarkTheme ? 1 : 0;
 
         var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+        EnsureNativeWindowShadowStyle(handle);
+
+        int cornerPreference = DWMWCP_ROUND;
+
+        _ = DwmSetWindowAttribute(
+            handle,
+            DWMWA_WINDOW_CORNER_PREFERENCE,
+            ref cornerPreference,
+            sizeof(int));
 
         _ = DwmSetWindowAttribute(
             handle,
@@ -75,6 +116,33 @@ public partial class MainWindow
                 ref borderColor,
                 sizeof(int));
         }
+    }
+
+    private static void EnsureNativeWindowShadowStyle(IntPtr handle)
+    {
+        // WindowStyle=None with CanMinimize drops the native frame style that DWM uses for its shadow.
+        // ResizeMode and WindowChrome still keep the window fixed-size after the style is restored.
+        IntPtr currentStyle = GetWindowLongPtr(handle, GWL_STYLE);
+        IntPtr shadowStyle = new(currentStyle.ToInt64() | WS_THICKFRAME);
+
+        if (shadowStyle == currentStyle)
+        {
+            return;
+        }
+
+        _ = SetWindowLongPtr(handle, GWL_STYLE, shadowStyle);
+        _ = SetWindowPos(
+            handle,
+            IntPtr.Zero,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOSIZE |
+            SWP_NOMOVE |
+            SWP_NOZORDER |
+            SWP_NOACTIVATE |
+            SWP_FRAMECHANGED);
     }
 
     private static int ToColorRef(Color color)
@@ -112,8 +180,67 @@ public partial class MainWindow
         SaveManualButtonText.Text = text.SaveButton;
         SettingsButtonText.Text = text.AdvancedSettingsButtonText;
         CloseFileMenuItem.Header = text.CloseFileMenuItem;
+        HoverTip.SetText(MinimizeWindowButton, text.IsRussian ? "Свернуть" : "Minimize");
+        HoverTip.SetText(CloseWindowButton, text.IsRussian ? "Закрыть" : "Close");
+
+        if (AdditionalPages.Visibility != Visibility.Visible)
+        {
+            UpdateMainPageChrome();
+        }
+
         UpdateDropAreaState();
         UpdateManualResultEstimateText();
+    }
+
+    private void UpdateMainPageChrome()
+    {
+        PageTitleTextBlock.Text = AppVersion.WindowTitle;
+        PageTitleTextBlock.FontSize = MainPageTitleFontSize;
+        NavigationBackButton.Visibility = Visibility.Hidden;
+        Grid.SetColumn(TitleDragArea, 0);
+        Grid.SetColumnSpan(TitleDragArea, 3);
+    }
+
+    private void OnAdditionalPageChromeChanged(string title, string backToolTip)
+    {
+        PageTitleTextBlock.Text = title;
+        PageTitleTextBlock.FontSize = AdditionalPageTitleFontSize;
+        NavigationBackButton.Visibility = Visibility.Visible;
+        Grid.SetColumn(TitleDragArea, 2);
+        Grid.SetColumnSpan(TitleDragArea, 1);
+        HoverTip.SetText(NavigationBackButton, backToolTip);
+    }
+
+    private void OnNavigationBackButtonClick(object sender, RoutedEventArgs e)
+    {
+        HoverTip.DismissUntilMouseLeave(NavigationBackButton);
+        AdditionalPages.NavigateBack();
+    }
+
+    private void OnMinimizeWindowButtonClick(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void OnCloseWindowButtonClick(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void OnTitleDragAreaMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left || e.ClickCount != 1)
+        {
+            return;
+        }
+
+        try
+        {
+            DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+        }
     }
 
     private void ApplySettingsToUi()
@@ -160,40 +287,39 @@ public partial class MainWindow
             return;
         }
 
-        bool? dialogResult = null;
-        SettingsWindow? dialog = null;
-        MainContentRoot.Effect = new BlurEffect
-        {
-            Radius = 4,
-            RenderingBias = RenderingBias.Performance,
-        };
+        UpdateLayout();
+        double mainWindowWidth = ActualWidth;
+        double mainWindowHeight = ActualHeight;
 
-        try
-        {
-            dialog = new SettingsWindow(currentSettings)
-            {
-                Owner = this
-            };
+        SizeToContent = System.Windows.SizeToContent.Manual;
+        Width = mainWindowWidth;
+        Height = mainWindowHeight;
 
-            dialogResult = dialog.ShowDialog();
-        }
-        finally
-        {
-            MainContentRoot.Effect = null;
-        }
+        AdditionalPages.Open(currentSettings);
+        MainContentRoot.Visibility = Visibility.Collapsed;
+        AdditionalPages.Visibility = Visibility.Visible;
+    }
 
-        if (dialogResult != true || dialog is null)
-        {
-            return;
-        }
+    private void OnAdditionalBackRequested()
+    {
+        ApplyTheme();
+        ReturnToMainPage();
+    }
 
+    private void OnAdditionalThemePreviewChanged(bool isDarkTheme)
+    {
+        ApplyTheme(isDarkTheme);
+    }
+
+    private void OnAdditionalSettingsApplied(AppSettings settings)
+    {
         bool wasManualPreviewLoaded = manualState.IsLoaded;
         bool wasManualResultEstimateVisible = currentSettings.ShowManualResultEstimate;
         ManualResultState? previousManualResultState = wasManualPreviewLoaded
             ? CaptureManualResultState()
             : null;
 
-        currentSettings.CopyFrom(dialog.Settings);
+        currentSettings.CopyFrom(settings);
         currentSettings.Save();
         ApplySettingsToUi();
         ApplyTheme();
@@ -225,6 +351,19 @@ public partial class MainWindow
             ResetManualPreview();
             SetStatusText(string.Empty);
         }
+
+        ReturnToMainPage();
+    }
+
+    private void ReturnToMainPage()
+    {
+        AdditionalPages.Visibility = Visibility.Collapsed;
+        MainContentRoot.Visibility = Visibility.Visible;
+        UpdateMainPageChrome();
+
+        ClearValue(WidthProperty);
+        ClearValue(HeightProperty);
+        SizeToContent = System.Windows.SizeToContent.WidthAndHeight;
     }
 
     private void OnQualityTextChanged(object sender, TextChangedEventArgs e)

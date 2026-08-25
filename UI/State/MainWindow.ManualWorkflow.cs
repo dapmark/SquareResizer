@@ -186,7 +186,8 @@ public partial class MainWindow
             manualState.CropY,
             manualState.CropSize,
             currentSettings.Language,
-            currentSettings.AutoSizeStep);
+            currentSettings.AutoSizeStep,
+            currentSettings.OnlineServiceCompatibility);
 
         if (!result.Success)
         {
@@ -338,7 +339,8 @@ public partial class MainWindow
             AppSettings.NormalizeResizeMode(currentSettings.ResizeMode),
             AppSettings.NormalizeSharpMode(currentSettings.SharpMode),
             AppSettings.NormalizeJpegMode(currentSettings.JpegMode),
-            AppSettings.NormalizeAutoSizeStep(currentSettings.AutoSizeStep));
+            AppSettings.NormalizeAutoSizeStep(currentSettings.AutoSizeStep),
+            currentSettings.OnlineServiceCompatibility);
     }
 
     private int GetManualQualityFromUi()

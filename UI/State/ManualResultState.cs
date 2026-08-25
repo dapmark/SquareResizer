@@ -9,4 +9,5 @@ internal readonly record struct ManualResultState(
     string ResizeMode,
     string SharpMode,
     int JpegMode,
-    int AutoSizeStep);
+    int AutoSizeStep,
+    bool OnlineServiceCompatibility);

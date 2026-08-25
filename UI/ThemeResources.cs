@@ -31,6 +31,9 @@ internal static class ThemeResources
             SetBrush(resources, "InputBackgroundBrush", Color.FromRgb(32, 32, 32));
             SetBrush(resources, "StatusTextBrush", Color.FromRgb(200, 200, 200));
             SetBrush(resources, "StatusErrorTextBrush", Color.FromRgb(241, 112, 123));
+            SetBrush(resources, "TitleButtonForegroundBrush", Color.FromRgb(212, 212, 212));
+            SetBrush(resources, "SoftButtonHoverBackgroundBrush", Color.FromRgb(51, 51, 51));
+            SetBrush(resources, "SoftButtonPressedBackgroundBrush", Color.FromRgb(62, 62, 66));
             return;
         }
 
@@ -52,6 +55,9 @@ internal static class ThemeResources
         SetBrush(resources, "InputBackgroundBrush", Color.FromRgb(255, 255, 255));
         SetBrush(resources, "StatusTextBrush", Color.FromRgb(80, 80, 80));
         SetBrush(resources, "StatusErrorTextBrush", Color.FromRgb(196, 43, 28));
+        SetBrush(resources, "TitleButtonForegroundBrush", Color.FromRgb(75, 85, 99));
+        SetBrush(resources, "SoftButtonHoverBackgroundBrush", Color.FromRgb(226, 240, 255));
+        SetBrush(resources, "SoftButtonPressedBackgroundBrush", Color.FromRgb(203, 227, 255));
     }
 
     public static void ApplySettings(ResourceDictionary resources, bool isDark)

@@ -17,6 +17,7 @@ internal sealed class AppSettings
     public const bool DefaultShowManualResultEstimate = true;
     public const string DefaultSharpMode = "standard";
     public const int DefaultJpegMode = 1;
+    public const bool DefaultOnlineServiceCompatibility = true;
     public const string DefaultLanguage = "en";
     public const double DefaultSmartPaddingPercent = 4.0;
     public const int DefaultSmartPaddingMaxPx = 32;
@@ -31,9 +32,9 @@ internal sealed class AppSettings
         "resize_mode",
         "sharp_mode",
         "jpeg_mode",
+        "online_service_compatibility",
         "smart_mode",
         "manual_mode",
-        "show_manual_result_estimate",
         "smart_padding_percent",
         "smart_padding_max_px",
         "auto_size_step",
@@ -46,9 +47,11 @@ internal sealed class AppSettings
     public string ResizeMode { get; set; } = DefaultResizeMode;
     public bool SmartMode { get; set; } = DefaultSmartMode;
     public bool ManualMode { get; set; } = DefaultManualMode;
+    // Retained as an internal compatibility flag. The estimate is always enabled and is not user-configurable.
     public bool ShowManualResultEstimate { get; set; } = DefaultShowManualResultEstimate;
     public string SharpMode { get; set; } = DefaultSharpMode;
     public int JpegMode { get; set; } = DefaultJpegMode;
+    public bool OnlineServiceCompatibility { get; set; } = DefaultOnlineServiceCompatibility;
     public string Language { get; set; } = DefaultLanguage;
     public double SmartPaddingPercent { get; set; } = DefaultSmartPaddingPercent;
     public int SmartPaddingMaxPx { get; set; } = DefaultSmartPaddingMaxPx;
@@ -69,9 +72,10 @@ internal sealed class AppSettings
             ResizeMode = ResizeMode,
             SmartMode = SmartMode,
             ManualMode = ManualMode,
-            ShowManualResultEstimate = ShowManualResultEstimate,
+            ShowManualResultEstimate = DefaultShowManualResultEstimate,
             SharpMode = SharpMode,
             JpegMode = JpegMode,
+            OnlineServiceCompatibility = OnlineServiceCompatibility,
             Language = Language,
             SmartPaddingPercent = SmartPaddingPercent,
             SmartPaddingMaxPx = SmartPaddingMaxPx,
@@ -86,9 +90,10 @@ internal sealed class AppSettings
         ResizeMode = other.ResizeMode;
         SmartMode = other.SmartMode;
         ManualMode = other.ManualMode;
-        ShowManualResultEstimate = other.ShowManualResultEstimate;
+        ShowManualResultEstimate = DefaultShowManualResultEstimate;
         SharpMode = other.SharpMode;
         JpegMode = other.JpegMode;
+        OnlineServiceCompatibility = other.OnlineServiceCompatibility;
         Language = other.Language;
         SmartPaddingPercent = other.SmartPaddingPercent;
         SmartPaddingMaxPx = other.SmartPaddingMaxPx;
@@ -166,7 +171,7 @@ internal sealed class AppSettings
 
                 if (key.Equals("show_manual_result_estimate", StringComparison.OrdinalIgnoreCase))
                 {
-                    settings.ShowManualResultEstimate = NormalizeShowManualResultEstimate(value);
+                    // Legacy setting: the estimate is now always enabled.
                     continue;
                 }
 
@@ -183,6 +188,12 @@ internal sealed class AppSettings
                         settings.JpegMode = NormalizeJpegMode(jpegMode);
                     }
 
+                    continue;
+                }
+
+                if (key.Equals("online_service_compatibility", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.OnlineServiceCompatibility = NormalizeOnlineServiceCompatibility(value);
                     continue;
                 }
 
@@ -228,6 +239,7 @@ internal sealed class AppSettings
             settings.ShowManualResultEstimate = DefaultShowManualResultEstimate;
             settings.SharpMode = DefaultSharpMode;
             settings.JpegMode = DefaultJpegMode;
+            settings.OnlineServiceCompatibility = DefaultOnlineServiceCompatibility;
             settings.Language = DefaultLanguage;
             settings.SmartPaddingPercent = DefaultSmartPaddingPercent;
             settings.SmartPaddingMaxPx = DefaultSmartPaddingMaxPx;
@@ -247,6 +259,7 @@ internal sealed class AppSettings
         SmartPaddingPercent = NormalizeSmartPaddingPercent(SmartPaddingPercent);
         SmartPaddingMaxPx = NormalizeSmartPaddingMaxPx(SmartPaddingMaxPx);
         AutoSizeStep = NormalizeAutoSizeStep(AutoSizeStep);
+        ShowManualResultEstimate = DefaultShowManualResultEstimate;
 
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -254,9 +267,9 @@ internal sealed class AppSettings
             ["resize_mode"] = ResizeMode,
             ["sharp_mode"] = SharpMode,
             ["jpeg_mode"] = JpegMode.ToString(CultureInfo.InvariantCulture),
+            ["online_service_compatibility"] = OnlineServiceCompatibility.ToString().ToLowerInvariant(),
             ["smart_mode"] = SmartMode.ToString().ToLowerInvariant(),
             ["manual_mode"] = ManualMode.ToString().ToLowerInvariant(),
-            ["show_manual_result_estimate"] = ShowManualResultEstimate.ToString().ToLowerInvariant(),
             ["smart_padding_percent"] = FormatDouble(SmartPaddingPercent),
             ["smart_padding_max_px"] = SmartPaddingMaxPx.ToString(CultureInfo.InvariantCulture),
             ["auto_size_step"] = AutoSizeStep.ToString(CultureInfo.InvariantCulture),
@@ -271,6 +284,11 @@ internal sealed class AppSettings
         foreach (string rawLine in sourceLines)
         {
             string line = rawLine.Trim();
+
+            if (line.StartsWith("# show_manual_result_estimate:", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
 
             if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
             {
@@ -287,6 +305,11 @@ internal sealed class AppSettings
             }
 
             string key = rawLine[..separatorIndex].Trim();
+
+            if (key.Equals("show_manual_result_estimate", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
 
             if (values.TryGetValue(key, out string? value))
             {
@@ -434,6 +457,27 @@ internal sealed class AppSettings
         }
 
         return DefaultSmartMode;
+    }
+
+    public static bool NormalizeOnlineServiceCompatibility(string? value)
+    {
+        if (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "1", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "on", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "yes", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(value, "false", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "0", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "off", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(value, "no", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return DefaultOnlineServiceCompatibility;
     }
 
     public static bool NormalizeManualMode(string? manualMode)

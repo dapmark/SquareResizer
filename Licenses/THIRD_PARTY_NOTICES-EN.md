@@ -26,4 +26,6 @@ SquareResizer uses third-party components for image processing and SVG rendering
 ## SVG icons
 
 - Tabler Icons – MIT – https://tabler.io/icons
+- Feather Icons – MIT – https://github.com/feathericons/feather
+- Lucide Icons – ISC – https://lucide.dev
 - Full text: `Licenses/SVG-Icons-Licenses.txt`
