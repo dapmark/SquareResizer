@@ -16,7 +16,7 @@ SquareResizer is a compact portable Windows utility that converts images to squa
 
 - Regular processing of one or more images
 - Safe square cropping without stretching
-- Manual mode with preview and a resizable crop frame
+- Manual mode with preview, a resizable crop frame and clockwise image rotation
 - Smart extension of the short side using the background color
 - Output size based on the source or standard cover dimensions
 - JPG quality, JPEG mode and sharpness settings
@@ -31,7 +31,7 @@ SquareResizer is a compact portable Windows utility that converts images to squa
 2. Configure quality, sharpness, smart mode and manual mode
 3. Open a file with the button or drag an image into the window
 4. Regular mode saves the result automatically
-5. Manual mode lets you adjust the frame and click Save
+5. In manual mode, adjust the frame, rotate the image if needed and click Save
 
 ## Processing modes
 
@@ -41,7 +41,7 @@ SquareResizer is a compact portable Windows utility that converts images to squa
 
 **Smart mode** extends the background when the side difference fits the configured limits. Otherwise, the image is cropped to a square by the shorter side
 
-**Manual mode** lets you move and resize the square frame. `Alt` resizes it symmetrically, arrow keys move it by 1 px, `Shift + arrow keys` by 10 px, `Ctrl + Home` centers it, `Ctrl + S` saves it and `Esc` closes the image
+**Manual mode** lets you move and resize the square frame and rotate the image 90° clockwise. `Alt` resizes the frame symmetrically, arrow keys move it by 1 px, `Shift + arrow keys` by 10 px, `Ctrl + Home` centers it, `Ctrl + S` saves it and `Esc` closes the image
 
 ## Settings
 

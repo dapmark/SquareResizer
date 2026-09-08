@@ -5,6 +5,7 @@ internal readonly record struct ManualResultState(
     int CropX,
     int CropY,
     int CropSize,
+    int RotationQuarterTurns,
     int Quality,
     string ResizeMode,
     string SharpMode,

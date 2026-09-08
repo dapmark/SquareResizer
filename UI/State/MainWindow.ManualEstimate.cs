@@ -97,7 +97,8 @@ public partial class MainWindow
                         state.CropY,
                         state.CropSize,
                         state.AutoSizeStep,
-                        state.OnlineServiceCompatibility),
+                        state.OnlineServiceCompatibility,
+                        state.RotationQuarterTurns),
                     token);
             }
             finally

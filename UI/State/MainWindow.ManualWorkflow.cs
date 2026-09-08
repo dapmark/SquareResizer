@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace ImageSquareResizer;
@@ -63,6 +64,13 @@ public partial class MainWindow
         e.Handled = true;
     }
 
+    private void OnRotateManualButtonClick(object sender, RoutedEventArgs e)
+    {
+        RotateManualPreviewClockwise();
+        PreviewHost.Focus();
+        e.Handled = true;
+    }
+
     private void OnSaveManualButtonClick(object sender, RoutedEventArgs e)
     {
         SaveManualPreview();
@@ -104,6 +112,7 @@ public partial class MainWindow
             manualState.SourcePath = sourcePath;
             manualState.ImageWidth = bitmap.PixelWidth;
             manualState.ImageHeight = bitmap.PixelHeight;
+            manualState.RotationQuarterTurns = 0;
             int initialCropSize = Math.Min(manualState.ImageWidth, manualState.ImageHeight);
             ApplyManualCrop(ManualCropGeometry.Center(
                 manualState.ImageWidth,
@@ -155,6 +164,37 @@ public partial class MainWindow
         return bitmap;
     }
 
+    private void RotateManualPreviewClockwise()
+    {
+        if (!manualState.IsLoaded ||
+            manualState.ImageWidth <= 0 ||
+            manualState.ImageHeight <= 0 ||
+            PreviewImage.Source is not BitmapSource bitmapSource)
+        {
+            return;
+        }
+
+        int previousWidth = manualState.ImageWidth;
+        int previousHeight = manualState.ImageHeight;
+        ManualCrop rotatedCrop = ManualCropGeometry.RotateClockwise(
+            GetManualCrop(),
+            previousWidth,
+            previousHeight);
+
+        var rotatedBitmap = new TransformedBitmap(bitmapSource, new RotateTransform(90));
+        rotatedBitmap.Freeze();
+
+        PreviewImage.Source = rotatedBitmap;
+        manualState.ImageWidth = previousHeight;
+        manualState.ImageHeight = previousWidth;
+        manualState.RotationQuarterTurns = (manualState.RotationQuarterTurns + 1) % 4;
+        ApplyManualCrop(rotatedCrop);
+
+        UpdateManualPreviewLayout();
+        UpdateManualActionButtons();
+        ScheduleManualFileSizeEstimate();
+    }
+
     private void SaveManualPreview()
     {
         if (!manualState.IsLoaded || string.IsNullOrWhiteSpace(manualState.SourcePath))
@@ -187,7 +227,8 @@ public partial class MainWindow
             manualState.CropSize,
             currentSettings.Language,
             currentSettings.AutoSizeStep,
-            currentSettings.OnlineServiceCompatibility);
+            currentSettings.OnlineServiceCompatibility,
+            manualState.RotationQuarterTurns);
 
         if (!result.Success)
         {
@@ -308,6 +349,7 @@ public partial class MainWindow
 
         SaveManualButton.IsEnabled = hasUnsavedChanges;
         CenterCropButton.IsEnabled = manualMode && manualState.IsLoaded && !IsManualCropCentered();
+        RotateManualButton.IsEnabled = manualMode && manualState.IsLoaded;
 
         if (hasUnsavedChanges)
         {
@@ -335,6 +377,7 @@ public partial class MainWindow
             manualState.CropX,
             manualState.CropY,
             manualState.CropSize,
+            manualState.RotationQuarterTurns,
             AppSettings.NormalizeQuality(quality),
             AppSettings.NormalizeResizeMode(currentSettings.ResizeMode),
             AppSettings.NormalizeSharpMode(currentSettings.SharpMode),

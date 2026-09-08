@@ -31,7 +31,7 @@ public partial class AdditionalPagesControl : UserControl
         "Licenses/Magick.NET-Apache-2.0.txt",
         "Licenses/ImageMagick-License.txt",
         "Licenses/SharpVectors-BSD-3-Clause.txt",
-        "Licenses/SVG-Icons-Licenses.txt",
+        "Licenses/Tabler-MIT.txt",
     };
 
     private AppSettings settingsDraft = new();

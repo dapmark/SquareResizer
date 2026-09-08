@@ -177,6 +177,7 @@ public partial class MainWindow
         DropOrTextBlock.Text = text.DropOrText;
         DropHereTextBlock.Text = text.DropHereText;
         CenterCropButtonText.Text = text.CenterCropButton;
+        RotateManualButtonText.Text = text.RotateClockwiseButton;
         SaveManualButtonText.Text = text.SaveButton;
         SettingsButtonText.Text = text.AdvancedSettingsButtonText;
         CloseFileMenuItem.Header = text.CloseFileMenuItem;

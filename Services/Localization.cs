@@ -62,6 +62,7 @@ internal sealed class Localization
     public string DropHereText => IsRussian ? "перенесите его сюда" : "drop it here";
     public string SaveButton => IsRussian ? "Сохранить" : "Save";
     public string CenterCropButton => IsRussian ? "Центрировать" : "Center";
+    public string RotateClockwiseButton => IsRussian ? "Повернуть" : "Rotate";
     public string CloseFileMenuItem => IsRussian ? "Закрыть файл" : "Close file";
     public string CenterCropButtonToolTip => IsRussian ? "Центрировать рамку" : "Center crop frame";
     public string SettingsButtonToolTip => IsRussian ? "Настройки" : "Settings";
