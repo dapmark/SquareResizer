@@ -23,6 +23,8 @@ internal sealed class ManualPreviewState
 
     public int CropY { get; set; }
 
+    public int RotationQuarterTurns { get; set; }
+
     public ManualResultState? SavedResultState { get; set; }
 
     public double PreviewLeft { get; set; }
@@ -62,6 +64,7 @@ internal sealed class ManualPreviewState
         CropSize = 0;
         CropX = 0;
         CropY = 0;
+        RotationQuarterTurns = 0;
         SavedResultState = null;
         PreviewLeft = 0;
         PreviewTop = 0;

@@ -3,22 +3,17 @@
   <metadata>
     <rdf:RDF>
       <cc:Work rdf:about="">
-        <dc:title>save-3</dc:title>
+        <dc:title>save-TABLER-DAPMARK</dc:title>
         <dc:creator>
-          <cc:Agent>
-            <dc:title>Tabler Icons Contributors</dc:title>
-          </cc:Agent>
-        </dc:creator>
-        <dc:contributor>
           <cc:Agent>
             <dc:title>DapMark</dc:title>
           </cc:Agent>
-        </dc:contributor>
+        </dc:creator>
         <dc:source>device-floppy — https://tabler.io/icons/icon/device-floppy</dc:source>
         <dc:format>image/svg+xml</dc:format>
-        <dc:rights>MIT License</dc:rights>
+        <dc:rights>MIT License (source); modifications © DapMark</dc:rights>
         <cc:license rdf:resource="https://opensource.org/license/mit/"/>
-        <dc:description>Modified derivative by DapMark based on save-2.svg, derived from the Tabler icon “device-floppy”; circular element removed, rectangular element added, scale and proportions adjusted.</dc:description>
+        <dc:description>Modified derivative by DapMark based on the Tabler icon “device-floppy”.</dc:description>
       </cc:Work>
     </rdf:RDF>
   </metadata>

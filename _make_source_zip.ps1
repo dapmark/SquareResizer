@@ -141,7 +141,7 @@ try {
 
     $version = [System.IO.File]::ReadAllText($versionPath, [System.Text.Encoding]::UTF8).Trim()
 
-    if ($version -notmatch '^\d+\.\d+[a-zA-Z]?$') {
+    if ($version -notmatch '^\d+\.\d+(?:(?:[a-z]|z\d+)(?:r\d+)?)?$') {
         throw ((Get-Utf8Text "0J3QtdC60L7RgNGA0LXQutGC0L3QsNGPINCy0LXRgNGB0LjRjyDQsiB2ZXJzaW9uLnR4dDogezB9") -f $version)
     }
 
@@ -194,6 +194,13 @@ try {
             $files += $localFile
         }
     }
+
+    $licenseAuditFile = "Docs/LICENSE_AUDIT.md"
+    $licenseAuditPath = Join-Path $root $licenseAuditFile
+    if (-not (Test-Path -LiteralPath $licenseAuditPath -PathType Leaf)) {
+        throw ((Get-Utf8Text "0J3QtSDQvdCw0LnQtNC10L0g0L7QsdGP0LfQsNGC0LXQu9GM0L3Ri9C5INGE0LDQudC7INCw0YPQtNC40YLQsCDQu9C40YbQtdC90LfQuNC5OiB7MH0=") -f $licenseAuditPath)
+    }
+    $files += $licenseAuditFile
 
     $files = @($files | Sort-Object -Unique)
 

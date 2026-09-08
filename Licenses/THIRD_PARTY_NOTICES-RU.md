@@ -23,9 +23,9 @@ SquareResizer использует сторонние компоненты дл�
 - Исходный проект: https://github.com/ElinamLLC/SharpVectors
 - Полный текст: `Licenses/SharpVectors-BSD-3-Clause.txt`
 
-## SVG-иконки
+## Tabler Icons
 
-- Tabler Icons – MIT – https://tabler.io/icons
-- Feather Icons – MIT – https://github.com/feathericons/feather
-- Lucide Icons – ISC – https://lucide.dev
-- Полный текст: `Licenses/SVG-Icons-Licenses.txt`
+- Назначение: SVG-иконки интерфейса и исходный материал для производной иконки DapMark
+- Лицензия: MIT License
+- Исходный проект: https://tabler.io/icons
+- Полный текст: `Licenses/Tabler-MIT.txt`

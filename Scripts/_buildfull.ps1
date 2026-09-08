@@ -110,7 +110,7 @@ try {
 
     $version = [System.IO.File]::ReadAllText($versionPath, [System.Text.Encoding]::UTF8).Trim()
 
-    if ($version -notmatch '^\d+\.\d+[a-zA-Z]?$') {
+    if ($version -notmatch '^\d+\.\d+(?:(?:[a-z]|z\d+)(?:r\d+)?)?$') {
         throw ((Get-Utf8Text "0J3QtdC60L7RgNGA0LXQutGC0L3QsNGPINCy0LXRgNGB0LjRjyDQsiB2ZXJzaW9uLnR4dDogezB9") -f $version)
     }
 

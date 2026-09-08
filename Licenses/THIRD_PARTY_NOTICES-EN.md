@@ -23,9 +23,9 @@ SquareResizer uses third-party components for image processing and SVG rendering
 - Source project: https://github.com/ElinamLLC/SharpVectors
 - Full text: `Licenses/SharpVectors-BSD-3-Clause.txt`
 
-## SVG icons
+## Tabler Icons
 
-- Tabler Icons – MIT – https://tabler.io/icons
-- Feather Icons – MIT – https://github.com/feathericons/feather
-- Lucide Icons – ISC – https://lucide.dev
-- Full text: `Licenses/SVG-Icons-Licenses.txt`
+- Purpose: interface SVG icons and source material for a DapMark derivative icon
+- License: MIT License
+- Source project: https://tabler.io/icons
+- Full text: `Licenses/Tabler-MIT.txt`

@@ -362,7 +362,8 @@ internal static class ImageProcessor
         int cropSize,
         string language = AppSettings.DefaultLanguage,
         int autoSizeStep = AppSettings.DefaultAutoSizeStep,
-        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility)
+        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility,
+        int rotationQuarterTurns = 0)
     {
         Localization text = Localization.For(language);
 
@@ -401,6 +402,7 @@ internal static class ImageProcessor
                 cropX,
                 cropY,
                 cropSize,
+                rotationQuarterTurns,
                 autoSizeStep,
                 onlineServiceCompatibility,
                 text.InvalidImageSize);
@@ -432,7 +434,8 @@ internal static class ImageProcessor
         int cropY,
         int cropSize,
         int autoSizeStep = AppSettings.DefaultAutoSizeStep,
-        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility)
+        bool onlineServiceCompatibility = AppSettings.DefaultOnlineServiceCompatibility,
+        int rotationQuarterTurns = 0)
     {
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
@@ -467,6 +470,7 @@ internal static class ImageProcessor
             cropX,
             cropY,
             cropSize,
+            rotationQuarterTurns,
             autoSizeStep,
             onlineServiceCompatibility,
             "Invalid image size.");
@@ -485,11 +489,20 @@ internal static class ImageProcessor
         int cropX,
         int cropY,
         int cropSize,
+        int rotationQuarterTurns,
         int autoSizeStep,
         bool onlineServiceCompatibility,
         string invalidImageSizeMessage)
     {
         image.AutoOrient();
+
+        int normalizedRotationQuarterTurns = ((rotationQuarterTurns % 4) + 4) % 4;
+
+        if (normalizedRotationQuarterTurns != 0)
+        {
+            image.Rotate(normalizedRotationQuarterTurns * 90.0);
+        }
+
         image.FilterType = FilterType.Lanczos;
 
         int imageWidth = (int)image.Width;

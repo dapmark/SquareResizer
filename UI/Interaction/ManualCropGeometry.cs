@@ -29,6 +29,19 @@ internal static class ManualCropGeometry
         return crop == Center(imageWidth, imageHeight, crop.Size);
     }
 
+    public static ManualCrop RotateClockwise(ManualCrop crop, int imageWidth, int imageHeight)
+    {
+        if (crop.Size <= 0 || imageWidth <= 0 || imageHeight <= 0)
+        {
+            return crop;
+        }
+
+        return new ManualCrop(
+            ClampCoordinate(imageHeight - crop.Y - crop.Size, imageHeight - crop.Size),
+            ClampCoordinate(crop.X, imageWidth - crop.Size),
+            crop.Size);
+    }
+
     public static ManualCrop Move(
         ManualCrop crop,
         int imageWidth,
